@@ -1,7 +1,7 @@
 
 # Hudini - CPU Magician on SLM
 
-![Hudini Logo](./../assets/hidini2.webp)
+![Hudini Logo](./src/assets/hidini2.webp)
 
 ### JUST FOR TESTING PURPOSES. DO NOT USE IT IN PRODUCTION!
 
