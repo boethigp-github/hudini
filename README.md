@@ -83,7 +83,6 @@ To enable prompt saving and generation functionality, you need a backend server.
 
 Certainly! Below is a complete, formatted section for your README that you can copy and paste to describe the server-side functionality of your application.
 
-```markdown
 ## Server
 
 The server is built using Flask and serves as the backend for the Hudini application. It handles prompt submissions, generates responses using the Llama model, and manages previous prompts.
@@ -113,7 +112,24 @@ Renders the homepage of the application.
   {
     "prompt": "Your input text here"
   }
-  ```
+
+
+### Important Files
+
+- **`test.py`**: Main server file that initializes the Flask app, sets up routes, and manages the Llama model.
+- **`prompts.json`**: File used to store and retrieve user prompts across server restarts.
+
+### Installing the Llama Model
+
+To use the Llama model, you need to download it from Hugging Face. Follow these steps to set up the model in the correct path:
+
+1. **Install Hugging Face CLI**: Ensure you have the Hugging Face CLI installed. You can install it via pip:
+
+```bash
+pip install huggingface-hub
+```
+
+
 - **Responses**:
     - `200 OK`: Prompt received successfully.
     - `400 Bad Request`: No prompt provided.
