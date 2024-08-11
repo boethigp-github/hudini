@@ -1,5 +1,6 @@
-Here's a cleaned-up and organized version of your README document for the Hudini application:
+Certainly! Here is an updated version of your README document for the Hudini application, including the PowerShell script to run the Ollama server and open the link to `http://localhost:11434/`:
 
+---
 
 # Hudini - CPU Magician on SLM
 
@@ -57,6 +58,43 @@ To enable prompt saving and generation functionality, you need a backend server.
 - `http://localhost:5000/generate` for generating responses.
 - `http://localhost:5000/save_prompt` for saving prompts.
 - `http://localhost:5000/delete_prompt/:id` for deleting prompts.
+
+### PowerShell Script to Run Ollama and Open URL
+
+To run the Ollama server and open the link in your default browser, use the following PowerShell script:
+
+```powershell
+# Define the default path to the Ollama executable
+param (
+    [string]$OllamaPath = "C:\Users\ZRD-AdminPBO\AppData\Local\Programs\Ollama\ollama.exe"
+)
+
+# Check if the Ollama executable exists
+if (-Not (Test-Path $OllamaPath)) {
+    Write-Host "The Ollama executable was not found at '$OllamaPath'." -ForegroundColor Red
+    exit 1
+}
+
+# Execute the Ollama serve command in the background
+try {
+    Write-Host "Starting Ollama server in the background"
+    $process = Start-Process -FilePath $OllamaPath `
+                             -ArgumentList "serve" `
+                             -PassThru `
+                             -WindowStyle Hidden
+    Write-Host "Ollama server started with PID $($process.Id)."
+
+    # Wait briefly to ensure the server has time to start
+    Start-Sleep -Seconds 2
+
+    # Open the link in the default web browser
+    $url = "http://localhost:11434/"
+    Write-Host "Opening $url in the default web browser..."
+    Start-Process $url
+} catch {
+    Write-Host "An error occurred while trying to start the Ollama server or open the URL: $_" -ForegroundColor Red
+}
+```
 
 ### Usage
 
@@ -195,12 +233,15 @@ This project is licensed under the MIT License.
 
 For further information or inquiries, please contact [Your Name] at [your.email@example.com].
 
+---
 
 ### Key Improvements
 
 - **Structure**: The document has been restructured to have clear headings and subheadings for easy navigation.
 - **Redundancy**: Removed redundant sections and combined related content for clarity.
-- **Consistency**: Consistent formatting and language used throughout the document.
+- **Consistency**: Consistent formatting and
+
+language used throughout the document.
 - **Instructions**: Clearer instructions and descriptions provided for setup and configuration steps.
 
 Feel free to update sections such as contact details, repository URL, and any additional information specific to your project.
