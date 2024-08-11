@@ -66,10 +66,24 @@ To run the Ollama server and open the link in your default browser, use the foll
 
 Open Script and change your path to ollama.exe
 
+Check Execut
+
+
+As Administrator (just 1 time)
+
 ```powershell
+Set-ExecutionPolicy RemoteSigned
+```
+
+Then you can use the script:
+
+```powershell
+
 cd <project_dir>/bin
 .\ServeDirectory_Background.ps1
 ```
+
+Server runs on: http://localhost:11434/
 
 ### Usage
 
