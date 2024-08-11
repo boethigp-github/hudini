@@ -1,31 +1,23 @@
-# Define the default path to the Ollama executable
-param (
-    [string]$OllamaPath = "C:\Users\ZRD-AdminPBO\AppData\Local\Programs\Ollama\ollama.exe"
-)
+# Define the Anaconda installation path, environment, and script details
+$AnacondaPath = "$Env:ProgramData\Anaconda3"  # Path to Anaconda installation
+$EnvName = "aider-ollama"  # Name of the Anaconda environment
+$ScriptPath = "C:\projects\llama.cpp\projects\src\test.py"  # Path to the Python script
 
-# Check if the Ollama executable exists
-if (-Not (Test-Path $OllamaPath)) {
-    Write-Host "The Ollama executable was not found at '$OllamaPath'." -ForegroundColor Red
+# Check if the script file exists
+if (-Not (Test-Path $ScriptPath)) {
+    Write-Host "The script '$ScriptPath' does not exist." -ForegroundColor Red
     exit 1
 }
 
-
-# Execute the Ollama serve command in the background
+# Activate the Anaconda environment and run the script in a new window
 try {
-    Write-Host "Starting Ollama server in the background"
-    $process = Start-Process -FilePath $OllamaPath `
-                             -ArgumentList "serve" `
-                             -PassThru `
-                             -WindowStyle Hidden
-    Write-Host "Ollama server started with PID $($process.Id)."
+    Write-Host "Activating the Anaconda environment '$EnvName' and running the Python script '$ScriptPath' in a new window"
 
-    # Wait briefly to ensure the server has time to start
-    Start-Sleep -Seconds 2
+    # Command to activate the environment and run the script
+    $command = "@echo off && call `"$AnacondaPath\Scripts\activate.bat`" $EnvName && python `"$ScriptPath`" && pause && conda deactivate"
 
-    # Open the link in the default web browser
-    $url = "http://localhost:11434/"
-    Write-Host "Opening $url in the default web browser..."
-    Start-Process $url
+    # Start a new Command Prompt window and execute the command
+    Start-Process -FilePath "cmd.exe" -ArgumentList "/c", $command -WindowStyle Normal
 } catch {
-    Write-Host "An error occurred while trying to start the Ollama server or open the URL: $_" -ForegroundColor Red
+    Write-Host "An error occurred while trying to run the script: $_" -ForegroundColor Red
 }

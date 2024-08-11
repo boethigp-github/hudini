@@ -75,6 +75,8 @@ As Administrator (just 1 time)
 Set-ExecutionPolicy RemoteSigned
 ```
 
+Ollama Server runs on: http://localhost:11434/
+
 Then you can use the script:
 
 ```powershell
@@ -83,7 +85,21 @@ cd <project_dir>/bin
 .\ServeDirectory_Background.ps1
 ```
 
+API Server runs at:
 Server runs on: http://localhost:11434/
+
+## API Server Start
+
+```powershell
+cd <project_dir>/bin
+.\ServeBackend.ps1
+```
+
+
+
+
+
+
 
 ### Usage
 
