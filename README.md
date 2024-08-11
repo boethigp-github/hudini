@@ -1,7 +1,6 @@
-Certainly! Here is an updated version of your README document for the Hudini application, including the PowerShell script to run the Ollama server and open the link to `http://localhost:11434/`:
+Here's an updated version of the README document that includes documentation for the `.env.local` configuration file and detailed instructions for setting up the Hudini application, including running the Ollama server:
 
 ---
-
 
 # Hudini - CPU Magician on SLM
 
@@ -9,7 +8,7 @@ Certainly! Here is an updated version of your README document for the Hudini app
 
 ### JUST FOR TESTING PURPOSES. DO NOT USE IT IN PRODUCTION!
 
-Hudini is an interactive chat interface designed to work with CPU magic on SLM. This application allows users to input prompts and receive responses in real time. The application also manages previous prompts, allowing users to easily revisit and delete them.
+Hudini is an interactive chat interface designed to work with CPU magic on SLM. This application allows users to input prompts and receive responses in real-time. The application also manages previous prompts, allowing users to easily revisit and delete them.
 
 ## Features
 
@@ -27,6 +26,7 @@ Ensure you have the following software installed on your machine:
 - [Node.js](https://nodejs.org/) (v12 or later)
 - [Vue CLI](https://cli.vuejs.org/) (optional for scaffolding Vue projects)
 - [Git](https://git-scm.com/) (for version control)
+- [Anaconda](https://www.anaconda.com/products/distribution#download-section) (for managing Python environments)
 
 ### Installation
 
@@ -51,6 +51,23 @@ Ensure you have the following software installed on your machine:
 
    This will start the application on `http://localhost:8080/`.
 
+### Environment Configuration
+
+Create a `.env.local` file in the parent directory of your scripts with the following content to specify the configuration for your backend, frontend, and Ollama script paths:
+
+```plaintext
+# Backend script configuration
+BackendEnvName=aider-ollama
+BackendScriptPath=C:\projects\llama.cpp\projects\src\llama-cpp-chat\src\backend\server.py
+
+# Frontend script configuration
+FrontendDirectoryPath=C:\projects\llama.cpp\projects\src\llama-cpp-chat
+
+# Ollama script configuration
+OllamaEnvName=aider-ollama
+OllamaPath=C:\Users\ZRD-AdminPBO\AppData\Local\Programs\Ollama\ollama.exe
+```
+
 ### Running the Backend Server
 
 To enable prompt saving and generation functionality, you need a backend server. The server endpoints used are:
@@ -60,46 +77,63 @@ To enable prompt saving and generation functionality, you need a backend server.
 - `http://localhost:5000/save_prompt` for saving prompts.
 - `http://localhost:5000/delete_prompt/:id` for deleting prompts.
 
+## Start All Services
+
+The app contains three services:
+
+- Ollama
+- Vue Dev Server
+- Flask Backend API Server
+
+You can start them separately, or run one script to start them all. They all operate in a single terminal.
+
+```powershell
+cd <project_dir>/bin
+.\StartAllServices.ps1
+```
+
 ### PowerShell Script to Run Ollama and Open URL
 
 To run the Ollama server and open the link in your default browser, use the following PowerShell script:
 
-Open Script and change your path to ollama.exe
+1. **Ensure the `.env.local` file is configured** as described above.
 
-Check Execut
+2. **Run the script** to start the Ollama server:
 
+   ```powershell
+   cd <project_dir>/bin
+   .\ServeDirectory_Background.ps1
+   ```
 
-As Administrator (just 1 time)
+3. **Set Execution Policy** (as Administrator, only needed once):
 
-```powershell
-Set-ExecutionPolicy RemoteSigned
-```
+   ```powershell
+   Set-ExecutionPolicy RemoteSigned
+   ```
 
-Ollama Server runs on: http://localhost:11434/
+The Ollama server runs on: `http://localhost:11434/`
 
-Then you can use the script:
+### API Server Start
 
-```powershell
-
-cd <project_dir>/bin
-.\ServeDirectory_Background.ps1
-```
-
-API Server runs at:
-Server runs on: http://localhost:11434/
-
-## API Server Start
+To start the backend API server, run:
 
 ```powershell
 cd <project_dir>/bin
 .\ServeBackend.ps1
 ```
 
+The server runs at: `http://localhost:5000/`
 
+### Start Frontend Dev Server
 
+To start the frontend development server, run:
 
+```powershell
+cd <project_dir>/bin
+.\ServeFrontendDev.ps1
+```
 
-
+The server runs on: `http://localhost:5173/`
 
 ### Usage
 
@@ -209,7 +243,7 @@ To use the Llama model, you need to download it from Hugging Face. Follow these 
 2. **Start the Server**: Run the Flask application.
 
    ```bash
-   python test.py
+   python server.py
    ```
 
    The server will start on `http://0.0.0.0:5000` with debug mode enabled.
@@ -220,7 +254,9 @@ The server uses Python's `logging` module to record server activity, which helps
 
 ### Error Handling
 
-The server includes error handling for common issues like missing prompts, file access errors, and model processing failures. It logs detailed error messages and stack traces for further investigation.
+The server includes error handling for common issues like missing prompts, file access errors, and model processing failures. It logs detailed error messages and stack
+
+traces for further investigation.
 
 ## Contributing
 
@@ -244,9 +280,9 @@ For further information or inquiries, please contact [Your Name] at [your.email@
 
 - **Structure**: The document has been restructured to have clear headings and subheadings for easy navigation.
 - **Redundancy**: Removed redundant sections and combined related content for clarity.
-- **Consistency**: Consistent formatting and
-
-language used throughout the document.
+- **Consistency**: Consistent formatting and language used throughout the document.
 - **Instructions**: Clearer instructions and descriptions provided for setup and configuration steps.
 
 Feel free to update sections such as contact details, repository URL, and any additional information specific to your project.
+
+This updated README should provide a comprehensive guide to setting up and using the Hudini application, including details about the `.env.local` configuration file. If you need further assistance or have any questions, feel free to ask!

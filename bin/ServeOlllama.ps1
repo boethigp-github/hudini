@@ -1,7 +1,23 @@
-# Define the default path to the Ollama executable
-param (
-    [string]$OllamaPath = "C:\Users\ZRD-AdminPBO\AppData\Local\Programs\Ollama\ollama.exe"
-)
+# Function to load variables from a .env.local file
+function Load-EnvFile($envFilePath) {
+    if (-Not (Test-Path $envFilePath)) {
+        Write-Host "The .env.local file '$envFilePath' does not exist." -ForegroundColor Red
+        exit 1
+    }
+
+    $envContent = Get-Content $envFilePath | Where-Object { $_ -match "=" }
+    $envContent | ForEach-Object {
+        $key, $value = $_ -split '=', 2
+        Set-Item -Path "Env:$key" -Value ($value -replace '"', '').Trim()
+    }
+}
+
+# Load environment variables from .env.local file located one directory up
+$envFilePath = "..\.env.local"
+Load-EnvFile $envFilePath
+
+# Define the path to the Ollama executable from .env.local
+$OllamaPath = $Env:OllamaPath
 
 # Check if the Ollama executable exists
 if (-Not (Test-Path $OllamaPath)) {
