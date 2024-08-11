@@ -9,7 +9,6 @@ if (-Not (Test-Path $OllamaPath)) {
     exit 1
 }
 
-
 # Execute the Ollama serve command in the background
 try {
     Write-Host "Starting Ollama server in the background"
