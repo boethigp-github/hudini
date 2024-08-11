@@ -2,6 +2,7 @@ Certainly! Here is an updated version of your README document for the Hudini app
 
 ---
 
+
 # Hudini - CPU Magician on SLM
 
 ![Hudini Logo](./src/assets/hidini2.webp)
