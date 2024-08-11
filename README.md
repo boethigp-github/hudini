@@ -65,7 +65,7 @@ FrontendDirectoryPath=C:\projects\llama.cpp\projects\src\llama-cpp-chat
 
 # Ollama script configuration
 OllamaEnvName=aider-ollama
-OllamaPath=C:\Users\ZRD-AdminPBO\AppData\Local\Programs\Ollama\ollama.exe
+OllamaPath=<your userdir>AppData\Local\Programs\Ollama\ollama.exe
 ```
 
 ### Running the Backend Server
