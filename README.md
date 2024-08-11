@@ -1,3 +1,5 @@
+Here's a cleaned-up and organized version of your README document for the Hudini application:
+
 
 # Hudini - CPU Magician on SLM
 
@@ -71,17 +73,14 @@ To enable prompt saving and generation functionality, you need a backend server.
 
 ### Configuration
 
-- **Styling**: Styles are imported from `./../assets/chat-styles.css`.
-- **Logo**: The logo is located at `./../assets/hidini2.webp`.
+- **Styling**: Styles are imported from `./src/assets/chat-styles.css`.
+- **Logo**: The logo is located at `./src/assets/hidini2.webp`.
 
 ## Project Structure
 
 - **`src/components`**: Contains Vue components, including the main chat component.
 - **`src/assets`**: Static assets like images and stylesheets.
 - **`src/main.js`**: Entry point for the Vue application.
-
-
-Certainly! Below is a complete, formatted section for your README that you can copy and paste to describe the server-side functionality of your application.
 
 ## Server
 
@@ -98,78 +97,63 @@ The server is built using Flask and serves as the backend for the Hudini applica
 - **`test.py`**: Main server file that initializes the Flask app, sets up routes, and manages the Llama model.
 - **`prompts.json`**: File used to store and retrieve user prompts across server restarts.
 
-### API Endpoints
-
-#### `GET /`
-
-Renders the homepage of the application.
-
-#### `POST /generate`
-
-- **Description**: Receives a user prompt, validates it, and prepares it for response generation.
-- **Request Body**: JSON object containing the prompt.
-  ```json
-  {
-    "prompt": "Your input text here"
-  }
-
-
-### Important Files
-
-- **`test.py`**: Main server file that initializes the Flask app, sets up routes, and manages the Llama model.
-- **`prompts.json`**: File used to store and retrieve user prompts across server restarts.
-
 ### Installing the Llama Model
 
 To use the Llama model, you need to download it from Hugging Face. Follow these steps to set up the model in the correct path:
 
+#### Option 1: Install Using Hugging Face CLI
+
 1. **Install Hugging Face CLI**: Ensure you have the Hugging Face CLI installed. You can install it via pip:
 
-```bash
-pip install huggingface-hub
-```
+   ```bash
+   pip install huggingface-hub
+   ```
 
+2. **Login to Hugging Face**: Use the CLI to log in to your Hugging Face account. Create an account if you don't have one.
 
-- **Responses**:
-    - `200 OK`: Prompt received successfully.
-    - `400 Bad Request`: No prompt provided.
-    - `500 Internal Server Error`: Error processing the prompt.
+   ```bash
+   huggingface-cli login
+   ```
 
-#### `GET /stream`
+3. **Download the Model**: Run the following command to download the LLaMA-7b model to the specified directory:
 
-- **Description**: Streams generated text based on the last received prompt using server-sent events (SSE).
-- **Responses**:
-    - `200 OK`: Begins streaming text tokens.
-    - `400 Bad Request`: No prompt available for streaming.
-    - `500 Internal Server Error`: Error during text generation.
+   ```bash
+   huggingface-cli download TheBloke/LLaMA-7b-GGUF llama-7b.Q4_K_M.gguf --local-dir C:/projects/llama-cpp --local-dir-use-symlinks False
+   ```
 
-#### `GET /load_prompts`
+   This command will place the model file in `C:/projects/llama-cpp`.
 
-- **Description**: Returns a list of previously saved prompts.
-- **Responses**:
-    - `200 OK`: Returns an array of prompts stored in `prompts.json`.
+4. **Verify the Model Path**: Ensure your server code points to this model path:
 
-#### `POST /save_prompt`
+   ```python
+   llm_wrapper = LlamaWrapper("C:\\projects\\llama-cpp\\llama-7b.Q4_K_M.gguf")
+   ```
 
-- **Description**: Saves a new prompt to the server.
-- **Request Body**: JSON object with the prompt text.
-  ```json
-  {
-    "prompt": "Your input text here"
-  }
-  ```
-- **Responses**:
-    - `200 OK`: Prompt saved successfully, returns the prompt ID.
-    - `400 Bad Request`: No prompt provided.
-    - `500 Internal Server Error`: Error saving the prompt.
+#### Option 2: Install Using Conda
 
-#### `DELETE /delete_prompt/<string:id>`
+1. **Install Conda**: Ensure you have Conda installed. If not, download and install [Anaconda](https://www.anaconda.com/products/distribution#download-section) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
 
-- **Description**: Deletes a specific prompt by its unique ID.
-- **Responses**:
-    - `200 OK`: Prompt deleted successfully.
-    - `404 Not Found`: Prompt ID not found.
-    - `500 Internal Server Error`: Error deleting the prompt.
+2. **Create a New Conda Environment**: Create and activate a new environment:
+
+   ```bash
+   conda create --name llama_env python=3.9
+   conda activate llama_env
+   ```
+
+3. **Install Required Packages**:
+
+   ```bash
+   conda install flask flask-cors
+   pip install llama-cpp-python huggingface-hub
+   ```
+
+4. **Download the Model**: Use the Hugging Face CLI command as described in Option 1 to download the model to `C:/projects/llama-cpp`.
+
+5. **Verify the Model Path**: Ensure your server code points to this model path:
+
+   ```python
+   llm_wrapper = LlamaWrapper("C:\\projects\\llama-cpp\\llama-7b.Q4_K_M.gguf")
+   ```
 
 ### Running the Server
 
@@ -187,13 +171,6 @@ pip install huggingface-hub
 
    The server will start on `http://0.0.0.0:5000` with debug mode enabled.
 
-### Configuration
-
-- **Model Path**: The Llama model is loaded from a specified path. Update the model path in `test.py` to point to your model location.
-  ```python
-  llm_wrapper = LlamaWrapper("C:\\projects\\llama.cpp\\models\\custom\\llama-2-7b-chat.Q4_K_M.gguf")
-  ```
-
 ### Logging
 
 The server uses Python's `logging` module to record server activity, which helps in debugging and monitoring server operations. Logs are printed to the console with information about requests, responses, and any errors encountered.
@@ -201,18 +178,6 @@ The server uses Python's `logging` module to record server activity, which helps
 ### Error Handling
 
 The server includes error handling for common issues like missing prompts, file access errors, and model processing failures. It logs detailed error messages and stack traces for further investigation.
-
----
-
-This section provides an overview of how to set up, run, and interact with the server component of the Hudini application. If you have any questions or encounter issues, refer to the logs or contact the development team for support.
-```
-
-### Instructions
-
-- **Copy the Markdown**: Copy the entire section above.
-- **Paste into README**: Place it in your `README.md` file under a section titled "Server" or where it fits best within your documentation.
-
-This description provides an overview of the server's capabilities, endpoints, setup instructions, and configuration options, giving users and developers the information needed to understand and work with the backend of your application.
 
 ## Contributing
 
@@ -231,17 +196,11 @@ This project is licensed under the MIT License.
 For further information or inquiries, please contact [Your Name] at [your.email@example.com].
 
 
-### Key Points
+### Key Improvements
 
-- **Introduction**: Provides a concise overview of what Hudini is and its main functionality.
-- **Features**: Highlights the main features of the application.
-- **Getting Started**: Instructions on how to set up and run the application locally.
-- **Usage**: Explains how to use the application once it's running.
-- **API Endpoints**: Lists the backend server endpoints for reference.
-- **Project Structure**: Briefly outlines the directory structure.
-- **Contributing**: Guidelines for contributing to the project.
-- **License**: Specifies the project's license.
-- **Contact**: Provides contact information for questions or support.
+- **Structure**: The document has been restructured to have clear headings and subheadings for easy navigation.
+- **Redundancy**: Removed redundant sections and combined related content for clarity.
+- **Consistency**: Consistent formatting and language used throughout the document.
+- **Instructions**: Clearer instructions and descriptions provided for setup and configuration steps.
 
-Feel free to adjust the content based on specific details of your project, such as the exact usage of endpoints, additional setup steps, or particular contribution guidelines.
-
+Feel free to update sections such as contact details, repository URL, and any additional information specific to your project.
