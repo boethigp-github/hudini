@@ -1,271 +1,124 @@
-Here's an updated version of the README document that includes documentation for the `.env.local` configuration file and detailed instructions for setting up the Hudini application, including running the Ollama server:
-
----
-
 # Hudini - CPU Magician on SLM
 
 ![Hudini Logo](./src/assets/hidini2.webp)
 
-### JUST FOR TESTING PURPOSES. DO NOT USE IT IN PRODUCTION!
+**CAUTION: FOR TESTING PURPOSES ONLY. NOT FOR PRODUCTION USE.**
 
-Hudini is an interactive chat interface designed to work with CPU magic on SLM. This application allows users to input prompts and receive responses in real-time. The application also manages previous prompts, allowing users to easily revisit and delete them.
+Hudini is an interactive chat interface that works with CPU magic on SLM, allowing real-time prompt input and response generation.
 
 ## Features
 
-- **Interactive Chat Interface**: Type your prompt in the textarea and send it to receive responses.
-- **Real-Time Responses**: Receive instant feedback on your inputs.
-- **Previous Prompts Management**: Save, load, and delete previous prompts.
-- **Responsive UI**: Designed with a modern, user-friendly interface.
+- Interactive chat interface with real-time responses
+- Previous prompts management (save, load, delete)
+- Responsive UI design
 
-## Getting Started
+## Prerequisites
 
-### Prerequisites
+- [Node.js](https://nodejs.org/) (v12+)
+- [Git](https://git-scm.com/)
+- [Python](https://www.python.org/) (3.7+)
 
-Ensure you have the following software installed on your machine:
+## Setup
 
-- [Node.js](https://nodejs.org/) (v12 or later)
-- [Vue CLI](https://cli.vuejs.org/) (optional for scaffolding Vue projects)
-- [Git](https://git-scm.com/) (for version control)
-- [Anaconda](https://www.anaconda.com/products/distribution#download-section) (for managing Python environments)
-
-### Installation
-
-1. **Clone the repository:**
-
+1. Clone the repository and install dependencies:
    ```bash
    git clone <repository-url>
    cd hudini
-   ```
-
-2. **Install dependencies:**
-
-   ```bash
    npm install
    ```
 
-3. **Run the development server:**
-
+2. Install required Python packages:
    ```bash
-   npm run serve
+   pip install openai flask flask-cors python-dotenv huggingface-hub
    ```
 
-   This will start the application on `http://localhost:8080/`.
-
-### Environment Configuration
-
-Create a `.env.local` file in the parent directory of your scripts with the following content to specify the configuration for your backend, frontend, and Ollama script paths:
-
-```plaintext
-# Backend script configuration
-BackendEnvName=aider-ollama
-BackendScriptPath=C:\projects\llama.cpp\projects\src\llama-cpp-chat\src\backend\server.py
-
-# Frontend script configuration
-FrontendDirectoryPath=C:\projects\llama.cpp\projects\src\llama-cpp-chat
-
-# Ollama script configuration
-OllamaEnvName=aider-ollama
-OllamaPath=<your userdir>AppData\Local\Programs\Ollama\ollama.exe
-API_KEY_OPEN_AI=<You Open API Key>
-```
-
-### Running the Backend Server
-
-To enable prompt saving and generation functionality, you need a backend server. The server endpoints used are:
-
-- `http://localhost:5000/load_prompts` for loading prompts.
-- `http://localhost:5000/generate` for generating responses.
-- `http://localhost:5000/save_prompt` for saving prompts.
-- `http://localhost:5000/delete_prompt/:id` for deleting prompts.
-
-## Start All Services
-
-The app contains three services:
-
-- Ollama
-- Vue Dev Server
-- Flask Backend API Server
-
-You can start them separately, or run one script to start them all. They all operate in a single terminal.
-
-```powershell
-cd <project_dir>/bin
-.\StartAllServices.ps1
-```
-
-### PowerShell Script to Run Ollama and Open URL
-
-To run the Ollama server and open the link in your default browser, use the following PowerShell script:
-
-1. **Ensure the `.env.local` file is configured** as described above.
-
-2. **Run the script** to start the Ollama server:
-
-   ```powershell
-   cd <project_dir>/bin
-   .\ServeDirectory_Background.ps1
+3. Configure `.env.local` in the project root:
+   ```plaintext
+   BackendScriptPath=C:\projects\llama.cpp\projects\src\llama-cpp-chat\src\backend\server.py
+   FrontendDirectoryPath=C:\projects\llama.cpp\projects\src\llama-cpp-chat
+   OllamaPath=<your userdir>AppData\Local\Programs\Olalama\ollama.exe
+   API_KEY_OPEN_AI=<Your Open API Key>
+   SERVER_URL=http://localhost:5000
    ```
 
-3. **Set Execution Policy** (as Administrator, only needed once):
-
-   ```powershell
-   Set-ExecutionPolicy RemoteSigned
-   ```
-
-The Ollama server runs on: `http://localhost:11434/`
-
-### API Server Start
-
-To start the backend API server, run:
-
-```powershell
-cd <project_dir>/bin
-.\ServeBackend.ps1
-```
-
-The server runs at: `http://localhost:5000/`
-
-### Start Frontend Dev Server
-
-To start the frontend development server, run:
-
-```powershell
-cd <project_dir>/bin
-.\ServeFrontendDev.ps1
-```
-
-The server runs on: `http://localhost:5173/`
-
-### Usage
-
-1. **Enter a Prompt**: Type your prompt into the textarea and press "Enter" or click the "Send" button to receive a response.
-2. **Manage Prompts**: View, select, and delete previous prompts from the "Previous Prompts" section.
-3. **Live Response Streaming**: See your response appear in real-time within the chat area.
-
-### API Endpoints
-
-- **GET `/load_prompts`**: Retrieve all previous prompts.
-- **POST `/generate`**: Send a prompt to the server to receive a response.
-- **POST `/save_prompt`**: Save a new prompt to the database.
-- **DELETE `/delete_prompt/:id`**: Remove a prompt by its ID.
-
-### Configuration
-
-- **Styling**: Styles are imported from `./src/assets/chat-styles.css`.
-- **Logo**: The logo is located at `./src/assets/hidini2.webp`.
-
-## Project Structure
-
-- **`src/components`**: Contains Vue components, including the main chat component.
-- **`src/assets`**: Static assets like images and stylesheets.
-- **`src/main.js`**: Entry point for the Vue application.
-
-## Server
-
-The server is built using Flask and serves as the backend for the Hudini application. It handles prompt submissions, generates responses using the Llama model, and manages previous prompts.
-
-### Key Components
-
-- **Flask Framework**: Provides a web server for handling HTTP requests and responses.
-- **Flask-CORS**: Enables Cross-Origin Resource Sharing (CORS) to allow requests from the frontend running on a different domain or port.
-- **Llama Model Integration**: Uses the `llama_cpp` library to generate responses based on user prompts.
-
-### Important Files
-
-- **`test.py`**: Main server file that initializes the Flask app, sets up routes, and manages the Llama model.
-- **`prompts.json`**: File used to store and retrieve user prompts across server restarts.
-
-### Installing the Llama Model
-
-To use the Llama model, you need to download it from Hugging Face. Follow these steps to set up the model in the correct path:
-
-#### Option 1: Install Using Hugging Face CLI
-
-1. **Install Hugging Face CLI**: Ensure you have the Hugging Face CLI installed. You can install it via pip:
-
-   ```bash
-   pip install huggingface-hub
-   ```
-
-2. **Login to Hugging Face**: Use the CLI to log in to your Hugging Face account. Create an account if you don't have one.
-
+4. Install the Llama Model:
    ```bash
    huggingface-cli login
-   ```
-
-3. **Download the Model**: Run the following command to download the LLaMA-7b model to the specified directory:
-
-   ```bash
    huggingface-cli download TheBloke/LLaMA-7b-GGUF llama-7b.Q4_K_M.gguf --local-dir C:/projects/llama-cpp --local-dir-use-symlinks False
    ```
 
-   This command will place the model file in `C:/projects/llama-cpp`.
+## Running the Application
 
-4. **Verify the Model Path**: Ensure your server code points to this model path:
+### Automated Start (All Services)
 
-   ```python
-   llm_wrapper = LlamaWrapper("C:\\projects\\llama-cpp\\llama-7b.Q4_K_M.gguf")
-   ```
+```powershell
+cd <project_root>/bin
+.\StartAllServices.ps1
+```
 
-#### Option 2: Install Using Conda
+### Manual Start
 
-1. **Install Conda**: Ensure you have Conda installed. If not, download and install [Anaconda](https://www.anaconda.com/products/distribution#download-section) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
-
-2. **Create a New Conda Environment**: Create and activate a new environment:
-
+1. Backend Server:
    ```bash
-   conda create --name llama_env python=3.9
-   conda activate llama_env
-   ```
-
-3. **Install Required Packages**:
-
-   ```bash
-   conda install flask flask-cors
-   pip install llama-cpp-python huggingface-hub
-   ```
-
-4. **Download the Model**: Use the Hugging Face CLI command as described in Option 1 to download the model to `C:/projects/llama-cpp`.
-
-5. **Verify the Model Path**: Ensure your server code points to this model path:
-
-   ```python
-   llm_wrapper = LlamaWrapper("C:\\projects\\llama-cpp\\llama-7b.Q4_K_M.gguf")
-   ```
-
-### Running the Server
-
-1. **Ensure Dependencies Are Installed**: Install required Python packages using pip.
-
-   ```bash
-   pip install flask flask-cors llama-cpp-python
-   ```
-
-2. **Start the Server**: Run the Flask application.
-
-   ```bash
+   cd <project_root>/src/backend
    python server.py
    ```
 
-   The server will start on `http://0.0.0.0:5000` with debug mode enabled.
+2. Frontend Development Server:
+   ```bash
+   cd <project_root>
+   npm run dev
+   ```
 
-### Logging
+3. Ollama Server:
+   ```bash
+   <your userdir>\AppData\Local\Programs\Ollama\ollama.exe serve
+   ```
 
-The server uses Python's `logging` module to record server activity, which helps in debugging and monitoring server operations. Logs are printed to the console with information about requests, responses, and any errors encountered.
+## Access Points
 
-### Error Handling
+- Frontend: [http://localhost:5173](http://localhost:5173)
+- Backend API: [http://localhost:5000](http://localhost:5000)
+- Ollama server: [http://localhost:11434](http://localhost:11434)
 
-The server includes error handling for common issues like missing prompts, file access errors, and model processing failures. It logs detailed error messages and stack
+## Directory Structure
 
-traces for further investigation.
+```
+llama-cpp-chat/
+├── bin/
+│   └── (PowerShell scripts)
+├── src/
+│   ├── backend/
+│   │   ├── clients/
+│   │   ├── tests/
+│   │   └── server.py
+│   ├── assets/
+│   └── components/
+├── .env.local
+└── README.md
+```
+
+## Running Tests
+
+```bash
+cd <project_root>/src/backend/tests
+python test_api.py
+```
+
+## API Endpoints
+
+- GET `/load_prompts`: Retrieve previous prompts
+- POST `/generate`: Send a prompt for response
+- POST `/save_prompt`: Save a new prompt
+- DELETE `/delete_prompt/:id`: Remove a prompt
 
 ## Contributing
 
-1. Fork the repository.
-2. Create your feature branch: `git checkout -b my-new-feature`.
-3. Commit your changes: `git commit -m 'Add some feature'`.
-4. Push to the branch: `git push origin my-new-feature`.
-5. Submit a pull request.
+1. Fork the repository
+2. Create your feature branch
+3. Commit changes
+4. Push to the branch
+5. Submit a pull request
 
 ## License
 
@@ -273,17 +126,4 @@ This project is licensed under the MIT License.
 
 ## Contact
 
-For further information or inquiries, please contact [Your Name] at [your.email@example.com].
-
----
-
-### Key Improvements
-
-- **Structure**: The document has been restructured to have clear headings and subheadings for easy navigation.
-- **Redundancy**: Removed redundant sections and combined related content for clarity.
-- **Consistency**: Consistent formatting and language used throughout the document.
-- **Instructions**: Clearer instructions and descriptions provided for setup and configuration steps.
-
-Feel free to update sections such as contact details, repository URL, and any additional information specific to your project.
-
-This updated README should provide a comprehensive guide to setting up and using the Hudini application, including details about the `.env.local` configuration file. If you need further assistance or have any questions, feel free to ask!
+For inquiries, contact [Your Name] at [your.email@example.com].

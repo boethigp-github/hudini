@@ -1,12 +1,14 @@
-import openai
+from openai import OpenAI
 from .base_client import BaseClient
 
 class OpenAIClient(BaseClient):
     def __init__(self, api_key):
-        openai.api_key = api_key
+        if not api_key:
+            raise ValueError("OpenAI API key is not set")
+        self.client = OpenAI(api_key=api_key)
 
     def generate(self, prompt: str, **kwargs):
-        response = openai.ChatCompletion.create(
+        response = self.client.chat.completions.create(
             model=kwargs.get('model', 'gpt-3.5-turbo'),
             messages=[{"role": "user", "content": prompt}],
             max_tokens=kwargs.get('max_tokens', 1000),

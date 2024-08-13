@@ -7,29 +7,42 @@ import uuid
 import logging
 import traceback
 from dotenv import load_dotenv
-
-# Correct import for ClientFactory
 from backend.clients.ClientFactory import ClientFactory
 
-# Load environment variables
-load_dotenv('.env.local')
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+# Print current working directory and .env.local path
+logger.info(f"Current working directory: {os.getcwd()}")
+env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), '.env.local')
+logger.info(f"Looking for .env.local at: {env_path}")
+
+# Load environment variables
+load_dotenv(env_path)
+
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
 # Initialize clients
+openai_api_key = os.getenv('API_KEY_OPEN_AI')
+if not openai_api_key:
+    logger.error("OpenAI API key not found in environment variables")
+    raise ValueError("OpenAI API key not set. Please check your .env.local file.")
+
+openai_client = ClientFactory.get_client('openai', api_key=openai_api_key)
 local_client = ClientFactory.get_client('local', model_path=os.getenv('ModelPath'))
-openai_client = ClientFactory.get_client('openai', api_key=os.getenv('API_KEY_OPEN_AI'))
+
 # Load environment variables
 load_dotenv('.env.local')
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)

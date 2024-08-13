@@ -1,7 +1,7 @@
 <template>
     <div class="chat-container">
         <div class="header">
-            <img src="./../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="120" />
+            <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="120" />
             <h1 class="title">Hudini - CPU Magician on SLM</h1>
         </div>
         <div class="content">
@@ -70,6 +70,7 @@ import { ref, watch, onMounted } from 'vue';
 
 export default {
     setup() {
+        const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
         const prompt = ref('');
         const response = ref('');
         const loading = ref(false);
@@ -81,7 +82,7 @@ export default {
 
         const loadModels = async () => {
             try {
-                const res = await fetch('http://localhost:5000/get_models');
+                const res = await fetch(`${serverUrl}/get_models`);
                 if (!res.ok) throw new Error('Failed to load models');
                 const data = await res.json();
                 localModels.value = data.local_models;
@@ -98,7 +99,7 @@ export default {
 
         const loadPrompts = async () => {
             try {
-                const res = await fetch('http://localhost:5000/load_prompts');
+                const res = await fetch(`${serverUrl}/load_prompts`);
                 if (!res.ok) throw new Error('Failed to load prompts');
                 previousPrompts.value = await res.json();
             } catch (error) {
@@ -126,7 +127,7 @@ export default {
             response.value = '';
 
             try {
-                const res = await fetch('http://localhost:5000/generate', {
+                const res = await fetch(`${serverUrl}/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt: prompt.value, model: selectedModel.value }),
@@ -134,7 +135,7 @@ export default {
 
                 if (!res.ok) throw new Error('Network response was not ok');
 
-                const eventSource = new EventSource('http://localhost:5000/stream');
+                const eventSource = new EventSource(`${serverUrl}/stream`);
                 eventSource.onmessage = (event) => {
                     console.log('Event data:', event.data);
                     if (event.data === '[END]') {
@@ -171,7 +172,7 @@ export default {
                     return;
                 }
 
-                const res = await fetch('http://localhost:5000/save_prompt', {
+                const res = await fetch(`${serverUrl}/save_prompt`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt: prompt.value }),
@@ -187,7 +188,7 @@ export default {
 
         const deletePrompt = async (id) => {
             try {
-                const res = await fetch(`http://localhost:5000/delete_prompt/${id}`, {
+                const res = await fetch(`${serverUrl}/delete_prompt/${id}`, {
                     method: 'DELETE',
                 });
 
@@ -237,5 +238,5 @@ export default {
 </script>
 
 <style scoped>
-@import './../assets/chat-styles.css';
+@import '../assets/chat-styles.css';
 </style>
