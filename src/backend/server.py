@@ -1,12 +1,18 @@
 from flask import Flask, request, jsonify, Response, render_template
 from flask_cors import CORS
-from llama_cpp import Llama
 import json
 from datetime import datetime
 import os
 import uuid
 import logging
 import traceback
+from dotenv import load_dotenv
+
+# Correct import for ClientFactory
+from backend.clients.ClientFactory import ClientFactory
+
+# Load environment variables
+load_dotenv('.env.local')
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -15,25 +21,26 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
-class LlamaWrapper:
-    def __init__(self, model_path):
-        self.llm = Llama(model_path=model_path)
-        logger.info("Llama model initialized")
+# Initialize clients
+local_client = ClientFactory.get_client('local', model_path=os.getenv('ModelPath'))
+openai_client = ClientFactory.get_client('openai', api_key=os.getenv('API_KEY_OPEN_AI'))
+# Load environment variables
+load_dotenv('.env.local')
 
-    def generate(self, prompt, **kwargs):
-        logger.info(f"Generating response for prompt: {prompt[:50]}...")
-        return self.llm(prompt, **kwargs)
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-# Initialize the Llama model
-try:
-    llm_wrapper = LlamaWrapper("C:\\projects\\llama.cpp\\models\\custom\llama-2-7b-chat.Q4_K_M.gguf")
-    logger.info("Llama wrapper initialized successfully.")
-except Exception as e:
-    logger.error(f"Error initializing Llama wrapper: {str(e)}")
-    logger.error(traceback.format_exc())
+app = Flask(__name__)
+CORS(app, supports_credentials=True)
+
+# Initialize clients
+local_client = ClientFactory.get_client('local', model_path=os.getenv('ModelPath'))
+openai_client = ClientFactory.get_client('openai', api_key=os.getenv('API_KEY_OPEN_AI'))
 
 # Global variables
 current_prompt = None
+current_model = None
 prompts_file = 'prompts.json'
 
 # Helper functions for prompt management
@@ -44,9 +51,6 @@ def load_prompts():
                 prompts = json.load(f)
             logger.info(f"Loaded {len(prompts)} prompts from file")
             return prompts
-    except json.JSONDecodeError:
-        logger.error(f"Error decoding JSON from {prompts_file}")
-        logger.error(traceback.format_exc())
     except Exception as e:
         logger.error(f"Error loading prompts: {str(e)}")
         logger.error(traceback.format_exc())
@@ -66,21 +70,29 @@ prompts = load_prompts()
 
 @app.route('/')
 def home():
-    logger.info("Rendering home page")
     return render_template('index.html')
+
+@app.route('/get_models', methods=['GET'])
+def get_models():
+    local_models = local_client.get_available_models()
+    openai_models = openai_client.get_available_models()
+    return jsonify({
+        'local_models': local_models,
+        'openai_models': openai_models
+    })
 
 @app.route('/generate', methods=['POST'])
 def generate():
-    global current_prompt
+    global current_prompt, current_model
     try:
-        current_prompt = request.json.get('prompt', '')
-        logger.info(f"Received prompt: {current_prompt[:50]}...")
+        data = request.json
+        current_prompt = data.get('prompt', '')
+        current_model = data.get('model', '')
 
-        if not current_prompt:
-            logger.warning("No prompt provided")
-            return jsonify({"error": "No prompt provided"}), 400
+        if not current_prompt or not current_model:
+            return jsonify({"error": "No prompt or model provided"}), 400
 
-        return jsonify({"status": "Prompt received"}), 200
+        return jsonify({"status": "Prompt and model received"}), 200
 
     except Exception as e:
         logger.error(f"Error in generate: {str(e)}")
@@ -89,36 +101,43 @@ def generate():
 
 @app.route('/stream')
 def stream():
-    global current_prompt
-    if not current_prompt:
-        return jsonify({"error": "No prompt available for streaming"}), 400
+    global current_prompt, current_model
+    if not current_prompt or not current_model:
+        return jsonify({"error": "No prompt or model available for streaming"}), 400
 
     def generate_and_stream():
         try:
-            output = llm_wrapper.generate(
-                current_prompt,
-                max_tokens=1000,
-                temperature=0.9,
-                top_p=0.95,
-                stop=["Q:", "\n"],
-                echo=False
-            )
-            logger.info(f"Raw model output: {output}")
-
-            if 'choices' in output and len(output['choices']) > 0 and output['choices'][0]['text']:
-                generated_text = output['choices'][0]['text']
-                logger.info(f"Generated text: {generated_text[:100]}...")
-
-                # Stream the generated text
-                for token in generated_text.split():
-                    logger.debug(f"Streaming token: {token}")
+            if current_model in local_client.get_available_models():
+                local_client.load_model(current_model)
+                output = local_client.generate(
+                    current_prompt,
+                    max_tokens=1000,
+                    temperature=0.9,
+                    top_p=0.95,
+                    stop=["Q:", "\n"],
+                    echo=False
+                )
+                if 'choices' in output and len(output['choices']) > 0 and output['choices'][0]['text']:
+                    generated_text = output['choices'][0]['text']
+                    for token in generated_text.split():
+                        yield f"data: {token}\n\n"
+                        import time
+                        time.sleep(0.1)
+                    yield "data: [END]\n\n"
+                else:
+                    yield "data: [ERROR] Empty or invalid model output\n\n"
+            else:
+                output = openai_client.generate(
+                    current_prompt,
+                    model=current_model,
+                    max_tokens=1000,
+                    temperature=0.9
+                )
+                for token in output.split():
                     yield f"data: {token}\n\n"
                     import time
                     time.sleep(0.1)
                 yield "data: [END]\n\n"
-            else:
-                logger.warning(f"Empty or invalid model output: {output}")
-                yield "data: [ERROR] Empty or invalid model output\n\n"
         except Exception as e:
             logger.error(f"Error in generate_and_stream: {str(e)}")
             logger.error(traceback.format_exc())
@@ -175,12 +194,6 @@ def delete_prompt(id):
         logger.error(f"Error in delete_prompt: {str(e)}")
         logger.error(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
-
-@app.after_request
-def after_request(response):
-    logger.debug(f"After request: {request.method} {request.url}")
-    logger.debug(f"Response status: {response.status}")
-    return response
 
 if __name__ == "__main__":
     logger.info("Starting Flask app")

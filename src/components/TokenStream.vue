@@ -1,8 +1,8 @@
 <template>
     <div class="chat-container">
         <div class="header">
-        <img src="./../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="120" />
-        <h1 class="title">Hudini - CPU Magican on SLM</h1>
+            <img src="./../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="120" />
+            <h1 class="title">Hudini - CPU Magician on SLM</h1>
         </div>
         <div class="content">
             <div class="chat-area">
@@ -13,6 +13,20 @@
                     <div>{{ response }}</div>
                 </div>
                 <a-form layout="vertical" class="form">
+                    <a-form-item label="Select Model">
+                        <a-select v-model:value="selectedModel" style="width: 100%">
+                            <a-select-opt-group label="Local Models">
+                                <a-select-option v-for="model in localModels" :key="model" :value="model">
+                                    {{ model }}
+                                </a-select-option>
+                            </a-select-opt-group>
+                            <a-select-opt-group label="OpenAI Models">
+                                <a-select-option v-for="model in openaiModels" :key="model" :value="model">
+                                    {{ model }}
+                                </a-select-option>
+                            </a-select-opt-group>
+                        </a-select>
+                    </a-form-item>
                     <a-form-item class="textarea-container">
                         <a-textarea
                             v-model:value="prompt"
@@ -61,6 +75,26 @@ export default {
         const loading = ref(false);
         const responseRef = ref(null);
         const previousPrompts = ref([]);
+        const selectedModel = ref('');
+        const localModels = ref([]);
+        const openaiModels = ref([]);
+
+        const loadModels = async () => {
+            try {
+                const res = await fetch('http://localhost:5000/get_models');
+                if (!res.ok) throw new Error('Failed to load models');
+                const data = await res.json();
+                localModels.value = data.local_models;
+                openaiModels.value = data.openai_models;
+                if (localModels.value.length > 0) {
+                    selectedModel.value = localModels.value[0];
+                } else if (openaiModels.value.length > 0) {
+                    selectedModel.value = openaiModels.value[0];
+                }
+            } catch (error) {
+                console.error('Error loading models:', error);
+            }
+        };
 
         const loadPrompts = async () => {
             try {
@@ -84,7 +118,7 @@ export default {
         };
 
         const handleSubmit = async () => {
-            if (!prompt.value.trim()) {
+            if (!prompt.value.trim() || !selectedModel.value) {
                 return;
             }
 
@@ -95,7 +129,7 @@ export default {
                 const res = await fetch('http://localhost:5000/generate', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: prompt.value }),
+                    body: JSON.stringify({ prompt: prompt.value, model: selectedModel.value }),
                 });
 
                 if (!res.ok) throw new Error('Network response was not ok');
@@ -106,7 +140,7 @@ export default {
                     if (event.data === '[END]') {
                         eventSource.close();
                         loading.value = false;
-                        savePrompt(); // Save prompt after successful generation
+                        savePrompt();
                     } else if (event.data.startsWith('[ERROR]')) {
                         response.value = event.data;
                         eventSource.close();
@@ -130,7 +164,6 @@ export default {
 
         const savePrompt = async () => {
             try {
-                // Check for exact match locally
                 const isDuplicate = previousPrompts.value.some(p => p.prompt.trim().toLowerCase() === prompt.value.trim().toLowerCase());
 
                 if (isDuplicate) {
@@ -145,7 +178,7 @@ export default {
                 });
 
                 if (res.ok) {
-                    await loadPrompts(); // Reload prompts after saving
+                    await loadPrompts();
                 }
             } catch (error) {
                 console.error('Error saving prompt:', error);
@@ -156,11 +189,10 @@ export default {
             try {
                 const res = await fetch(`http://localhost:5000/delete_prompt/${id}`, {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
                 });
 
                 if (res.ok) {
-                    await loadPrompts(); // Reload prompts after deletion
+                    await loadPrompts();
                 }
             } catch (error) {
                 console.error('Error deleting prompt:', error);
@@ -175,12 +207,15 @@ export default {
 
         const formatTimestamp = (timestamp) => {
             const date = new Date(timestamp);
-            return date.toLocaleString(); // You can customize this format as needed
+            return date.toLocaleString();
         };
 
         watch(response, scrollToBottom);
 
-        onMounted(loadPrompts);
+        onMounted(() => {
+            loadModels();
+            loadPrompts();
+        });
 
         return {
             prompt,
@@ -188,6 +223,9 @@ export default {
             loading,
             responseRef,
             previousPrompts,
+            selectedModel,
+            localModels,
+            openaiModels,
             handleKeydown,
             handleSubmit,
             loadPrompt,
@@ -197,8 +235,6 @@ export default {
     },
 };
 </script>
-
-
 
 <style scoped>
 @import './../assets/chat-styles.css';

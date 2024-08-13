@@ -66,6 +66,7 @@ FrontendDirectoryPath=C:\projects\llama.cpp\projects\src\llama-cpp-chat
 # Ollama script configuration
 OllamaEnvName=aider-ollama
 OllamaPath=<your userdir>AppData\Local\Programs\Ollama\ollama.exe
+API_KEY_OPEN_AI=<You Open API Key>
 ```
 
 ### Running the Backend Server
