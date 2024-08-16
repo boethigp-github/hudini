@@ -33,7 +33,7 @@ if not openai_api_key:
     raise ValueError("OpenAI API key not set. Please check your .env.local file.")
 
 openai_client = ClientFactory.get_client('openai', api_key=openai_api_key)
-local_client = ClientFactory.get_client('local', model_path=os.getenv('ModelPath'))
+local_client = ClientFactory.get_client('local', model_path=os.getenv('PROJECT_MODEL_PATH'))
 
 # Load environment variables
 load_dotenv('.env.local')
@@ -48,7 +48,7 @@ app = Flask(__name__)
 CORS(app, supports_credentials=True)
 
 # Initialize clients
-local_client = ClientFactory.get_client('local', model_path=os.getenv('ModelPath'))
+local_client = ClientFactory.get_client('local', model_path=os.getenv('PROJECT_MODEL_PATH'))
 openai_client = ClientFactory.get_client('openai', api_key=os.getenv('API_KEY_OPEN_AI'))
 
 # Global variables

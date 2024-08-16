@@ -17,7 +17,7 @@ $envFilePath = "..\.env.local"
 Load-EnvFile $envFilePath
 
 # Define the Anaconda environment and script details from .env.local
-$EnvName = $Env:BackendEnvName
+$EnvName = $Env:ANACONDA_ENV_NAME
 $PROJEKT_ROOT = $Env:PROJEKT_ROOT
 
 # Check if the PROJEKT_ROOT exists
