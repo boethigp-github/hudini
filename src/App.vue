@@ -1,15 +1,15 @@
 <template>
     <div id="app">
-        <TokenStream />
+        <ChatForm />
     </div>
 </template>
 
 <script>
-import TokenStream from './components/TokenStream.vue';
+import ChatForm from './components/ChatForm.vue';
 
 export default {
     components: {
-        TokenStream,
+        ChatForm,
     },
 };
 </script>

@@ -55,6 +55,15 @@ openai_client = ClientFactory.get_client('openai', api_key=os.getenv('API_KEY_OP
 current_prompt = None
 current_model = None
 prompts_file = 'prompts.json'
+@app.route('/ping')
+def ping():
+    def generate():
+        yield "data: Server is alive\n\n"
+        time.sleep(0.5)  # Simulate some delay
+        yield "data: Ping successful\n\n"
+        time.sleep(0.5)  # Simulate some delay
+        yield "data: [END]\n\n"
+    return Response(generate(), content_type='text/event-stream')
 
 # Helper functions for prompt management
 def load_prompts():
@@ -189,6 +198,8 @@ def save_prompt():
         logger.error(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
+
+
 @app.route('/delete_prompt/<string:id>', methods=['DELETE'])
 def delete_prompt(id):
     global prompts
@@ -208,6 +219,9 @@ def delete_prompt(id):
         logger.error(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
+
+# if __name__ == "__main__":
+#     logger.info("Starting Flask app")
+#     app.run(host='0.0.0.0', port=5000, debug=True)
 if __name__ == "__main__":
-    logger.info("Starting Flask app")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+

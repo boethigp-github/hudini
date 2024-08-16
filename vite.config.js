@@ -9,6 +9,17 @@ export default defineConfig(({ mode }) => {
 
     return {
         plugins: [vue()],
+        test: {
+            globals: true,
+            environment: 'jsdom',
+            setupFiles: ['./vitest.setup.js'],
+            testTimeout: 10000,
+            // Add coverage configuration
+            coverage: {
+                provider: 'v8', // Use v8 coverage provider
+                reporter: ['text', 'json', 'html'], // Add desired reporters
+            },
+        },
         resolve: {
             alias: {
                 '@': '/src',

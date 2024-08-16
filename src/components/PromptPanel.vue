@@ -76,39 +76,14 @@ export default defineComponent({
         const loadPrompts = async () => {
             try {
                 const res = await fetch(`${serverUrl}/load_prompts`);
-                if (!res.ok) { // noinspection ExceptionCaughtLocallyJS
-                    throw new Error("Failed to load prompts");
-                }
+                if (!res.ok) throw new Error("Failed to load prompts");
                 previousPrompts.value = await res.json();
             } catch (error) {
                 console.error("Error loading prompts:", error);
             }
         };
 
-        const savePrompt = async (prompt) => {
-            try {
-                const isDuplicate = previousPrompts.value.some(
-                    (p) => p.prompt.trim().toLowerCase() === prompt.trim().toLowerCase()
-                );
 
-                if (isDuplicate) {
-                    console.log("Duplicate prompt detected, aborting silently");
-                    return;
-                }
-
-                const res = await fetch(`${serverUrl}/save_prompt`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ prompt }),
-                });
-
-                if (res.ok) {
-                    await loadPrompts();
-                }
-            } catch (error) {
-                console.error("Error saving prompt", error);
-            }
-        };
 
         const deletePrompt = async (id) => {
             try {
@@ -156,7 +131,6 @@ export default defineComponent({
             previousPrompts,
             activeKey,
             deletePrompt,
-            savePrompt,
             getTitle,
             formatTimestamp,
         };

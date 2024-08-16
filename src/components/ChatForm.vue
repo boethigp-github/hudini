@@ -91,6 +91,32 @@ export default {
         const localModels = ref([]);
         const openaiModels = ref([]);
 
+
+        const savePrompt = async (prompt) => {
+            try {
+                const isDuplicate = previousPrompts.value.some(
+                    (p) => p.prompt.trim().toLowerCase() === prompt.trim().toLowerCase()
+                );
+
+                if (isDuplicate) {
+                    console.log("Duplicate prompt detected, aborting silently");
+                    return;
+                }
+
+                const res = await fetch(`${serverUrl}/save_prompt`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ prompt }),
+                });
+
+                if (res.ok) {
+                    await loadPrompts();
+                }
+            } catch (error) {
+                console.error("Error saving prompt", error);
+            }
+        };
+
         const loadModels = async () => {
             try {
                 const res = await fetch(`${serverUrl}/get_models`);
