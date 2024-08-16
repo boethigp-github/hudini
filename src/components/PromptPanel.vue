@@ -76,7 +76,9 @@ export default defineComponent({
         const loadPrompts = async () => {
             try {
                 const res = await fetch(`${serverUrl}/load_prompts`);
-                if (!res.ok) throw new Error("Failed to load prompts");
+                if (!res.ok) { // noinspection ExceptionCaughtLocallyJS
+                    throw new Error("Failed to load prompts");
+                }
                 previousPrompts.value = await res.json();
             } catch (error) {
                 console.error("Error loading prompts:", error);
@@ -101,6 +103,10 @@ export default defineComponent({
         };
 
         const getTitle = (prompt) => {
+
+            if (!prompt.prompt) {
+                return;
+            }
             let title = prompt.prompt.substring(0, 200);
 
             if (title.length >= 200) {

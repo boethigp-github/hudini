@@ -23,7 +23,7 @@
                 </div>
                 <a-form layout="vertical" class="form">
                     <a-form-item :label="$t('select_model')">
-                        <a-select v-model:value="selectedModel" style="width: 100%">
+                        <a-select v-model:value="selectedModel" class="">
                             <a-select-opt-group label="Local Models">
                                 <a-select-option v-for="model in localModels" :key="model" :value="model">
                                     {{ model }}
@@ -42,7 +42,7 @@
                             :rows="6"
                             :placeholder="$t('enter_prompt')"
                             @keydown="handleKeydown"
-                            class="textarea"
+                            class="prompt_input"
                             :disabled="loading"
                         />
                         <a-button
@@ -141,10 +141,14 @@ export default {
             }
         };
 
+
+
         const handleSubmit = async () => {
             if (!prompt.value.trim() || !selectedModel.value) {
                 return;
             }
+
+            await savePrompt(prompt);
 
             loading.value = true;
             response.value = '';
