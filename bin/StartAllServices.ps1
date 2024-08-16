@@ -23,3 +23,5 @@ function Run-ScriptAndClose($scriptPath) {
 Run-ScriptAndClose $BackendScript
 Run-ScriptAndClose $FrontendDevScript
 Run-ScriptAndClose $OllamaScript
+# Return to the original location
+

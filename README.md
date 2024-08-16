@@ -60,8 +60,8 @@ cd <project_root>/bin
 
 1. Backend Server:
    ```bash
-   cd <project_root>/src/backend
-   python server.py
+   cd <project_root>/src
+  python -m backend.server
    ```
 
 2. Frontend Development Server:
@@ -127,3 +127,5 @@ This project is licensed under the MIT License.
 ## Contact
 
 For inquiries, contact [Your Name] at [your.email@example.com].
+
+

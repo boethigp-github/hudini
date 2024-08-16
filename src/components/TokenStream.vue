@@ -1,19 +1,28 @@
+<!--suppress ExceptionCaughtLocallyJS -->
 <template>
     <div class="chat-container">
         <div class="header">
+            <!--suppress CheckImageSize -->
             <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="120" />
-            <h1 class="title">Hudini - CPU Magician on SLM</h1>
+            <h1 class="title">{{ $t('hudini_title') }}</h1>
+            <a-select v-model:value="selectedLanguage" @change="changeLanguage" style="width: 120px; position: absolute; right: 20px; top: 20px;">
+                <a-select-option value="en">English</a-select-option>
+                <a-select-option value="de">Deutsch</a-select-option>
+                <a-select-option value="fr">Français</a-select-option>
+                <a-select-option value="ru">Русский</a-select-option>
+                <a-select-option value="zh">中文</a-select-option>
+            </a-select>
         </div>
         <div class="content">
             <div class="chat-area">
                 <div id="response" class="response" ref="responseRef">
                     <div v-if="!response" class="placeholder">
-                        Your response will appear here
+                        {{ $t('your_response') }}
                     </div>
                     <div>{{ response }}</div>
                 </div>
                 <a-form layout="vertical" class="form">
-                    <a-form-item label="Select Model">
+                    <a-form-item :label="$t('select_model')">
                         <a-select v-model:value="selectedModel" style="width: 100%">
                             <a-select-opt-group label="Local Models">
                                 <a-select-option v-for="model in localModels" :key="model" :value="model">
@@ -31,7 +40,7 @@
                         <a-textarea
                             v-model:value="prompt"
                             :rows="6"
-                            placeholder="Enter your prompt here..."
+                            :placeholder="$t('enter_prompt')"
                             @keydown="handleKeydown"
                             class="textarea"
                             :disabled="loading"
@@ -42,24 +51,13 @@
                             :loading="loading"
                             class="send-button"
                         >
-                            Send
+                            {{ $t('send_button') }}
                         </a-button>
                     </a-form-item>
                 </a-form>
             </div>
             <div class="previous-prompts">
-                <h2>Previous Prompts</h2>
-                <ul>
-                    <li v-for="item in previousPrompts" :key="item.id">
-                        <div class="prompt-item">
-                            <div class="timestamp">{{ formatTimestamp(item.timestamp) }}</div>
-                            <span @click="loadPrompt(item.prompt)">{{ item.prompt }}</span>
-                            <a-button type="link" @click="deletePrompt(item.id)" class="delete-button">
-                                Delete
-                            </a-button>
-                        </div>
-                    </li>
-                </ul>
+                <PromptPanel/>
             </div>
         </div>
     </div>
@@ -67,9 +65,22 @@
 
 <script>
 import { ref, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+import PromptPanel from './PromptPanel.vue';
 
 export default {
+    components: {
+        PromptPanel
+    },
     setup() {
+        const { locale } = useI18n();
+        const selectedLanguage = ref(localStorage.getItem('locale') || 'de');
+
+        const changeLanguage = (value) => {
+            locale.value = value;
+            localStorage.setItem('locale', value);
+        };
+
         const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
         const prompt = ref('');
         const response = ref('');
@@ -95,20 +106,6 @@ export default {
             } catch (error) {
                 console.error('Error loading models:', error);
             }
-        };
-
-        const loadPrompts = async () => {
-            try {
-                const res = await fetch(`${serverUrl}/load_prompts`);
-                if (!res.ok) throw new Error('Failed to load prompts');
-                previousPrompts.value = await res.json();
-            } catch (error) {
-                console.error('Error loading prompts:', error);
-            }
-        };
-
-        const loadPrompt = (selectedPrompt) => {
-            prompt.value = selectedPrompt;
         };
 
         const handleKeydown = (event) => {
@@ -141,7 +138,7 @@ export default {
                     if (event.data === '[END]') {
                         eventSource.close();
                         loading.value = false;
-                        savePrompt();
+
                     } else if (event.data.startsWith('[ERROR]')) {
                         response.value = event.data;
                         eventSource.close();
@@ -163,60 +160,23 @@ export default {
             }
         };
 
-        const savePrompt = async () => {
-            try {
-                const isDuplicate = previousPrompts.value.some(p => p.prompt.trim().toLowerCase() === prompt.value.trim().toLowerCase());
-
-                if (isDuplicate) {
-                    console.log('Duplicate prompt detected, aborting silently');
-                    return;
-                }
-
-                const res = await fetch(`${serverUrl}/save_prompt`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: prompt.value }),
-                });
-
-                if (res.ok) {
-                    await loadPrompts();
-                }
-            } catch (error) {
-                console.error('Error saving prompt:', error);
-            }
-        };
-
-        const deletePrompt = async (id) => {
-            try {
-                const res = await fetch(`${serverUrl}/delete_prompt/${id}`, {
-                    method: 'DELETE',
-                });
-
-                if (res.ok) {
-                    await loadPrompts();
-                }
-            } catch (error) {
-                console.error('Error deleting prompt:', error);
-            }
-        };
-
         const scrollToBottom = () => {
             if (responseRef.value) {
                 responseRef.value.scrollTop = responseRef.value.scrollHeight;
             }
         };
 
+        watch(response, scrollToBottom);
+
+        onMounted(() => {
+            loadModels();
+        });
+
         const formatTimestamp = (timestamp) => {
             const date = new Date(timestamp);
             return date.toLocaleString();
         };
 
-        watch(response, scrollToBottom);
-
-        onMounted(() => {
-            loadModels();
-            loadPrompts();
-        });
 
         return {
             prompt,
@@ -229,14 +189,10 @@ export default {
             openaiModels,
             handleKeydown,
             handleSubmit,
-            loadPrompt,
-            deletePrompt,
-            formatTimestamp,
+            changeLanguage,
+            selectedLanguage,
+            formatTimestamp
         };
     },
 };
 </script>
-
-<style scoped>
-@import '../assets/chat-styles.css';
-</style>

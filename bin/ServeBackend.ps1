@@ -18,20 +18,23 @@ Load-EnvFile $envFilePath
 
 # Define the Anaconda environment and script details from .env.local
 $EnvName = $Env:BackendEnvName
-$ScriptPath = $Env:BackendScriptPath
+$PROJEKT_ROOT = $Env:PROJEKT_ROOT
 
-# Check if the script file exists
-if (-Not (Test-Path $ScriptPath)) {
-    Write-Host "The script '$ScriptPath' does not exist." -ForegroundColor Red
+# Check if the PROJEKT_ROOT exists
+if (-Not (Test-Path $PROJEKT_ROOT)) {
+    Write-Host "The specified project root path '$PROJEKT_ROOT' does not exist." -ForegroundColor Red
     exit 1
 }
 
+# Change to the specified directory
+Set-Location -Path $PROJEKT_ROOT
+
 # Activate the Anaconda environment and run the script in a new window
 try {
-    Write-Host "Activating the Anaconda environment '$EnvName' and running the Python script '$ScriptPath' in a new window"
+    Write-Host "Activating the Anaconda environment '$EnvName' and running the Python backend server in a new window"
 
     # Command to activate the environment and run the script
-    $command = "@echo off && call `"%ProgramData%\Anaconda3\Scripts\activate.bat`" $EnvName && python `"$ScriptPath`" && pause && conda deactivate"
+    $command = "@echo off && call `"%ProgramData%\Anaconda3\Scripts\activate.bat`" $EnvName && python -m backend.server && pause && conda deactivate"
 
     # Start a new Command Prompt window and execute the command
     Start-Process -FilePath "cmd.exe" -ArgumentList "/c", $command -WindowStyle Normal

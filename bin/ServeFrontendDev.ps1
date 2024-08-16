@@ -13,7 +13,7 @@ function Load-EnvFile($envFilePath) {
 }
 
 # Load environment variables from .env.local file located one directory up
-$envFilePath = "..\.env.local"
+
 Load-EnvFile $envFilePath
 
 # Define the directory where the npm script should be run from .env.local
