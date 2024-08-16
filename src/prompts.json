@@ -1,0 +1,7 @@
+[
+  {
+    "id": "4b1bdd90-db11-48be-9d15-97b3379697d2",
+    "prompt": "# Backend script configuration\nBackendEnvName=aider-ollama\nBackendScriptPath=<you path to repo>llama-cpp-chat\\src\\backend\\server.py\n\n# Frontend script configuration\nFrontendDirectoryPath=C:\\projects\\llama.cpp\\projects\\src\\llama-cpp-chat\n\n# Ollama script configuration\nOllamaEnvName=aider-ollama\nOllamaPath=<you path to programms>\\Programs\\Ollama\\ollama.exe\nAPI_KEY_OPEN_AI=<apikey>\nModelPath=C:\\\\projects\\\\llama.cpp\\\\models\\\\custom\\\nSERVER_URL=http://localhost:5000\n",
+    "timestamp": "2024-08-13T21:09:46.814921"
+  }
+]
