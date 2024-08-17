@@ -30,9 +30,12 @@ Hudini is an interactive chat interface that works with CPU magic on SLM, allowi
    ```
 
 2. Install required Python packages:
+   The `requirements.txt` file is located at `projects/src/llama-cpp-chat/src/backend/requirements.txt`. To install the required Python packages, navigate to this directory and run:
    ```bash
-   pip install openai flask flask-cors python-dotenv huggingface-hub flask-swagger-ui
+   cd projects/src/llama-cpp-chat/src/backend
+   pip install -r requirements.txt
    ```
+   This will install all the necessary Python dependencies for the project.
 
 3. Configure `.env.local` in the project root:
    ```plaintext
@@ -95,6 +98,7 @@ llama-cpp-chat/
 │   ├── backend/
 │   │   ├── clients/
 │   │   ├── tests/
+│   │   ├── requirements.txt
 │   │   └── server.py
 │   ├── assets/
 │   └── components/
