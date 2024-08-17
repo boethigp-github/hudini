@@ -8,7 +8,10 @@ from app.routes.models import models_blueprint
 from app.routes.prompts import prompts_blueprint
 from app.routes.generations import generations_blueprint
 from app.config import Config
+from flask_migrate import Migrate
+from app.extensions import db
 
+migrate = Migrate()
 class FlaskAppFactory:
     def __init__(self):
         logging.basicConfig(
@@ -56,7 +59,15 @@ class FlaskAppFactory:
         app = Flask(__name__)
         CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:5173"}})
         self.load_config(app)
+
+        db.init_app(app)
+
+        # Register blueprints
         self.register_blueprints(app)
+
+        with app.app_context():
+                db.create_all()  # This wil
+
 
         self.logger.info("Registered routes:")
         for rule in app.url_map.iter_rules():

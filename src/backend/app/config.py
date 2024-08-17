@@ -26,7 +26,9 @@ class Config:
     if not MODEL_PATH:
         raise ValueError("Model path not set. Please check your .env.local file.")
 
-    # Additional configuration variables can be added here
-    # Example: Database URI, Redis configuration, etc.
-    # DATABASE_URI = os.getenv('DATABASE_URI')
+    # SQLAlchemy settings
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL')
+    if not SQLALCHEMY_DATABASE_URI:
+        raise ValueError("Database URL not set. Please check your .env.local file.")
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 

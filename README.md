@@ -1,4 +1,4 @@
-Here's the updated README with placeholders for API keys:
+Here's an updated README that includes a section on setting up PostgreSQL, along with a flow diagram for integrating PostgreSQL with Flask.
 
 ---
 
@@ -24,6 +24,8 @@ Hudini is an interactive chat interface that works with CPU magic on SLM, allowi
 - [Git](https://git-scm.com/)
 - [Python](https://www.python.org/) (3.7+)
 - [Anaconda](https://www.anaconda.com/) (for managing Python environments)
+- [PostgreSQL](https://www.postgresql.org/) (for database management)
+- [Hugging Face CLI](https://huggingface.co/docs/huggingface_hub/quick-start) (for downloading models)
 
 ## Setup
 
@@ -45,6 +47,7 @@ Hudini is an interactive chat interface that works with CPU magic on SLM, allowi
    PROJEKT_ROOT=C:\projects\llama.cpp\projects\src\llama-cpp-chat\src
    API_KEY_OPEN_AI=your-openai-api-key-here
    PROJECT_FRONTEND_DIRECTORY=C:\\projects\\llama.cpp\\projects\\src\\llama-cpp-chat\\src\\frontend\
+   DATABASE_URL=postgresql://username:password@localhost:5432/hudini
    ```
 
    Then, create the Anaconda environment using the name from the `ANACONDA_ENV_NAME` variable:
@@ -64,7 +67,24 @@ Hudini is an interactive chat interface that works with CPU magic on SLM, allowi
    ```
    This will install all the necessary Python dependencies for the project.
 
-4. **Configure `.env.local` in the project root:**
+   4. **Set Up PostgreSQL Database:**
+
+      **Step 4.1: Install PostgreSQL**
+       - Download and install PostgreSQL from the [official website](https://www.postgresql.org/download/).
+
+      **Step 4.2: Create a Database**
+       - Open the PostgreSQL command line or a tool like pgAdmin.
+       - Create a new database for the project:
+         ```postgresql
+         CREATE DATABASE hudini;
+         ```
+       - Create a user and assign it to the database:
+         ```postgresql
+          CREATE USER your_username WITH PASSWORD 'your_password';
+          GRANT ALL PRIVILEGES ON DATABASE hudini TO your_username;
+         ```
+
+5. **Configure `.env.local` in the project root:**
    Ensure that your `.env.local` file is properly configured with all the necessary environment variables. Here is an example:
    ```plaintext
    ANACONDA_ENV_NAME=aider-ollama
@@ -73,9 +93,10 @@ Hudini is an interactive chat interface that works with CPU magic on SLM, allowi
    PROJEKT_ROOT=C:\projects\llama.cpp\projects\src\llama-cpp-chat\src
    API_KEY_OPEN_AI=your-openai-api-key-here
    PROJECT_FRONTEND_DIRECTORY=C:\\projects\\llama.cpp\\projects\\src\\llama-cpp-chat\\src\\frontend\
+   DATABASE_URL=postgresql://username:password@localhost:5432/hudini
    ```
 
-5. **Install the Llama Model:**
+6. **Install the Llama Model:**
    To download and install the Llama model, follow these steps:
    ```bash
    huggingface-cli login
@@ -183,13 +204,6 @@ The test suite for Hudini is located in the `src/backend/tests` directory. These
    cd src/backend/tests
    ```
 
-4. **Run all tests:**
-   ```bash
-   python -m unittest discover
-   ```
-
-### Running Specific Tests
-
 We are using `pytest`. You can run specific test methods using the following format:
 
 ```bash
@@ -225,46 +239,3 @@ AssertionError: 500 != 200
 ----------------------------------------------------------------------
 Ran 6 tests in X.XXXs
 
-FAILED (failures=1)
-```
-
-In this case, the `test_swagger_yaml` test failed because it received a 500 status code instead of the expected 200. This information can help you identify and fix issues in your API.
-
-## API Endpoints
-
-- **GET** `/load_prompts`: Retrieve previous prompts
-- **POST** `/generate`: Send a prompt for a response
-- **POST** `/save_prompt`: Save a new prompt
-- **DELETE** `/delete_prompt/:id`: Remove a prompt
-- **GET** `/swagger.yaml`: Retrieve Swagger API documentation
-- **GET** `/api/docs`: Access Swagger UI for interactive API exploration
-
-## API Documentation
-
-The API documentation is available in two formats:
-
-1. **Swagger/OpenAPI YAML**: You can access the raw YAML file by visiting [http://localhost:5000/swagger.yaml](http://localhost:5000/swagger.yaml) when the backend server is running. This YAML file can be used with Swagger UI or other OpenAPI-compatible tools to explore and interact with the API.
-
-2. **Swagger UI**: For an interactive documentation experience, visit [http://localhost:5000/api/docs
-
-](http://localhost:5000/api/docs). This interface allows you to explore the API endpoints, see request/response examples, and even try out the API directly from your browser.
-
-## Contributing
-
-1. **Fork the repository**
-2. **Create your feature branch**
-3. **Commit changes**
-4. **Push to the branch**
-5. **Submit a pull request**
-
-## License
-
-This project is licensed under the MIT License.
-
-## Contact
-
-For inquiries, contact [Your Name] at [your.email@example.com].
-
----
-
-This version of the README includes placeholders for API keys, ensuring sensitive information isn't exposed.
