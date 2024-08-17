@@ -1,9 +1,9 @@
 import unittest
 import requests
 import json
-import yaml
 from dotenv import load_dotenv
 import os
+import yaml
 
 # Get the current file's directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -81,41 +81,56 @@ class TestLlamaCppChatAPI(unittest.TestCase):
         self.assertEqual(delete_data['status'], "Prompt deleted successfully")
 
     def test_swagger_yaml(self):
-        response = requests.get(f"{self.BASE_URL}/swagger.yaml")
-        try:
-            self.assertEqual(response.status_code, 200)
-        except AssertionError:
-            print(f"Error: Unexpected status code {response.status_code}")
-            print("Response content:")
-            print(response.text)
-            raise
+           response = requests.get(f"{self.BASE_URL}/swagger.yaml")
+           self.assertEqual(response.status_code, 200)
+           self.assertEqual(response.headers['Content-Type'], 'application/x-yaml')
 
-        try:
-            self.assertEqual(response.headers['Content-Type'], 'application/x-yaml')
-        except AssertionError:
-            print(f"Error: Unexpected Content-Type {response.headers.get('Content-Type')}")
-            raise
+           # Parse the YAML content
+           try:
+               swagger_data = yaml.safe_load(response.text)
+           except yaml.YAMLError as e:
+               self.fail(f"Failed to parse YAML: {e}")
 
-        # Parse the YAML content
-        try:
-            swagger_data = yaml.safe_load(response.text)
-        except yaml.YAMLError as e:
-            print(f"Failed to parse YAML: {e}")
-            print("Response content:")
-            print(response.text)
-            self.fail(f"Failed to parse YAML: {e}")
+           # Check for essential Swagger/OpenAPI elements
+           self.assertIn('openapi', swagger_data)
+           self.assertIn('info', swagger_data)
+           self.assertIn('paths', swagger_data)
 
-        # Check for essential Swagger/OpenAPI elements
-        try:
-            self.assertIn('openapi', swagger_data)
-            self.assertIn('info', swagger_data)
-            self.assertIn('paths', swagger_data)
-        except AssertionError as e:
-            print(f"Error: Missing essential Swagger/OpenAPI elements")
-            print("Parsed YAML content:")
-            print(json.dumps(swagger_data, indent=2))
-            raise
+           # Check if there's at least one endpoint defined
+           self.assertTrue(len(swagger_data['paths']) > 0, "No endpoints defined in Swagger YAML")
 
+    def test_save_prompt_valid(self):
+        payload = {"prompt": "Test prompt"}
+        response = requests.post(f"{self.BASE_URL}/save_prompt", json=payload)
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIn('status', data)
+        self.assertEqual(data['status'], "Prompt saved successfully")
+        self.assertIn('id', data)
+
+    def test_save_prompt_invalid_missing_prompt(self):
+        payload = {}  # Missing 'prompt' field
+        response = requests.post(f"{self.BASE_URL}/save_prompt", json=payload)
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertIn('error', data)
+        self.assertIn("'prompt' is a required property", data['error'])
+
+    def test_save_prompt_invalid_empty_prompt(self):
+        payload = {"prompt": ""}
+        response = requests.post(f"{self.BASE_URL}/save_prompt", json=payload)
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertIn('error', data)
+        self.assertEqual(data['error'], "No prompt provided")
+
+    def test_save_prompt_invalid_extra_field(self):
+        payload = {"prompt": "Test prompt", "extra_field": "This shouldn't be here"}
+        response = requests.post(f"{self.BASE_URL}/save_prompt", json=payload)
+        self.assertEqual(response.status_code, 400)
+        data = response.json()
+        self.assertIn('error', data)
+        self.assertIn("Additional properties are not allowed", data['error'])
 
 if __name__ == '__main__':
     unittest.main()

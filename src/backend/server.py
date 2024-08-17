@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from backend.clients.ClientFactory import ClientFactory
 import yaml
 from flask_swagger_ui import get_swaggerui_blueprint
-
+from jsonschema import validate, ValidationError  # Add this import
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -80,6 +80,15 @@ def save_prompts(prompts):
 
 # Load prompts on startup
 prompts = load_prompts()
+
+# swagger
+swagger_yaml_path = os.path.join(os.path.dirname(__file__), 'swagger.yaml')
+# Load Swagger YAML for request validation
+with open(swagger_yaml_path, 'r') as file:
+    swagger_spec = yaml.safe_load(file)
+
+# Extract the schema for save_prompt
+save_prompt_schema = swagger_spec['paths']['/save_prompt']['post']['requestBody']['content']['application/json']['schema']
 
 @app.route('/')
 def home():
@@ -168,7 +177,19 @@ def load_prompts_route():
 def save_prompt():
     global prompts
     try:
-        new_prompt = request.json.get('prompt', '')
+        data = request.json
+        logger.info(f"Received save_prompt request with data: {data}")
+
+        # Validate request data against the schema
+        try:
+            validate(instance=data, schema=save_prompt_schema)
+            logger.info("Request data passed schema validation")
+        except ValidationError as validation_error:
+            error_message = f"Invalid request: {validation_error.message}"
+            logger.error(f"Validation error: {error_message}")
+            return jsonify({"error": error_message}), 400
+
+        new_prompt = data.get('prompt', '')
         if not new_prompt:
             logger.warning("No prompt provided for saving")
             return jsonify({"error": "No prompt provided"}), 400
@@ -185,9 +206,9 @@ def save_prompt():
         logger.info(f"Prompt saved successfully with id: {prompt_id}")
         return jsonify({"status": "Prompt saved successfully", "id": prompt_id}), 200
     except Exception as e:
-        logger.error(f"Error in save_prompt: {str(e)}")
+        logger.error(f"Unexpected error in save_prompt: {str(e)}")
         logger.error(traceback.format_exc())
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "An unexpected error occurred"}), 500
 
 @app.route('/delete_prompt/<string:id>', methods=['DELETE'])
 def delete_prompt(id):

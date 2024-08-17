@@ -111,6 +111,10 @@ paths:
                             properties:
                                 prompt:
                                     type: string
+                                    description: The prompt to be saved
+                            required:
+                                - prompt
+                            additionalProperties: false
             responses:
                 '200':
                     description: Prompt saved successfully
@@ -124,7 +128,23 @@ paths:
                                     id:
                                         type: string
                 '400':
-                    description: No prompt provided
+                    description: Invalid request
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    error:
+                                        type: string
+                '500':
+                    description: Server error
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    error:
+                                        type: string
 
     /delete_prompt/{id}:
         delete:
@@ -140,3 +160,14 @@ paths:
                     description: Prompt deleted successfully
                 '404':
                     description: Prompt not found
+    /swagger.yaml:
+        get:
+            summary: Get Swagger YAML
+            description: Retrieve the Swagger YAML file describing the API
+            responses:
+                '200':
+                    description: Successful response
+                    content:
+                        application/x-yaml:
+                            schema:
+                                type: string
