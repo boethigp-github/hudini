@@ -49,7 +49,7 @@ Hudini is an interactive chat interface that works with CPU magic on SLM, allowi
 4. Install the Llama Model:
    ```bash
    huggingface-cli login
-   huggingface-cli download TheBloke/LLaMA-7b-GGUF llama-7b.Q4_K_M.gguf --local-dir C:/projects/llama-cpp --local-dir-use-symlinks False
+   huggingface-cli download TheBloke/LLaMA-7b-GGUF llama-7b.Q4_K_M.gguf --local-dir C:/projects/llama-cpp/models/custom --local-dir-use-symlinks False
    ```
 
 ## Running the Application
