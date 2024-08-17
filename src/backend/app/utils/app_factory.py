@@ -46,6 +46,7 @@ class FlaskAppFactory:
         possible_env_paths = [
             os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '.env.local')),
             os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '.env.local')),
+            os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', '.env.local')),
             os.path.abspath(os.path.join(os.getcwd(), '.env.local')),
             os.path.expanduser('~/.env.local'),
         ]

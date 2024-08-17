@@ -1,11 +1,10 @@
-<!--suppress CheckImageSize -->
 <template>
     <div class="chat-container">
         <div class="header">
+            <!--suppress CheckImageSize -->
             <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="120" />
             <div class="title-container">
                 <h1 class="title">{{ $t('hudini_title') }}</h1>
-                <!-- Use the LanguageSwitch component here -->
                 <div class="language-switch-container">
                     <LanguageSwitch />
                 </div>
@@ -13,8 +12,12 @@
         </div>
         <div class="content">
             <div class="chat-area">
-                <!-- Pass the 'response' prop to the ResponsePanel component -->
-                <ResponsePanel ref="responsePanel" :response="response" />
+                <!-- Pass the 'responses' and 'currentResponse' props to the ResponsePanel component -->
+                <ResponsePanel
+                    ref="responsePanel"
+                    :responses="responses"
+                    :currentResponse="currentResponse"
+                />
                 <a-form layout="vertical" class="form">
                     <a-form-item :label="$t('select_model')">
                         <a-select v-model:value="selectedModel">
@@ -52,12 +55,11 @@
             </div>
             <div class="previous-prompts">
                 <h2>{{ $t('previous_prompts') }}</h2>
-                <PromptPanel :response="response" :key="updateTrigger" />
+                <PromptPanel :key="updateTrigger" />
             </div>
         </div>
     </div>
 </template>
-
 
 <script>
 import { ref, onMounted } from 'vue';
@@ -65,6 +67,7 @@ import PromptPanel from './PromptPanel.vue';
 import ResponsePanel from './ResponsePanel.vue';
 import LanguageSwitch from './LanguageSwitch.vue'; // Import the LanguageSwitch component
 import { message } from 'ant-design-vue'; // Add this import statement
+
 export default {
     name: 'ChatForm',
     components: {
@@ -75,7 +78,8 @@ export default {
     setup() {
         const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
         const prompt = ref('');
-        const response = ref(''); // Response data initialized as an empty string
+        const responses = ref([]); // Store all responses
+        const currentResponse = ref(''); // Store current streaming response
         const loading = ref(false);
         const selectedModel = ref('');
         const localModels = ref([]);
@@ -137,30 +141,49 @@ export default {
 
         const handleSubmit = () => {
             if (!prompt.value.trim() || !selectedModel.value) {
+                message.error('Please enter a prompt and select a model.');
                 return;
             }
 
+            // Log the data being sent to the server
+            console.log('Prompt:', prompt.value.trim());
+            console.log('Selected Model:', selectedModel.value);
+
+            // Save the prompt
             savePrompt();
 
             loading.value = true;
-            response.value = '';
 
-            const eventSource = new EventSource(`${serverUrl}/stream`);
+            // Create the payload for the /stream request
+            const requestPayload = {
+                prompt: prompt.value.trim(),
+                model: selectedModel.value
+            };
+
+            // Log the payload
+            console.log('Sending data to /stream endpoint:', requestPayload);
+
+            // Send prompt and model to the server
+            const eventSource = new EventSource(`${serverUrl}/stream?prompt=${encodeURIComponent(requestPayload.prompt)}&model=${encodeURIComponent(requestPayload.model)}`);
             eventSource.onmessage = (event) => {
                 if (event.data === '[END]') {
+                    // Add the current response to the list of responses
+                    responses.value.push(currentResponse.value.trim());
+                    currentResponse.value = ''; // Clear the current response
                     eventSource.close();
                     loading.value = false;
                 } else if (event.data.startsWith('[ERROR]')) {
-                    response.value = event.data;
+                    currentResponse.value = event.data.substring(8); // Remove '[ERROR]' prefix
                     eventSource.close();
                     loading.value = false;
                 } else {
-                    response.value += event.data + ' ';
+                    currentResponse.value += event.data + ' ';
                 }
             };
 
             eventSource.onerror = (error) => {
                 console.error('EventSource failed:', error);
+                currentResponse.value = 'An error occurred while connecting to the server.';
                 eventSource.close();
                 loading.value = false;
             };
@@ -172,7 +195,8 @@ export default {
 
         return {
             prompt,
-            response,
+            responses,
+            currentResponse,
             loading,
             selectedModel,
             localModels,
@@ -186,8 +210,6 @@ export default {
 </script>
 
 <style scoped>
-
-
 .title {
     font-size: 2.5rem; /* Adjust size as needed */
     font-weight: bold;
@@ -195,7 +217,4 @@ export default {
     text-align: left;
     /* Ensure the title is always at the top left */
 }
-
-
-
 </style>

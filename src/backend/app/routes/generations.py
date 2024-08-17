@@ -19,10 +19,13 @@ def generate_route():
         current_prompt = data.get('prompt', '')
         current_model = data.get('model', '')
 
+        # Log the received data and global variables
+        logger.info(f"Received prompt: '{current_prompt}' and model: '{current_model}'")
+        logger.info(f"Global state - Prompt: '{current_prompt}', Model: '{current_model}'")
+
         if not current_prompt or not current_model:
             return jsonify({"error": "No prompt or model provided"}), 400
 
-        logger.info(f"Received prompt for model: {current_model}")
         return jsonify({"status": "Prompt and model received"}), 200
 
     except Exception as e:
@@ -30,11 +33,24 @@ def generate_route():
         logger.error(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
+
 @generations_blueprint.route('/stream')
 def stream_route():
-    global current_prompt, current_model
-    if not current_prompt or not current_model:
+    # Retrieve prompt and model from query parameters
+    prompt = request.args.get('prompt', '')
+    model = request.args.get('model', '')
+
+    # Log the retrieved parameters
+    logger.info(f"Stream route accessed with prompt: '{prompt}' and model: '{model}'")
+
+    if not prompt or not model:
+        logger.error(f"Stream route failed because prompt or model is not set. Prompt: '{prompt}', Model: '{model}'")
         return jsonify({"error": "No prompt or model available for streaming"}), 400
+
+    # Set global variables if needed
+    global current_prompt, current_model
+    current_prompt = prompt
+    current_model = model
 
     return Response(generate_and_stream(), content_type='text/event-stream')
 

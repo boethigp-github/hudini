@@ -20,7 +20,7 @@ const i18n = createI18n({
 describe('ResponsePanel.vue', () => {
     it('renders correctly with an empty response', () => {
         const wrapper = mount(ResponsePanel, {
-            props: { response: '' },
+            props: { responses: [], currentResponse: '' },
             global: {
                 plugins: [i18n],
             },
@@ -32,40 +32,40 @@ describe('ResponsePanel.vue', () => {
 
     it('renders the response correctly', async () => {
         const wrapper = mount(ResponsePanel, {
-            props: { response: 'This is a test response' },
+            props: { responses: [], currentResponse: 'This is a test response' },
             global: {
                 plugins: [i18n],
             },
         });
 
         expect(wrapper.find('.placeholder').exists()).toBe(false);
-        expect(wrapper.text()).toContain('This is a test response');
+        expect(wrapper.find('.current-response').text()).toBe('This is a test response');
     });
 
     it('calls scrollToBottom when response changes', async () => {
         const wrapper = mount(ResponsePanel, {
-            props: { response: 'Initial response' },
+            props: { responses: [], currentResponse: 'Initial response' },
             global: {
                 plugins: [i18n],
             },
         });
 
         const scrollToBottomSpy = vi.spyOn(wrapper.vm, 'scrollToBottom');
-        await wrapper.setProps({ response: 'Updated response' });
+        await wrapper.setProps({ responses: [], currentResponse: 'Updated response' });
 
         expect(scrollToBottomSpy).toHaveBeenCalled();
     });
 
     it('scrolls to bottom when response changes', async () => {
         const wrapper = mount(ResponsePanel, {
-            props: { response: 'Initial response' },
+            props: { responses: [], currentResponse: 'Initial response' },
             global: {
                 plugins: [i18n],
             },
         });
 
         // Mock scrollTop and scrollHeight properties
-        const responseElement = wrapper.element;
+        const responseElement = wrapper.find('#response').element;
 
         Object.defineProperty(responseElement, 'scrollTop', {
             writable: true,
@@ -76,12 +76,12 @@ describe('ResponsePanel.vue', () => {
             value: 100,
         });
 
-        await wrapper.setProps({ response: 'New response' });
+        await wrapper.setProps({ currentResponse: 'New response' });
 
-        // You may need to use nextTick to wait for DOM updates
+        // Wait for the next DOM update
         await wrapper.vm.$nextTick();
 
-        // Check if scrollTop is updated
+        // Verify the scrollTop value is updated
         expect(responseElement.scrollTop).toBe(responseElement.scrollHeight);
     });
 });
