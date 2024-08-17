@@ -3,14 +3,13 @@
     <div class="chat-container">
         <div class="header">
             <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="120" />
-            <h1 class="title">{{ $t('hudini_title') }}</h1>
-            <a-select v-model:value="selectedLanguage" @change="changeLanguage" style="width: 120px; position: absolute; right: 20px; top: 20px;">
-                <a-select-option value="en">English</a-select-option>
-                <a-select-option value="de">Deutsch</a-select-option>
-                <a-select-option value="fr">Français</a-select-option>
-                <a-select-option value="ru">Русский</a-select-option>
-                <a-select-option value="zh">中文</a-select-option>
-            </a-select>
+            <div class="title-container">
+                <h1 class="title">{{ $t('hudini_title') }}</h1>
+                <!-- Use the LanguageSwitch component here -->
+                <div class="language-switch-container">
+                    <LanguageSwitch />
+                </div>
+            </div>
         </div>
         <div class="content">
             <div class="chat-area">
@@ -18,7 +17,7 @@
                 <ResponsePanel ref="responsePanel" :response="response" />
                 <a-form layout="vertical" class="form">
                     <a-form-item :label="$t('select_model')">
-                        <a-select v-model:value="selectedModel" class="">
+                        <a-select v-model:value="selectedModel">
                             <a-select-opt-group label="Local Models">
                                 <a-select-option v-for="model in localModels" :key="model" :value="model">
                                     {{ model }}
@@ -59,28 +58,21 @@
     </div>
 </template>
 
+
 <script>
 import { ref, onMounted } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { message } from 'ant-design-vue';
 import PromptPanel from './PromptPanel.vue';
 import ResponsePanel from './ResponsePanel.vue';
-
+import LanguageSwitch from './LanguageSwitch.vue'; // Import the LanguageSwitch component
+import { message } from 'ant-design-vue'; // Add this import statement
 export default {
     name: 'ChatForm',
     components: {
         PromptPanel,
         ResponsePanel,
+        LanguageSwitch, // Register the LanguageSwitch component
     },
     setup() {
-        const { t } = useI18n();
-        const selectedLanguage = ref(localStorage.getItem('locale') || 'de');
-
-        const changeLanguage = (value) => {
-            locale.value = value;
-            localStorage.setItem('locale', value);
-        };
-
         const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
         const prompt = ref('');
         const response = ref(''); // Response data initialized as an empty string
@@ -179,7 +171,6 @@ export default {
         });
 
         return {
-            t,
             prompt,
             response,
             loading,
@@ -188,8 +179,6 @@ export default {
             openaiModels,
             handleKeydown,
             handleSubmit,
-            changeLanguage,
-            selectedLanguage,
             updateTrigger,
         };
     },
@@ -197,5 +186,16 @@ export default {
 </script>
 
 <style scoped>
-/* Add your styles here */
+
+
+.title {
+    font-size: 2.5rem; /* Adjust size as needed */
+    font-weight: bold;
+    margin-bottom: 10px; /* Space between title and language switch */
+    text-align: left;
+    /* Ensure the title is always at the top left */
+}
+
+
+
 </style>
