@@ -134,26 +134,15 @@ The test suite for Hudini is located in the `llama-cpp-chat/src/backend/tests` d
    ```
 
 ### Running Specific Tests
-
+We are using pytest
 You can run specific test methods using the following format:
 
 ```bash
-python -m unittest test_api.TestLlamaCppChatAPI.<test_method_name>
-```
+pytest -v ./api # test comple eapi folder
+pytest -v ./api/models/*
+pytest -v ./api/models/test_models.py # concrete file
 
-Available test methods include:
 
-- `test_get_models`: Tests the `/get_models` endpoint
-- `test_generate`: Tests the `/generate` endpoint
-- `test_stream`: Tests the `/stream` endpoint
-- `test_load_prompts`: Tests the `/load_prompts` endpoint
-- `test_save_and_delete_prompt`: Tests the `/save_prompt` and `/delete_prompt` endpoints
-- `test_swagger_yaml`: Tests the `/swagger.yaml` endpoint
-
-For example, to run only the test for the Swagger YAML endpoint:
-
-```bash
-python -m unittest test_api.TestLlamaCppChatAPI.test_swagger_yaml
 ```
 
 ### Understanding Test Results
