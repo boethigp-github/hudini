@@ -39,11 +39,16 @@ Hudini is an interactive chat interface that works with CPU magic on SLM, allowi
 
 3. Configure `.env.local` in the project root:
    ```plaintext
-   BackendScriptPath=C:\projects\llama.cpp\projects\src\llama-cpp-chat\src\backend\server.py
-   FrontendDirectoryPath=C:\projects\llama.cpp\projects\src\llama-cpp-chat
-   OllamaPath=<your userdir>AppData\Local\Programs\Olalama\ollama.exe
-   API_KEY_OPEN_AI=<Your Open API Key>
-   SERVER_URL=http://localhost:5000
+   # Backend script configuration
+    ANACONDA_ENV_NAME=<you name of anaconda env>
+    #Urls
+    SERVER_URL=http://localhost:5000
+    #Models
+    PROJECT_MODEL_PATH=C:\\projects\\llama.cpp\\models\\custom\
+    # directories
+    PROJEKT_ROOT=C:\projects\llama.cpp\projects\src\llama-cpp-chat\src
+    #API Keys
+    API_KEY_OPEN_AI=<apikey>
    ```
 
 4. Install the Llama Model:
