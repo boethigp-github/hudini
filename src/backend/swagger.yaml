@@ -1,0 +1,142 @@
+openapi: 3.0.0
+info:
+    title: Hudini - Rest API
+    version: 1.0.0
+    description: API for a Flask application with prompt management and text generation capabilities
+
+servers:
+    - url: http://localhost:5000
+
+paths:
+    /:
+        get:
+            summary: Home page
+            responses:
+                '200':
+                    description: Renders the index.html template
+
+    /ping:
+        get:
+            summary: Ping the server
+            responses:
+                '200':
+                    description: Server status stream
+                    content:
+                        text/event-stream:
+                            schema:
+                                type: string
+
+    /get_models:
+        get:
+            summary: Get available models
+            responses:
+                '200':
+                    description: List of available local and OpenAI models
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    local_models:
+                                        type: array
+                                        items:
+                                            type: string
+                                    openai_models:
+                                        type: array
+                                        items:
+                                            type: string
+
+    /generate:
+        post:
+            summary: Set current prompt and model
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                prompt:
+                                    type: string
+                                model:
+                                    type: string
+            responses:
+                '200':
+                    description: Prompt and model received successfully
+                '400':
+                    description: No prompt or model provided
+
+    /stream:
+        get:
+            summary: Stream generated text
+            responses:
+                '200':
+                    description: Stream of generated text
+                    content:
+                        text/event-stream:
+                            schema:
+                                type: string
+                '400':
+                    description: No prompt or model available for streaming
+
+    /load_prompts:
+        get:
+            summary: Load saved prompts
+            responses:
+                '200':
+                    description: List of saved prompts
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: object
+                                    properties:
+                                        id:
+                                            type: string
+                                        prompt:
+                                            type: string
+                                        timestamp:
+                                            type: string
+
+    /save_prompt:
+        post:
+            summary: Save a new prompt
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                prompt:
+                                    type: string
+            responses:
+                '200':
+                    description: Prompt saved successfully
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    status:
+                                        type: string
+                                    id:
+                                        type: string
+                '400':
+                    description: No prompt provided
+
+    /delete_prompt/{id}:
+        delete:
+            summary: Delete a saved prompt
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                '200':
+                    description: Prompt deleted successfully
+                '404':
+                    description: Prompt not found

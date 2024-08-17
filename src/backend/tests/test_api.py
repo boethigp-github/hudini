@@ -1,6 +1,7 @@
 import unittest
 import requests
 import json
+import yaml
 from dotenv import load_dotenv
 import os
 
@@ -78,6 +79,43 @@ class TestLlamaCppChatAPI(unittest.TestCase):
         self.assertEqual(delete_response.status_code, 200)
         delete_data = delete_response.json()
         self.assertEqual(delete_data['status'], "Prompt deleted successfully")
+
+    def test_swagger_yaml(self):
+        response = requests.get(f"{self.BASE_URL}/swagger.yaml")
+        try:
+            self.assertEqual(response.status_code, 200)
+        except AssertionError:
+            print(f"Error: Unexpected status code {response.status_code}")
+            print("Response content:")
+            print(response.text)
+            raise
+
+        try:
+            self.assertEqual(response.headers['Content-Type'], 'application/x-yaml')
+        except AssertionError:
+            print(f"Error: Unexpected Content-Type {response.headers.get('Content-Type')}")
+            raise
+
+        # Parse the YAML content
+        try:
+            swagger_data = yaml.safe_load(response.text)
+        except yaml.YAMLError as e:
+            print(f"Failed to parse YAML: {e}")
+            print("Response content:")
+            print(response.text)
+            self.fail(f"Failed to parse YAML: {e}")
+
+        # Check for essential Swagger/OpenAPI elements
+        try:
+            self.assertIn('openapi', swagger_data)
+            self.assertIn('info', swagger_data)
+            self.assertIn('paths', swagger_data)
+        except AssertionError as e:
+            print(f"Error: Missing essential Swagger/OpenAPI elements")
+            print("Parsed YAML content:")
+            print(json.dumps(swagger_data, indent=2))
+            raise
+
 
 if __name__ == '__main__':
     unittest.main()

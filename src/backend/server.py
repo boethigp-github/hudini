@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, Response, render_template
+from flask import Flask, request, jsonify, Response, render_template, send_file
 from flask_cors import CORS
 import json
 from datetime import datetime
@@ -8,7 +8,8 @@ import logging
 import traceback
 from dotenv import load_dotenv
 from backend.clients.ClientFactory import ClientFactory
-
+import yaml
+from flask_swagger_ui import get_swaggerui_blueprint
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -22,9 +23,24 @@ logger.info(f"Looking for .env.local at: {env_path}")
 # Load environment variables
 load_dotenv(env_path)
 
-
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
+
+# Swagger UI configuration
+SWAGGER_URL = '/api/docs'  # URL for exposing Swagger UI (without trailing '/')
+API_URL = '/swagger.yaml'  # Our API url (can of course be a local resource)
+
+# Call factory function to create our blueprint
+swaggerui_blueprint = get_swaggerui_blueprint(
+    SWAGGER_URL,
+    API_URL,
+    config={  # Swagger UI config overrides
+        'app_name': "Hudini API"
+    },
+)
+
+# Register blueprint at URL
+app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
 
 # Initialize clients
 openai_api_key = os.getenv('API_KEY_OPEN_AI')
@@ -35,35 +51,10 @@ if not openai_api_key:
 openai_client = ClientFactory.get_client('openai', api_key=openai_api_key)
 local_client = ClientFactory.get_client('local', model_path=os.getenv('PROJECT_MODEL_PATH'))
 
-# Load environment variables
-load_dotenv('.env.local')
-
-# Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
-
-
-
-app = Flask(__name__)
-CORS(app, supports_credentials=True)
-
-# Initialize clients
-local_client = ClientFactory.get_client('local', model_path=os.getenv('PROJECT_MODEL_PATH'))
-openai_client = ClientFactory.get_client('openai', api_key=os.getenv('API_KEY_OPEN_AI'))
-
 # Global variables
 current_prompt = None
 current_model = None
 prompts_file = 'prompts.json'
-@app.route('/ping')
-def ping():
-    def generate():
-        yield "data: Server is alive\n\n"
-        time.sleep(0.5)  # Simulate some delay
-        yield "data: Ping successful\n\n"
-        time.sleep(0.5)  # Simulate some delay
-        yield "data: [END]\n\n"
-    return Response(generate(), content_type='text/event-stream')
 
 # Helper functions for prompt management
 def load_prompts():
@@ -198,8 +189,6 @@ def save_prompt():
         logger.error(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
-
-
 @app.route('/delete_prompt/<string:id>', methods=['DELETE'])
 def delete_prompt(id):
     global prompts
@@ -219,6 +208,10 @@ def delete_prompt(id):
         logger.error(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
+@app.route('/swagger.yaml')
+def get_swagger_yaml():
+    swagger_yaml_path = os.path.join(os.path.dirname(__file__), 'swagger.yaml')
+    return send_file(swagger_yaml_path, mimetype='application/x-yaml')
 
 if __name__ == "__main__":
     logger.info("Starting Flask app")
