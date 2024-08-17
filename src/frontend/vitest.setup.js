@@ -1,4 +1,4 @@
-import { config } from '@vue/test-utils'
+
 import { vi } from 'vitest'
 
 // Mock the import.meta.env

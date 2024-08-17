@@ -54,7 +54,7 @@ local_client = ClientFactory.get_client('local', model_path=os.getenv('PROJECT_M
 # Global variables
 current_prompt = None
 current_model = None
-prompts_file = 'prompts.json'
+prompts_file = 'storage/prompts/prompts.json'
 
 # Helper functions for prompt management
 def load_prompts():

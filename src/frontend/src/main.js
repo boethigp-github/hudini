@@ -3,7 +3,7 @@ import App from './App.vue';
 import Antd from 'ant-design-vue';
 import 'ant-design-vue/dist/reset.css'; // Correct import for Ant Design Vue styles
 import './assets/chat-styles.css';
-import i18n from './i18n';
+import i18n from './i18n.js';
 import { createPinia } from 'pinia'
 const app = createApp(App);
 
