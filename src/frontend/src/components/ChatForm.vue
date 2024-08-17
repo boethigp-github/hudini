@@ -1,8 +1,7 @@
-<!--suppress ExceptionCaughtLocallyJS -->
+<!--suppress ExceptionCaughtLocallyJS, CheckImageSize -->
 <template>
     <div class="chat-container">
         <div class="header">
-            <!--suppress CheckImageSize -->
             <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="120" />
             <h1 class="title">{{ $t('hudini_title') }}</h1>
             <a-select v-model:value="selectedLanguage" @change="changeLanguage" style="width: 120px; position: absolute; right: 20px; top: 20px;">
@@ -57,15 +56,18 @@
                 </a-form>
             </div>
             <div class="previous-prompts">
-                <PromptPanel/>
+                <h2>{{ $t('previous_prompts') }}</h2>
+                <p v-if="noPrompts">{{ $t('no_prompts') }}</p> <!-- Show message if no prompts -->
+                <PromptPanel v-else/>
             </div>
         </div>
     </div>
 </template>
 
 <script>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { message } from 'ant-design-vue';
 import PromptPanel from './PromptPanel.vue';
 
 export default {
@@ -73,7 +75,7 @@ export default {
         PromptPanel
     },
     setup() {
-        const { locale } = useI18n();
+        const { t } = useI18n();
         const selectedLanguage = ref(localStorage.getItem('locale') || 'de');
 
         const changeLanguage = (value) => {
@@ -91,11 +93,26 @@ export default {
         const localModels = ref([]);
         const openaiModels = ref([]);
 
-
-        const savePrompt = async (prompt) => {
+        const loadPrompts = async () => {
             try {
+                const res = await fetch(`${serverUrl}/load_prompts`);
+                if (!res.ok) {
+                    throw new Error("Failed to load prompts");
+                }
+                previousPrompts.value = await res.json();
+            } catch (error) {
+                console.error("Error loading prompts:", error);
+                message.error(t('failed_to_load_prompts'));
+            }
+        };
+
+        const noPrompts = computed(() => previousPrompts.value.length === 0); // Computed property to check if prompts are empty
+
+        const savePrompt = async () => {
+            try {
+                const rawPrompt = prompt.value.trim();  // Get the raw string value
                 const isDuplicate = previousPrompts.value.some(
-                    (p) => p.prompt.trim().toLowerCase() === prompt.trim().toLowerCase()
+                    (p) => p.prompt.trim().toLowerCase() === rawPrompt.toLowerCase()
                 );
 
                 if (isDuplicate) {
@@ -106,7 +123,7 @@ export default {
                 const res = await fetch(`${serverUrl}/save_prompt`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ prompt }),
+                    body: JSON.stringify({ prompt: rawPrompt }),  // Send the raw value
                 });
 
                 if (res.ok) {
@@ -114,6 +131,7 @@ export default {
                 }
             } catch (error) {
                 console.error("Error saving prompt", error);
+                message.error(t('failed_to_save_prompt'));  // Show error message
             }
         };
 
@@ -141,14 +159,12 @@ export default {
             }
         };
 
-
-
         const handleSubmit = async () => {
             if (!prompt.value.trim() || !selectedModel.value) {
                 return;
             }
 
-            await savePrompt(prompt);
+            await savePrompt();  // Call savePrompt without passing the prompt explicitly
 
             loading.value = true;
             response.value = '';
@@ -157,7 +173,7 @@ export default {
                 const res = await fetch(`${serverUrl}/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: prompt.value, model: selectedModel.value }),
+                    body: JSON.stringify({ prompt: prompt.value.trim(), model: selectedModel.value }),  // Use prompt.value.trim()
                 });
 
                 if (!res.ok) throw new Error('Network response was not ok');
@@ -200,6 +216,7 @@ export default {
 
         onMounted(() => {
             loadModels();
+            loadPrompts();  // Load previous prompts on component mount
         });
 
         const formatTimestamp = (timestamp) => {
@@ -207,13 +224,14 @@ export default {
             return date.toLocaleString();
         };
 
-
         return {
+            t,
             prompt,
             response,
             loading,
             responseRef,
             previousPrompts,
+            noPrompts,  // Include the computed property in the return object
             selectedModel,
             localModels,
             openaiModels,

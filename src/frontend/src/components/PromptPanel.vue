@@ -1,5 +1,4 @@
 <template>
-    <h2>{{ $t('previous_prompts') }}</h2>
     <a-collapse  :style="{background:'#fff9f9', marginBottom:'10px'}" v-model:activeKey="activeKey" accordion>
         <a-collapse-panel v-for="prompt in previousPrompts" :key="prompt.id" :style="{background:'#fff9f9'}">
             <template #header>

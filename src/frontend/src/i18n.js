@@ -1,6 +1,5 @@
 import { createI18n } from 'vue-i18n';
 
-// Deine Sprachdateien
 const messages = {
     en: {
         hudini_title: 'Hudini - CPU Magician on SLM',
@@ -13,6 +12,8 @@ const messages = {
         failed_to_copy: 'Failed to copy prompt',
         prompt_deleted: 'Prompt deleted',
         previous_prompts: 'Previous Prompts',
+        no_prompts: 'No prompts saved yet',  // New key
+        failed_to_load_prompts: 'Failed to load prompts',  // Existing key, ensuring it's in sync
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -25,6 +26,8 @@ const messages = {
         failed_to_copy: 'Prompt konnte nicht kopiert werden',
         prompt_deleted: 'Prompt gelöscht',
         previous_prompts: 'Bisherige Prompts',
+        no_prompts: 'Noch keine Prompts gespeichert',  // New key
+        failed_to_load_prompts: 'Fehler beim Laden der Prompts',  // Existing key
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -37,6 +40,8 @@ const messages = {
         failed_to_copy: 'Échec de la copie du prompt',
         prompt_deleted: 'Prompt supprimé',
         previous_prompts: 'Prompts Précédents',
+        no_prompts: 'Aucun prompt enregistré',  // New key
+        failed_to_load_prompts: 'Échec du chargement des prompts',  // Existing key
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
@@ -49,6 +54,8 @@ const messages = {
         failed_to_copy: 'Не удалось скопировать подсказку',
         prompt_deleted: 'Подсказка удалена',
         previous_prompts: 'Предыдущие подсказки',
+        no_prompts: 'Пока нет сохраненных подсказок',  // New key
+        failed_to_load_prompts: 'Не удалось загрузить подсказки',  // Existing key
     },
     zh: {
         hudini_title: 'Hudini - SLM上的CPU魔术师',
@@ -61,12 +68,13 @@ const messages = {
         failed_to_copy: '无法复制提示',
         prompt_deleted: '提示已删除',
         previous_prompts: '以前的提示',
+        no_prompts: '尚未保存提示',  // New key
+        failed_to_load_prompts: '加载提示失败',  // Existing key
     }
 };
 
-// Erstelle die i18n Instanz
 const i18n = createI18n({
-    legacy: false, // Deaktiviere den Legacy-Modus für Vue 3
+    legacy: false,
     locale: localStorage.getItem('locale') || 'de',
     fallbackLocale: 'en',
     messages,
