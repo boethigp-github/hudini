@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
+import path from 'path';
 
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
@@ -17,9 +18,7 @@ export default defineConfig(({ mode }) => {
             },
         },
         resolve: {
-            alias: {
-                '@': '/frontend/src', // '@' now correctly points to 'frontend/src' directory
-            },
+            '@': path.resolve(__dirname, './src'),
         },
         define: {
             'import.meta.env.VITE_SERVER_URL': JSON.stringify(env.SERVER_URL),
