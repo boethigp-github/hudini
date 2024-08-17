@@ -1,4 +1,4 @@
-<!--suppress ExceptionCaughtLocallyJS, CheckImageSize -->
+<!--suppress CheckImageSize -->
 <template>
     <div class="chat-container">
         <div class="header">
@@ -57,15 +57,15 @@
             </div>
             <div class="previous-prompts">
                 <h2>{{ $t('previous_prompts') }}</h2>
-                <p v-if="noPrompts">{{ $t('no_prompts') }}</p> <!-- Show message if no prompts -->
-                <PromptPanel v-else/>
+                <!-- The :key attribute ensures re-render when updateTrigger changes -->
+                <PromptPanel :key="updateTrigger" />
             </div>
         </div>
     </div>
 </template>
 
 <script>
-import { ref, watch, onMounted, computed } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { message } from 'ant-design-vue';
 import PromptPanel from './PromptPanel.vue';
@@ -88,68 +88,55 @@ export default {
         const response = ref('');
         const loading = ref(false);
         const responseRef = ref(null);
-        const previousPrompts = ref([]);
         const selectedModel = ref('');
         const localModels = ref([]);
         const openaiModels = ref([]);
+        const updateTrigger = ref(0);  // Reactive integer to trigger re-render
 
-        const loadPrompts = async () => {
-            try {
-                const res = await fetch(`${serverUrl}/load_prompts`);
-                if (!res.ok) {
-                    throw new Error("Failed to load prompts");
-                }
-                previousPrompts.value = await res.json();
-            } catch (error) {
-                console.error("Error loading prompts:", error);
-                message.error(t('failed_to_load_prompts'));
+        const savePrompt = () => {
+            if (!prompt.value || typeof prompt.value !== 'string' || prompt.value.trim() === '') {
+                message.error(t('invalid_prompt'));
+                return;
             }
-        };
 
-        const noPrompts = computed(() => previousPrompts.value.length === 0); // Computed property to check if prompts are empty
+            const rawPrompt = prompt.value.trim();
 
-        const savePrompt = async () => {
-            try {
-                const rawPrompt = prompt.value.trim();  // Get the raw string value
-                const isDuplicate = previousPrompts.value.some(
-                    (p) => p.prompt.trim().toLowerCase() === rawPrompt.toLowerCase()
-                );
-
-                if (isDuplicate) {
-                    console.log("Duplicate prompt detected, aborting silently");
-                    return;
-                }
-
-                const res = await fetch(`${serverUrl}/save_prompt`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ prompt: rawPrompt }),  // Send the raw value
+            fetch(`${serverUrl}/save_prompt`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt: rawPrompt }),
+            })
+                .then(res => {
+                    if (!res.ok) {
+                        throw new Error("Failed to save prompt");
+                    }
+                    message.success('Prompt saved successfully');
+                    updateTrigger.value++;  // Increment the updateTrigger to force re-render of PromptPanel
+                })
+                .catch(error => {
+                    console.error("Error saving prompt", error);
+                    message.error(t('failed_to_save_prompt'));
                 });
-
-                if (res.ok) {
-                    await loadPrompts();
-                }
-            } catch (error) {
-                console.error("Error saving prompt", error);
-                message.error(t('failed_to_save_prompt'));  // Show error message
-            }
         };
 
-        const loadModels = async () => {
-            try {
-                const res = await fetch(`${serverUrl}/get_models`);
-                if (!res.ok) throw new Error('Failed to load models');
-                const data = await res.json();
-                localModels.value = data.local_models;
-                openaiModels.value = data.openai_models;
-                if (localModels.value.length > 0) {
-                    selectedModel.value = localModels.value[0];
-                } else if (openaiModels.value.length > 0) {
-                    selectedModel.value = openaiModels.value[0];
-                }
-            } catch (error) {
-                console.error('Error loading models:', error);
-            }
+        const loadModels = () => {
+            fetch(`${serverUrl}/get_models`)
+                .then(res => {
+                    if (!res.ok) throw new Error("Failed to load models");
+                    return res.json();
+                })
+                .then(data => {
+                    localModels.value = data.local_models;
+                    openaiModels.value = data.openai_models;
+                    if (localModels.value.length > 0) {
+                        selectedModel.value = localModels.value[0];
+                    } else if (openaiModels.value.length > 0) {
+                        selectedModel.value = openaiModels.value[0];
+                    }
+                })
+                .catch(error => {
+                    console.error("Error loading models:", error);
+                });
         };
 
         const handleKeydown = (event) => {
@@ -159,51 +146,49 @@ export default {
             }
         };
 
-        const handleSubmit = async () => {
+        const handleSubmit = () => {
             if (!prompt.value.trim() || !selectedModel.value) {
                 return;
             }
 
-            await savePrompt();  // Call savePrompt without passing the prompt explicitly
+            savePrompt();
 
             loading.value = true;
             response.value = '';
 
-            try {
-                const res = await fetch(`${serverUrl}/generate`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: prompt.value.trim(), model: selectedModel.value }),  // Use prompt.value.trim()
-                });
+            fetch(`${serverUrl}/generate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: prompt.value.trim(), model: selectedModel.value }),
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error('Network response was not ok');
 
-                if (!res.ok) throw new Error('Network response was not ok');
-
-                const eventSource = new EventSource(`${serverUrl}/stream`);
-                eventSource.onmessage = (event) => {
-                    console.log('Event data:', event.data);
-                    if (event.data === '[END]') {
+                    const eventSource = new EventSource(`${serverUrl}/stream`);
+                    eventSource.onmessage = (event) => {
+                        if (event.data === '[END]') {
+                            eventSource.close();
+                            loading.value = false;
+                        } else if (event.data.startsWith('[ERROR]')) {
+                            response.value = event.data;
+                            eventSource.close();
+                            loading.value = false;
+                        } else {
+                            response.value += event.data + ' ';
+                            scrollToBottom();
+                        }
+                    };
+                    eventSource.onerror = (error) => {
+                        console.error('EventSource failed:', error);
                         eventSource.close();
                         loading.value = false;
-
-                    } else if (event.data.startsWith('[ERROR]')) {
-                        response.value = event.data;
-                        eventSource.close();
-                        loading.value = false;
-                    } else {
-                        response.value += event.data + ' ';
-                        scrollToBottom();
-                    }
-                };
-                eventSource.onerror = (error) => {
-                    console.error('EventSource failed:', error);
-                    eventSource.close();
+                    };
+                })
+                .catch(error => {
+                    console.error('There was an error:', error);
+                    response.value = 'An error occurred while processing your request.';
                     loading.value = false;
-                };
-            } catch (error) {
-                console.error('There was an error:', error);
-                response.value = 'An error occurred while processing your request.';
-                loading.value = false;
-            }
+                });
         };
 
         const scrollToBottom = () => {
@@ -216,13 +201,7 @@ export default {
 
         onMounted(() => {
             loadModels();
-            loadPrompts();  // Load previous prompts on component mount
         });
-
-        const formatTimestamp = (timestamp) => {
-            const date = new Date(timestamp);
-            return date.toLocaleString();
-        };
 
         return {
             t,
@@ -230,8 +209,6 @@ export default {
             response,
             loading,
             responseRef,
-            previousPrompts,
-            noPrompts,  // Include the computed property in the return object
             selectedModel,
             localModels,
             openaiModels,
@@ -239,8 +216,8 @@ export default {
             handleSubmit,
             changeLanguage,
             selectedLanguage,
-            formatTimestamp
+            updateTrigger,  // Expose updateTrigger to the template
         };
-    },
+    }
 };
 </script>
