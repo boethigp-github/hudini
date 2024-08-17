@@ -14,12 +14,8 @@
         </div>
         <div class="content">
             <div class="chat-area">
-                <div id="response" class="response" ref="responseRef">
-                    <div v-if="!response" class="placeholder">
-                        {{ $t('your_response') }}
-                    </div>
-                    <div>{{ response }}</div>
-                </div>
+                <!-- Pass the 'response' prop to the ResponsePanel component -->
+                <ResponsePanel ref="responsePanel" :response="response" />
                 <a-form layout="vertical" class="form">
                     <a-form-item :label="$t('select_model')">
                         <a-select v-model:value="selectedModel" class="">
@@ -57,22 +53,24 @@
             </div>
             <div class="previous-prompts">
                 <h2>{{ $t('previous_prompts') }}</h2>
-                <!-- The :key attribute ensures re-render when updateTrigger changes -->
-                <PromptPanel :key="updateTrigger" />
+                <PromptPanel :response="response" :key="updateTrigger" />
             </div>
         </div>
     </div>
 </template>
 
 <script>
-import { ref, watch, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { message } from 'ant-design-vue';
 import PromptPanel from './PromptPanel.vue';
+import ResponsePanel from './ResponsePanel.vue';
 
 export default {
+    name: 'ChatForm',
     components: {
-        PromptPanel
+        PromptPanel,
+        ResponsePanel,
     },
     setup() {
         const { t } = useI18n();
@@ -85,13 +83,12 @@ export default {
 
         const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
         const prompt = ref('');
-        const response = ref('');
+        const response = ref(''); // Response data initialized as an empty string
         const loading = ref(false);
-        const responseRef = ref(null);
         const selectedModel = ref('');
         const localModels = ref([]);
         const openaiModels = ref([]);
-        const updateTrigger = ref(0);  // Reactive integer to trigger re-render
+        const updateTrigger = ref(0);
 
         const savePrompt = () => {
             if (!prompt.value || typeof prompt.value !== 'string' || prompt.value.trim() === '') {
@@ -111,7 +108,7 @@ export default {
                         throw new Error("Failed to save prompt");
                     }
                     message.success('Prompt saved successfully');
-                    updateTrigger.value++;  // Increment the updateTrigger to force re-render of PromptPanel
+                    updateTrigger.value++;
                 })
                 .catch(error => {
                     console.error("Error saving prompt", error);
@@ -156,48 +153,26 @@ export default {
             loading.value = true;
             response.value = '';
 
-            fetch(`${serverUrl}/generate`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: prompt.value.trim(), model: selectedModel.value }),
-            })
-                .then(res => {
-                    if (!res.ok) throw new Error('Network response was not ok');
-
-                    const eventSource = new EventSource(`${serverUrl}/stream`);
-                    eventSource.onmessage = (event) => {
-                        if (event.data === '[END]') {
-                            eventSource.close();
-                            loading.value = false;
-                        } else if (event.data.startsWith('[ERROR]')) {
-                            response.value = event.data;
-                            eventSource.close();
-                            loading.value = false;
-                        } else {
-                            response.value += event.data + ' ';
-                            scrollToBottom();
-                        }
-                    };
-                    eventSource.onerror = (error) => {
-                        console.error('EventSource failed:', error);
-                        eventSource.close();
-                        loading.value = false;
-                    };
-                })
-                .catch(error => {
-                    console.error('There was an error:', error);
-                    response.value = 'An error occurred while processing your request.';
+            const eventSource = new EventSource(`${serverUrl}/stream`);
+            eventSource.onmessage = (event) => {
+                if (event.data === '[END]') {
+                    eventSource.close();
                     loading.value = false;
-                });
-        };
+                } else if (event.data.startsWith('[ERROR]')) {
+                    response.value = event.data;
+                    eventSource.close();
+                    loading.value = false;
+                } else {
+                    response.value += event.data + ' ';
+                }
+            };
 
-        const scrollToBottom = () => {
-            if (responseRef.value) {
-                responseRef.value.scrollTop = responseRef.value.scrollHeight;
-            }
+            eventSource.onerror = (error) => {
+                console.error('EventSource failed:', error);
+                eventSource.close();
+                loading.value = false;
+            };
         };
-
-        watch(response, scrollToBottom);
 
         onMounted(() => {
             loadModels();
@@ -208,7 +183,6 @@ export default {
             prompt,
             response,
             loading,
-            responseRef,
             selectedModel,
             localModels,
             openaiModels,
@@ -216,8 +190,12 @@ export default {
             handleSubmit,
             changeLanguage,
             selectedLanguage,
-            updateTrigger,  // Expose updateTrigger to the template
+            updateTrigger,
         };
-    }
+    },
 };
 </script>
+
+<style scoped>
+/* Add your styles here */
+</style>
