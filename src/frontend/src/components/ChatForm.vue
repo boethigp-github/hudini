@@ -14,6 +14,7 @@
             <div class="chat-area">
                 <ResponsePanel
                     :responses="responses"
+                    :prompt="storedPrompt"
                 />
                 <a-form layout="vertical" class="form">
                     <ModelSelection />
@@ -71,6 +72,7 @@ export default {
         const loading = ref(false);
         const modelsStore = useModelsStore();
         const updateTrigger = ref(0);
+        const storedPrompt = ref({status:'initialized', prompt:null, prompt_id:null});
 
         const savePromptToServer = async () => {
             if (!prompt.value || typeof prompt.value !== 'string' || prompt.value.trim() === '') {
@@ -84,7 +86,7 @@ export default {
             };
 
             try {
-                await savePrompt(promptData);
+                storedPrompt.value = await savePrompt(promptData);
                 message.success(t('prompt_saved'));
                 updateTrigger.value++;
             } catch (error) {
@@ -172,6 +174,7 @@ export default {
             responses,
             loading,
             modelsStore,
+            storedPrompt,
             handleKeydown,
             handleSubmit,
             updateTrigger,

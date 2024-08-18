@@ -1,7 +1,13 @@
 <!--suppress CssUnusedSymbol -->
 <template>
     <div id="response" class="response">
-        <!-- Render the list of responses -->
+
+        <div v-if="prompt" class="user-prompt">
+            <div class="response-content">
+                {{ prompt.prompt }}
+            </div>
+        </div>
+
         <div v-for="(item, index) in responses"
             :key="index"
             :class="[item.status === 'complete' ? 'response-item' : 'incomplete-item']"
@@ -35,6 +41,10 @@ export default {
             required: true,
             default: () => [],
         },
+        prompt:{
+            type: Object,
+            required: true
+        }
     },
     setup(props) {
         const scrollToBottom = () => {
@@ -73,7 +83,7 @@ export default {
     flex-direction: column;
 }
 
-.response-item {
+.response-item, .user-prompt{
     border: 2px solid #4CAF50;
     border-radius: 10px;
     padding: 10px;
@@ -81,6 +91,10 @@ export default {
     margin-top: 10px;
 }
 
+.user-prompt{
+  border: 2px solid grey;
+    width: auto;
+}
 .incomplete-item {
     border: none;
     margin-top: 10px;

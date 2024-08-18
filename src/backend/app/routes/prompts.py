@@ -1,23 +1,20 @@
+from app.utils.schema_to_model_builder import SchemaToModelBuilder
+import logging
+import json
+import traceback
+from jsonschema import validate, ValidationError
 from flask import Blueprint, jsonify, request
 from app.models import Prompt
 from app.extensions import db
-from jsonschema import validate, ValidationError
-import logging
-import traceback
+
+
+schema_ref = SchemaToModelBuilder.load_swagger_definition()
+schema_builder = SchemaToModelBuilder(schema_ref['components']['schemas']['StreamResponse']['properties'])
 
 prompts_blueprint = Blueprint('prompts', __name__)
 logger = logging.getLogger(__name__)
 
-# Define the JSON schema for the save_prompt request
-save_prompt_schema = {
-    "type": "object",
-    "properties": {
-        "prompt": {"type": "string"},
-        "models": {"type": "array"},
-    },
-    "required": ["prompt"],
-    "additionalProperties": False  # Ensures no extra fields are allowed
-}
+
 
 @prompts_blueprint.route('/load_prompts', methods=['GET'])
 def load_prompts_route():
@@ -30,37 +27,30 @@ def save_prompt_route():
     try:
         data = request.json
         logger.info(f"Received save_prompt request with data: {data}")
-
+        prompt = data.get('prompt', None)
+        prompt_id = data.get('prompt_id', None)
         # Validate request data against the schema
         try:
-            validate(instance=data, schema=save_prompt_schema)
+            validate(instance=data, schema=schema_ref)
             logger.info("Request data passed schema validation")
         except ValidationError as validation_error:
             error_message = validation_error.message
             logger.error(f"Validation error: {error_message}")
-            return jsonify({"error": error_message}), 400
-
-        new_prompt = data.get('prompt', None)
-        if new_prompt is None:
-            logger.warning("'prompt' is a required property")
-            return jsonify({"error": "'prompt' is a required property"}), 400
-        elif not new_prompt.strip():  # Check if the prompt is empty or just whitespace
-            logger.warning("No prompt provided for saving")
-            return jsonify({"error": "No prompt provided"}), 400
+            return json.dumps(schema_builder.create_object(status="validation-error",prompt=prompt, prompt_id=prompt_id, message=error_message,)), 400
 
         # Check if the prompt already exists
-        existing_prompt = Prompt.query.filter_by(prompt=new_prompt).first()
+        existing_prompt = Prompt.query.filter_by(prompt=prompt).first()
         if existing_prompt:
             logger.info(f"Prompt already exists with id: {existing_prompt.id}")
-            return jsonify({"status": "Prompt not changed", "id": str(existing_prompt.id)}), 200
+            json.dumps(schema_builder.create_object(status="prompt-not-changed",prompt= data.get('prompt', None), prompt_id=prompt_id,message="no action required")), 200
 
         # Save the new prompt if it does not already exist
-        prompt = Prompt(prompt=new_prompt)
-        db.session.add(prompt)
+        storedPrompt = Prompt(prompt=prompt)
+        db.session.add(storedPrompt)
         db.session.commit()
 
-        logger.info(f"Prompt saved successfully with id: {prompt.id}")
-        return jsonify({"status": "Prompt saved successfully", "id": str(prompt.id)}), 200
+        logger.info(f"Prompt saved successfully with id: {storedPrompt.id}")
+        return  json.dumps(schema_builder.create_object(status="prompt-saved",prompt=storedPrompt.prompt, prompt_id=str(storedPrompt.id), message="promt was saved")), 200
     except Exception as e:
         db.session.rollback()
         logger.error(f"Unexpected error in save_prompt: {str(e)}")
