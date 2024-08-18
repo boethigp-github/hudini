@@ -2,7 +2,7 @@
 <template>
     <div id="response" class="response">
 
-        <div v-if="prompt" class="user-prompt">
+        <div v-if="prompt?.prompt?.length" class="user-prompt">
             <div class="response-content">
                 {{ prompt.prompt }}
             </div>
