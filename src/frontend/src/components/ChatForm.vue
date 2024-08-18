@@ -16,7 +16,7 @@
                     :responses="responses"
                 />
                 <a-form layout="vertical" class="form">
-                    <ModelSelection />s
+                    <ModelSelection />
                     <a-form-item class="textarea-container">
                         <a-textarea
                             v-model:value="prompt"
