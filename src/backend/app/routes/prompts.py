@@ -12,7 +12,8 @@ logger = logging.getLogger(__name__)
 save_prompt_schema = {
     "type": "object",
     "properties": {
-        "prompt": {"type": "string"}
+        "prompt": {"type": "string"},
+        "models": {"type": "array"},
     },
     "required": ["prompt"],
     "additionalProperties": False  # Ensures no extra fields are allowed

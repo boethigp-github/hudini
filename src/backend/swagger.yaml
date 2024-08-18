@@ -75,7 +75,7 @@ paths:
                     content:
                         text/event-stream:
                             schema:
-                                type: string
+                                $ref: '#/components/schemas/StreamResponse'
                 '400':
                     description: No prompt or model available for streaming
 
@@ -160,6 +160,7 @@ paths:
                     description: Prompt deleted successfully
                 '404':
                     description: Prompt not found
+
     /swagger.yaml:
         get:
             summary: Get Swagger YAML
@@ -171,3 +172,38 @@ paths:
                         application/x-yaml:
                             schema:
                                 type: string
+
+components:
+    schemas:
+        StreamResponse:
+            type: object
+            properties:
+                status:
+                    type: string
+                    description: Status of the stream (e.g., start, data, end, error)
+                    example: "data"
+                model:
+                    type: string
+                    description: The name of the model being used
+                    example: "gpt-3"
+                message:
+                    type: string
+                    description: Additional information or error messages
+                    example: "Generation failed due to an error"
+                token:
+                    type: string
+                    description: The generated token or word from the model
+                    example: "Hello"
+                user:
+                    type: string
+                    description: The user associated with the request
+                    example: "johndoe"
+                timestamp:
+                    type: string
+                    description: The time at which the event occurred
+                    format: date-time
+                    example: "2024-08-18 15:34:56"
+                prompt:
+                    type: string
+                    description: The prompt that was used for generation
+                    example: "Tell me a short joke"

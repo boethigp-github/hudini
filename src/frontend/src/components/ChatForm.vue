@@ -1,10 +1,10 @@
+<!--suppress CheckImageSize -->
 <template>
     <div class="chat-container">
         <div class="header">
-            <!--suppress CheckImageSize -->
             <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="120" />
             <div class="title-container">
-                <h1 class="title">{{ $t('hudini_title') }}</h1>
+                <h1 class="title">{{ t('hudini_title') }}</h1>
                 <div class="language-switch-container">
                     <LanguageSwitch />
                 </div>
@@ -12,32 +12,23 @@
         </div>
         <div class="content">
             <div class="chat-area">
-                <!-- Pass the 'responses' and 'currentResponse' props to the ResponsePanel component -->
                 <ResponsePanel
                     ref="responsePanel"
                     :responses="responses"
                     :currentResponse="currentResponse"
                 />
                 <a-form layout="vertical" class="form">
-                    <a-form-item :label="$t('select_model')">
-                        <a-select v-model:value="selectedModel">
-                            <a-select-opt-group label="Local Models">
-                                <a-select-option v-for="model in localModels" :key="model" :value="model">
-                                    {{ model }}
-                                </a-select-option>
-                            </a-select-opt-group>
-                            <a-select-opt-group label="OpenAI Models">
-                                <a-select-option v-for="model in openaiModels" :key="model" :value="model">
-                                    {{ model }}
-                                </a-select-option>
-                            </a-select-opt-group>
-                        </a-select>
-                    </a-form-item>
+                    <ModelSelection
+                        :modelValue="modelsStore.selectedModels"
+                        @update:modelValue="modelsStore.setSelectedModels"
+                        :localModels="localModels"
+                        :openaiModels="openaiModels"
+                    />
                     <a-form-item class="textarea-container">
                         <a-textarea
                             v-model:value="prompt"
                             :rows="6"
-                            :placeholder="$t('enter_prompt')"
+                            :placeholder="t('enter_prompt')"
                             @keydown="handleKeydown"
                             class="prompt_input"
                             :disabled="loading"
@@ -48,13 +39,13 @@
                             :loading="loading"
                             class="send-button"
                         >
-                            {{ $t('send_button') }}
+                            {{ t('send_button') }}
                         </a-button>
                     </a-form-item>
                 </a-form>
             </div>
             <div class="previous-prompts">
-                <h2>{{ $t('previous_prompts') }}</h2>
+                <h2>{{ t('previous_prompts') }}</h2>
                 <PromptPanel :key="updateTrigger" />
             </div>
         </div>
@@ -63,73 +54,68 @@
 
 <script>
 import { ref, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useModelsStore } from './../stores/models';
 import PromptPanel from './PromptPanel.vue';
 import ResponsePanel from './ResponsePanel.vue';
-import LanguageSwitch from './LanguageSwitch.vue'; // Import the LanguageSwitch component
-import { message } from 'ant-design-vue'; // Add this import statement
+import LanguageSwitch from './LanguageSwitch.vue';
+import ModelSelection from './ModelSelection.vue';
+import { message } from 'ant-design-vue';
+import { streamPrompt, getModels, savePrompt } from './../services/api';
 
 export default {
     name: 'ChatForm',
     components: {
         PromptPanel,
         ResponsePanel,
-        LanguageSwitch, // Register the LanguageSwitch component
+        LanguageSwitch,
+        ModelSelection,
     },
     setup() {
-        const serverUrl = import.meta.env.VITE_SERVER_URL || 'http://localhost:5000';
+        const { t } = useI18n();
+
         const prompt = ref('');
-        const responses = ref([]); // Store all responses
-        const currentResponse = ref(''); // Store current streaming response
+        const responses = ref([]);
+        const currentResponse = ref('');
         const loading = ref(false);
-        const selectedModel = ref('');
+        const modelsStore = useModelsStore(); // Access the Pinia store
         const localModels = ref([]);
         const openaiModels = ref([]);
         const updateTrigger = ref(0);
 
-        const savePrompt = () => {
+        const savePromptToServer = async () => {
             if (!prompt.value || typeof prompt.value !== 'string' || prompt.value.trim() === '') {
                 message.error(t('invalid_prompt'));
                 return;
             }
 
-            const rawPrompt = prompt.value.trim();
+            const promptData = {
+                prompt: prompt.value.trim(),
+                models: modelsStore.selectedModels,
+            };
 
-            fetch(`${serverUrl}/save_prompt`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt: rawPrompt }),
-            })
-                .then(res => {
-                    if (!res.ok) {
-                        throw new Error("Failed to save prompt");
-                    }
-                    message.success('Prompt saved successfully');
-                    updateTrigger.value++;
-                })
-                .catch(error => {
-                    console.error("Error saving prompt", error);
-                    message.error(t('failed_to_save_prompt'));
-                });
+            try {
+                await savePrompt(promptData);
+                message.success(t('prompt_saved'));
+                updateTrigger.value++;
+            } catch (error) {
+                message.error(t('failed_to_save_prompt'));
+            }
         };
 
-        const loadModels = () => {
-            fetch(`${serverUrl}/get_models`)
-                .then(res => {
-                    if (!res.ok) throw new Error("Failed to load models");
-                    return res.json();
-                })
-                .then(data => {
-                    localModels.value = data.local_models;
-                    openaiModels.value = data.openai_models;
-                    if (localModels.value.length > 0) {
-                        selectedModel.value = localModels.value[0];
-                    } else if (openaiModels.value.length > 0) {
-                        selectedModel.value = openaiModels.value[0];
-                    }
-                })
-                .catch(error => {
-                    console.error("Error loading models:", error);
-                });
+        const loadModels = async () => {
+            try {
+                const data = await getModels();
+                localModels.value = data.local_models;
+                openaiModels.value = data.openai_models;
+                if (localModels.value.length > 0 && modelsStore.selectedModels.length === 0) {
+                    modelsStore.setSelectedModels([localModels.value[0]]);
+                } else if (openaiModels.value.length > 0 && modelsStore.selectedModels.length === 0) {
+                    modelsStore.setSelectedModels([openaiModels.value[0]]);
+                }
+            } catch (error) {
+                message.error(t('failed_to_load_models'));
+            }
         };
 
         const handleKeydown = (event) => {
@@ -139,58 +125,59 @@ export default {
             }
         };
 
-        const handleSubmit = () => {
-            if (!prompt.value.trim() || !selectedModel.value) {
-                message.error('Please enter a prompt and select a model.');
+        const handleSubmit = async () => {
+            if (!prompt.value.trim() || modelsStore.selectedModels.length === 0) {
+                message.error(t('enter_prompt_and_select_model'));
                 return;
             }
 
-            // Log the data being sent to the server
-            console.log('Prompt:', prompt.value.trim());
-            console.log('Selected Model:', selectedModel.value);
-
-            // Save the prompt
-            savePrompt();
-
             loading.value = true;
+            currentResponse.value = '';
 
-            // Create the payload for the /stream request
-            const requestPayload = {
+            const promptData = {
                 prompt: prompt.value.trim(),
-                model: selectedModel.value
+                models: modelsStore.selectedModels,
             };
 
-            // Log the payload
-            console.log('Sending data to /stream endpoint:', requestPayload);
+            await streamPrompt(
+                promptData,
+                (chunk) => {
+                    let parsedChunk;
+                    try {
+                        parsedChunk = JSON.parse(chunk);
+                    } catch (error) {
+                        console.error("Error parsing JSON chunk:", error);
+                        return;
+                    }
 
-            // Send prompt and model to the server
-            const eventSource = new EventSource(`${serverUrl}/stream?prompt=${encodeURIComponent(requestPayload.prompt)}&model=${encodeURIComponent(requestPayload.model)}`);
-            eventSource.onmessage = (event) => {
-                if (event.data === '[END]') {
-                    // Add the current response to the list of responses
-                    responses.value.push(currentResponse.value.trim());
-                    currentResponse.value = ''; // Clear the current response
-                    eventSource.close();
+                    // Handle the status of the chunk
+                    if (parsedChunk.status === "end") {
+                        responses.value.push(currentResponse.value.trim());
+                        currentResponse.value = '';
+                    } else if (parsedChunk.status === "data") {
+                        currentResponse.value += " "+parsedChunk.token;
+                    } else if (parsedChunk.status === "error") {
+                        currentResponse.value = `Error: ${parsedChunk.error}`;
+                    }
+                },
+                (error) => {
+                    console.error('Stream error:', error);
+                    currentResponse.value = t('server_connection_error');
                     loading.value = false;
-                } else if (event.data.startsWith('[ERROR]')) {
-                    currentResponse.value = event.data.substring(8); // Remove '[ERROR]' prefix
-                    eventSource.close();
+                },
+                () => {
                     loading.value = false;
-                } else {
-                    currentResponse.value += event.data + ' ';
+                    savePromptToServer();
                 }
-            };
-
-            eventSource.onerror = (error) => {
-                console.error('EventSource failed:', error);
-                currentResponse.value = 'An error occurred while connecting to the server.';
-                eventSource.close();
-                loading.value = false;
-            };
+            );
         };
+
+
+
 
         onMounted(() => {
             loadModels();
+            modelsStore.loadFromStorage(); // Load selected models from storage when the component mounts
         });
 
         return {
@@ -198,23 +185,32 @@ export default {
             responses,
             currentResponse,
             loading,
-            selectedModel,
+            modelsStore, // Expose the store to the template
             localModels,
             openaiModels,
             handleKeydown,
             handleSubmit,
             updateTrigger,
+            t,
         };
     },
 };
 </script>
 
 <style scoped>
-.title {
-    font-size: 2.5rem; /* Adjust size as needed */
-    font-weight: bold;
-    margin-bottom: 10px; /* Space between title and language switch */
-    text-align: left;
-    /* Ensure the title is always at the top left */
+
+.header {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background-color: #f0f2f5;
 }
+
+
+.title {
+    font-size: 2.0rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
 </style>

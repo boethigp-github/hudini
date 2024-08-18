@@ -2,6 +2,8 @@ from flask import Blueprint, jsonify, request, Response
 import logging
 import traceback
 import time
+import json
+import uuid  # Import UUID for generating unique IDs
 from app.services.local_service import get_local_client
 from app.services.openai_service import get_openai_client
 
@@ -10,23 +12,23 @@ logger = logging.getLogger(__name__)
 
 current_prompt = None
 current_model = None
+current_prompt_id = None  # Store the prompt_id of the current prompt
 
 @generations_blueprint.route('/generate', methods=['POST'])
 def generate_route():
-    global current_prompt, current_model
     try:
         data = request.json
-        current_prompt = data.get('prompt', '')
-        current_model = data.get('model', '')
+        prompt = data.get('prompt', '')
+        models = data.get('models', [])
+        prompt_id = str(uuid.uuid4())  # Generate a unique prompt_id for the prompt
 
-        # Log the received data and global variables
-        logger.info(f"Received prompt: '{current_prompt}' and model: '{current_model}'")
-        logger.info(f"Global state - Prompt: '{current_prompt}', Model: '{current_model}'")
+        logger.info(f"Received prompt: '{prompt}' with prompt_id: '{prompt_id}' and models: {models}")
 
-        if not current_prompt or not current_model:
-            return jsonify({"error": "No prompt or model provided"}), 400
+        if not prompt or not models:
+            return jsonify({"error": "No prompt or models provided"}), 400
 
-        return jsonify({"status": "Prompt and model received"}), 200
+        # Return the generated prompt_id along with the status
+        return jsonify({"status": "Prompt and models received", "prompt_id": prompt_id})
 
     except Exception as e:
         logger.error(f"Error in generate: {str(e)}")
@@ -34,33 +36,40 @@ def generate_route():
         return jsonify({"error": str(e)}), 500
 
 
-@generations_blueprint.route('/stream')
+@generations_blueprint.route('/stream', methods=['POST', 'GET'])
 def stream_route():
-    # Retrieve prompt and model from query parameters
-    prompt = request.args.get('prompt', '')
-    model = request.args.get('model', '')
+    data = request.json
+    prompt = data.get('prompt', '')
+    models = data.get('models', [])
+    prompt_id = data.get('prompt_id', str(uuid.uuid4()))  # Use provided prompt_id or generate a new one
 
-    # Log the retrieved parameters
-    logger.info(f"Stream route accessed with prompt: '{prompt}' and model: '{model}'")
+    logger.info(f"Stream route accessed with prompt: '{prompt}', prompt_id: '{prompt_id}' and model: '{models[0]}'")
 
-    if not prompt or not model:
-        logger.error(f"Stream route failed because prompt or model is not set. Prompt: '{prompt}', Model: '{model}'")
+    if not prompt or not models:
+        logger.error(f"Stream route failed because prompt or model is not set. Prompt: '{prompt}', Model: '{models[0]}'")
         return jsonify({"error": "No prompt or model available for streaming"}), 400
 
-    # Set global variables if needed
-    global current_prompt, current_model
+    global current_prompt, current_model, current_prompt_id
     current_prompt = prompt
-    current_model = model
+    current_model = models[0]
+    current_prompt_id = prompt_id
 
-    return Response(generate_and_stream(), content_type='text/event-stream')
+    return Response(generate_and_stream(), content_type='application/json')
+
 
 def generate_and_stream():
-    global current_prompt, current_model
+    global current_prompt, current_model, current_prompt_id
     try:
         local_client = get_local_client()
         if local_client is None:
             logger.error("Failed to get local client")
-            yield "data: [ERROR] Failed to initialize local client\n\n"
+            yield json.dumps({
+                "status": "error",
+                "error": "Failed to initialize local client",
+                "prompt": current_prompt,
+                "prompt_id": current_prompt_id,
+                "model": current_model
+            })
             return
 
         logger.info("Successfully got local client")
@@ -70,12 +79,24 @@ def generate_and_stream():
             logger.info(f"Available models: {available_models}")
         except Exception as e:
             logger.error(f"Error getting available models: {str(e)}")
-            yield f"data: [ERROR] Unable to fetch available models: {str(e)}\n\n"
+            yield json.dumps({
+                "status": "error",
+                "error": f"Unable to fetch available models: {str(e)}",
+                "prompt": current_prompt,
+                "prompt_id": current_prompt_id,
+                "model": current_model
+            })
             return
 
         if not available_models:
             logger.error("No available models found")
-            yield "data: [ERROR] No available models found\n\n"
+            yield json.dumps({
+                "status": "error",
+                "error": "No available models found",
+                "prompt": current_prompt,
+                "prompt_id": current_prompt_id,
+                "model": current_model
+            })
             return
 
         if current_model in available_models:
@@ -84,7 +105,13 @@ def generate_and_stream():
                 local_client.load_model(current_model)
             except Exception as e:
                 logger.error(f"Error loading model {current_model}: {str(e)}")
-                yield f"data: [ERROR] Unable to load model {current_model}: {str(e)}\n\n"
+                yield json.dumps({
+                    "status": "error",
+                    "error": f"Unable to load model {current_model}: {str(e)}",
+                    "prompt": current_prompt,
+                    "prompt_id": current_prompt_id,
+                    "model": current_model
+                })
                 return
 
             try:
@@ -98,24 +125,57 @@ def generate_and_stream():
                 )
             except Exception as e:
                 logger.error(f"Error generating with local model: {str(e)}")
-                yield f"data: [ERROR] Generation failed: {str(e)}\n\n"
+                yield json.dumps({
+                    "status": "error",
+                    "error": f"Generation failed: {str(e)}",
+                    "prompt": current_prompt,
+                    "prompt_id": current_prompt_id,
+                    "model": current_model
+                })
                 return
 
             if 'choices' in output and len(output['choices']) > 0 and output['choices'][0]['text']:
                 generated_text = output['choices'][0]['text']
                 for token in generated_text.split():
-                    yield f"data: {token}\n\n"
+                    response = {
+                        "status": "data",
+                        "token": token,
+                        "data": generated_text,
+                        "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
+                        "user": "anonymous",
+                        "prompt": current_prompt,
+                        "prompt_id": current_prompt_id,
+                        "model": current_model
+                    }
+                    yield json.dumps(response)
                     time.sleep(0.1)
-                yield "data: [END]\n\n"
+                yield json.dumps({
+                    "status": "end",
+                    "prompt": current_prompt,
+                    "prompt_id": current_prompt_id,
+                    "model": current_model
+                })
             else:
                 logger.error("Empty or invalid model output")
-                yield "data: [ERROR] Empty or invalid model output\n\n"
+                yield json.dumps({
+                    "status": "error",
+                    "error": "Empty or invalid model output",
+                    "prompt": current_prompt,
+                    "prompt_id": current_prompt_id,
+                    "model": current_model
+                })
         else:
             logger.info(f"Using OpenAI model: {current_model}")
             openai_client = get_openai_client()
             if openai_client is None:
                 logger.error("OpenAI client is not initialized")
-                yield "data: [ERROR] OpenAI client is not initialized\n\n"
+                yield json.dumps({
+                    "status": "error",
+                    "error": "OpenAI client is not initialized",
+                    "prompt": current_prompt,
+                    "prompt_id": current_prompt_id,
+                    "model": current_model
+                })
                 return
 
             try:
@@ -127,14 +187,41 @@ def generate_and_stream():
                 )
             except Exception as e:
                 logger.error(f"Error generating with OpenAI model: {str(e)}")
-                yield f"data: [ERROR] OpenAI generation failed: {str(e)}\n\n"
+                yield json.dumps({
+                    "status": "error",
+                    "error": f"OpenAI generation failed: {str(e)}",
+                    "prompt": current_prompt,
+                    "prompt_id": current_prompt_id,
+                    "model": current_model
+                })
                 return
 
             for token in output.split():
-                yield f"data: {token}\n\n"
+                response = {
+                    "status": "data",
+                    "token": token,
+                    "data": output,
+                    "timestamp": time.strftime('%Y-%m-%d %H:%M:%S'),
+                    "user": "anonymous",
+                    "prompt": current_prompt,
+                    "prompt_id": current_prompt_id,
+                    "model": current_model
+                }
+                yield json.dumps(response)
                 time.sleep(0.1)
-            yield "data: [END]\n\n"
+            yield json.dumps({
+                "status": "end",
+                "prompt": current_prompt,
+                "prompt_id": current_prompt_id,
+                "model": current_model
+            })
     except Exception as e:
         logger.error(f"Unexpected error in generate_and_stream: {str(e)}")
         logger.error(traceback.format_exc())
-        yield f"data: [ERROR] Unexpected error: {str(e)}\n\n"
+        yield json.dumps({
+            "status": "error",
+            "error": f"Unexpected error: {str(e)}",
+            "prompt": current_prompt,
+            "prompt_id": current_prompt_id,
+            "model": current_model
+        })
