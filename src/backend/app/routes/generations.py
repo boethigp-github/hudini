@@ -10,13 +10,12 @@ from typing import Dict, Any
 from app.services.local_service import get_local_client
 from app.services.openai_service import get_openai_client
 from app.utils.schema_to_model_builder import SchemaToModelBuilder
+from app.services.model_service import get_local_models, get_openai_models
 
 generations_blueprint = Blueprint('generations', __name__)
 logger = logging.getLogger(__name__)
 
-current_prompt = None
-current_model = None
-current_prompt_id = None
+
 
 def load_swagger_definition() -> Dict[str, Any]:
     swagger_yaml_path = os.path.join(os.path.dirname(__file__), '..', '..', 'swagger.yaml')
@@ -75,49 +74,31 @@ def stream_route():
         logger.error(f"Stream route failed because prompt or model is not set. Prompt: '{prompt}', Model: '{models[0]}'")
         return jsonify({"error": "No prompt or model available for streaming"}), 400
 
-    global current_prompt, current_model, current_prompt_id
-    current_prompt = prompt
-    current_model = models[0]
-    current_prompt_id = prompt_id
+    return Response(generate_and_stream(prompt, models[0], prompt_id), content_type='application/json')
 
-    return Response(generate_and_stream(), content_type='application/json')
+def generate_and_stream(prompt, model, prompt_id):
 
-def generate_and_stream():
-    global current_prompt, current_model, current_prompt_id
     try:
         local_client = get_local_client()
-        if local_client is None:
-            logger.error("Failed to get local client")
-            yield json.dumps(schema_builder.create_object(status="error", message="Failed to initialize local client"))
-            return
+        openai_client = get_openai_client()
+        local_models = get_local_models()
+        openai_models = get_openai_models()
 
-        logger.info("Successfully got local client")
+        logBootstrap(prompt, model, prompt_id, local_models, openai_models)
 
-        try:
-            available_models = local_client.get_available_models()
-            logger.info(f"Available models: {available_models}")
-        except Exception as e:
-            logger.error(f"Error getting available models: {str(e)}")
-            yield json.dumps(schema_builder.create_object(status="error", message=f"Unable to fetch available models: {str(e)}"))
-            return
-
-        if not available_models:
-            logger.error("No available models found")
-            yield json.dumps(schema_builder.create_object(status="error", message="No available models found"))
-            return
-
-        if current_model in available_models:
-            logger.info(f"Using local model: {current_model}")
+        ####################################################################################################################
+        ## Local Models
+        if model in local_models:
+            logger.info(f"Using local model: {model}")
             try:
-                local_client.load_model(current_model)
+                local_client.load_model(model)
             except Exception as e:
-                logger.error(f"Error loading model {current_model}: {str(e)}")
-                yield json.dumps(schema_builder.create_object(status="error", message=f"Unable to load model {current_model}: {str(e)}"))
+                logger.error(f"Error loading model {model}: {str(e)}")
+                yield json.dumps(schema_builder.create_object(status="error", message=f"Unable to load model {model}: {str(e)}"))
                 return
-
             try:
                 output = local_client.generate(
-                    current_prompt,
+                    prompt,
                     max_tokens=1000,
                     temperature=0.9,
                     top_p=0.95,
@@ -137,34 +118,44 @@ def generate_and_stream():
                     time.sleep(0.1)
                 yield json.dumps(schema_builder.create_object(status="end"))
             else:
-                logger.error("Empty or invalid model output")
-                yield json.dumps(schema_builder.create_object(status="error", message="Empty or invalid model output"))
-        else:
-            logger.info(f"Using OpenAI model: {current_model}")
-            openai_client = get_openai_client()
-            if openai_client is None:
-                logger.error("OpenAI client is not initialized")
-                yield json.dumps(schema_builder.create_object(status="error", message="OpenAI client is not initialized"))
-                return
+                logger.error("Empty or invalid local model output")
+                yield json.dumps(schema_builder.create_object(status="error", message="Empty or invalid local model output", model=model))
 
+        ####################################################################################################################
+        ## Open OpenAI
+        elif model in openai_models:
+            logger.info(f"Process OpenAI: {model}")
             try:
                 output = openai_client.generate(
-                    current_prompt,
-                    model=current_model,
+                    prompt,
+                    model=model,
                     max_tokens=1000,
                     temperature=0.9
                 )
+
+                # Ensure output is split into tokens and streamed
+                for token in output.split():
+                    response = schema_builder.create_object(status="data", token=token, message=output, model=model, prompt=prompt, prompt_id=prompt_id)
+                    yield json.dumps(response)
+                    time.sleep(0.1)
+
+                # Signal the end of the streaming
+                yield json.dumps(schema_builder.create_object(status="end"))
             except Exception as e:
                 logger.error(f"Error generating with OpenAI model: {str(e)}")
                 yield json.dumps(schema_builder.create_object(status="error", message=f"OpenAI generation failed: {str(e)}"))
-                return
+        else:
+           logger.info(f"No modelproviders responsible for model: {model} ,  \nlocalmodels: {local_models}, openai_models: {openai_models}")
+           yield json.dumps(schema_builder.create_object(status="error", message=f"No Modelproviders responsible for model", model=model, prompt=prompt, prompt_id=prompt_id))
 
-            for token in output.split():
-                response = schema_builder.create_object(status="data", token=token, message=output)
-                yield json.dumps(response)
-                time.sleep(0.1)
-            yield json.dumps(schema_builder.create_object(status="end"))
     except Exception as e:
         logger.error(f"Unexpected error in generate_and_stream: {str(e)}")
         logger.error(traceback.format_exc())
-        yield json.dumps(schema_builder.create_object(status="error", message=f"Unexpected error: {str(e)}"))
+        yield json.dumps(schema_builder.create_object(status="error", message=f"Unexpected error: {str(e)} localmodels: {local_models}, openai_models: {openai_models}",model=model, prompt=prompt, prompt_id=prompt_ids))
+
+def logBootstrap(prompt, model, prompt_id, local_models, openai_models):
+    logger.info(f"Using model: {model}")
+    logger.info(f"use prompt_id {prompt_id}")
+    logger.info(f"use prompt {prompt}")
+    logger.info(f"available local models: {local_models}")
+    logger.info(f"available OpenAI models: {openai_models}")

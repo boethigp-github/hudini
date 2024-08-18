@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 import json
 import yaml
 from jsonschema import validate
+import time
 
 # Get the current file's directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -56,12 +57,15 @@ class TestGenerateAndStream(unittest.TestCase):
             "prompt_id": generate_data['prompt_id'],  # Use the prompt_id from the generate request
             "user": "test_user"  # Optional: specify a user if required by your app
         }
-        response = requests.post(f"{self.BASE_URL}/stream", json=stream_payload, stream=True)
+        response = requests.post(f"{self.BASE_URL}/stream", json=stream_payload, stream=True, timeout=10)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['Content-Type'], 'application/json')
 
         # Handle streaming responses
         buffer = ""
+        timeout_seconds = 10  # Set a timeout for the test
+        start_time = time.time()
+
         for i, line in enumerate(response.iter_lines()):
             if line:
                 # Decode the line and append it to the buffer
@@ -78,6 +82,8 @@ class TestGenerateAndStream(unittest.TestCase):
                     continue
                 except Exception as e:
                     self.fail(f"Schema validation failed: {str(e)}")
+            if time.time() - start_time > timeout_seconds:
+                self.fail("Test timed out while waiting for stream response.")
             if i >= 50:  # Safeguard to avoid infinite loops in case of an issue
                 break
 
