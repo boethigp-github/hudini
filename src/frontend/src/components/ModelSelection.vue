@@ -21,23 +21,40 @@
 </template>
 
 <script>
-import { defineComponent, onMounted } from 'vue'
+import { defineComponent, ref, onMounted } from 'vue'
 import { useModelsStore } from './../stores'
+import { getModels } from './../services/api'
 
 export default defineComponent({
     name: 'ModelSelection',
-    props: {
-        localModels: {
-            type: Array,
-            required: true,
-        },
-        openaiModels: {
-            type: Array,
-            required: true,
-        },
-    },
     setup() {
         const modelsStore = useModelsStore()
+        const localModels = ref([])
+        const openaiModels = ref([])
+
+        const loadModels = async () => {
+            try {
+                const data = await getModels()
+                localModels.value = data.local_models
+                openaiModels.value = data.openai_models
+
+                // This ensures that selected models are validated against the available models
+                modelsStore.selectedModels = modelsStore.selectedModels.filter(
+                    model => localModels.value.includes(model) || openaiModels.value.includes(model)
+                )
+
+                // If no models are selected after filtering, select the first available one
+                if (modelsStore.selectedModels.length === 0) {
+                    if (localModels.value.length > 0) {
+                        modelsStore.setSelectedModels([localModels.value[0]])
+                    } else if (openaiModels.value.length > 0) {
+                        modelsStore.setSelectedModels([openaiModels.value[0]])
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to load models:', error)
+            }
+        }
 
         const updateModels = async (values) => {
             await modelsStore.setSelectedModels(values)
@@ -45,10 +62,13 @@ export default defineComponent({
 
         onMounted(async () => {
             await modelsStore.loadFromStorage()
+            await loadModels()
         })
 
         return {
             modelsStore,
+            localModels,
+            openaiModels,
             updateModels,
         }
     },

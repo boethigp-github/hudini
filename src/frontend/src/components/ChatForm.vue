@@ -18,12 +18,7 @@
                     :currentResponse="currentResponse"
                 />
                 <a-form layout="vertical" class="form">
-                    <ModelSelection
-                        :modelValue="modelsStore.selectedModels"
-                        @update:modelValue="modelsStore.setSelectedModels"
-                        :localModels="localModels"
-                        :openaiModels="openaiModels"
-                    />
+                    <ModelSelection />
                     <a-form-item class="textarea-container">
                         <a-textarea
                             v-model:value="prompt"
@@ -53,7 +48,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useModelsStore } from './../stores/models';
 import PromptPanel from './PromptPanel.vue';
@@ -61,7 +56,7 @@ import ResponsePanel from './ResponsePanel.vue';
 import LanguageSwitch from './LanguageSwitch.vue';
 import ModelSelection from './ModelSelection.vue';
 import { message } from 'ant-design-vue';
-import { streamPrompt, getModels } from './../services/api';
+import { streamPrompt, savePrompt } from './../services/api';
 
 export default {
     name: 'ChatForm',
@@ -73,14 +68,11 @@ export default {
     },
     setup() {
         const { t } = useI18n();
-
         const prompt = ref('');
         const responses = ref([]);
         const currentResponse = ref('');
         const loading = ref(false);
-        const modelsStore = useModelsStore(); // Access the Pinia store
-        const localModels = ref([]);
-        const openaiModels = ref([]);
+        const modelsStore = useModelsStore();
         const updateTrigger = ref(0);
 
         const savePromptToServer = async () => {
@@ -100,24 +92,6 @@ export default {
                 updateTrigger.value++;
             } catch (error) {
                 message.error(t('failed_to_save_prompt'));
-            }
-        };
-
-        const loadModels = async () => {
-            try {
-                const data = await getModels();
-                localModels.value = data.local_models;
-                openaiModels.value = data.openai_models;
-
-                if (modelsStore.selectedModels.length === 0) {
-                    if (localModels.value.length > 0) {
-                        modelsStore.setSelectedModels([localModels.value[0]]);
-                    } else if (openaiModels.value.length > 0) {
-                        modelsStore.setSelectedModels([openaiModels.value[0]]);
-                    }
-                }
-            } catch (error) {
-                message.error(t('failed_to_load_models'));
             }
         };
 
@@ -175,19 +149,12 @@ export default {
             );
         };
 
-        onMounted(async () => {
-            await modelsStore.loadFromStorage(); // Load selected models from storage when the component mounts
-            loadModels();
-        });
-
         return {
             prompt,
             responses,
             currentResponse,
             loading,
-            modelsStore, // Expose the store to the template
-            localModels,
-            openaiModels,
+            modelsStore,
             handleKeydown,
             handleSubmit,
             updateTrigger,
