@@ -9,6 +9,7 @@ import os
 from typing import Dict, Any
 from app.services.local_service import get_local_client
 from app.services.openai_service import get_openai_client
+from app.utils.schema_to_model_builder import SchemaToModelBuilder
 
 generations_blueprint = Blueprint('generations', __name__)
 logger = logging.getLogger(__name__)
@@ -32,31 +33,14 @@ def load_swagger_definition() -> Dict[str, Any]:
 def get_stream_response_schema(swagger_def: Dict[str, Any]) -> Dict[str, Any]:
     return swagger_def['components']['schemas']['StreamResponse']['properties']
 
-def create_response_object(schema: Dict[str, Any], **kwargs) -> Dict[str, Any]:
-    response = {}
-    for key, value in schema.items():
-        if key in kwargs:
-            response[key] = kwargs[key]
-        elif value.get('type') == 'string':
-            if key == 'timestamp':
-                response[key] = time.strftime('%Y-%m-%d %H:%M:%S')
-            elif value.get('format') == 'uuid':
-                response[key] = str(uuid.uuid4())
-            else:
-                response[key] = ''
-        elif value.get('type') == 'number':
-            response[key] = 0
-        else:
-            response[key] = None
-    return response
-
 # Load the Swagger definition
 try:
     swagger_def = load_swagger_definition()
     stream_response_schema = get_stream_response_schema(swagger_def)
+    schema_builder = SchemaToModelBuilder(stream_response_schema)
 except Exception as e:
     logger.error(f"Failed to load Swagger definition: {e}")
-    stream_response_schema = {}  # Fallback to empty schema
+    schema_builder = SchemaToModelBuilder({})  # Fallback to empty schema
 
 @generations_blueprint.route('/generate', methods=['POST'])
 def generate_route():
@@ -104,7 +88,7 @@ def generate_and_stream():
         local_client = get_local_client()
         if local_client is None:
             logger.error("Failed to get local client")
-            yield json.dumps(create_response_object(stream_response_schema, status="error", message="Failed to initialize local client"))
+            yield json.dumps(schema_builder.create_object(status="error", message="Failed to initialize local client"))
             return
 
         logger.info("Successfully got local client")
@@ -114,12 +98,12 @@ def generate_and_stream():
             logger.info(f"Available models: {available_models}")
         except Exception as e:
             logger.error(f"Error getting available models: {str(e)}")
-            yield json.dumps(create_response_object(stream_response_schema, status="error", message=f"Unable to fetch available models: {str(e)}"))
+            yield json.dumps(schema_builder.create_object(status="error", message=f"Unable to fetch available models: {str(e)}"))
             return
 
         if not available_models:
             logger.error("No available models found")
-            yield json.dumps(create_response_object(stream_response_schema, status="error", message="No available models found"))
+            yield json.dumps(schema_builder.create_object(status="error", message="No available models found"))
             return
 
         if current_model in available_models:
@@ -128,7 +112,7 @@ def generate_and_stream():
                 local_client.load_model(current_model)
             except Exception as e:
                 logger.error(f"Error loading model {current_model}: {str(e)}")
-                yield json.dumps(create_response_object(stream_response_schema, status="error", message=f"Unable to load model {current_model}: {str(e)}"))
+                yield json.dumps(schema_builder.create_object(status="error", message=f"Unable to load model {current_model}: {str(e)}"))
                 return
 
             try:
@@ -142,25 +126,25 @@ def generate_and_stream():
                 )
             except Exception as e:
                 logger.error(f"Error generating with local model: {str(e)}")
-                yield json.dumps(create_response_object(stream_response_schema, status="error", message=f"Generation failed: {str(e)}"))
+                yield json.dumps(schema_builder.create_object(status="error", message=f"Generation failed: {str(e)}"))
                 return
 
             if 'choices' in output and len(output['choices']) > 0 and output['choices'][0]['text']:
                 generated_text = output['choices'][0]['text']
                 for token in generated_text.split():
-                    response = create_response_object(stream_response_schema, status="data", token=token, message=generated_text)
+                    response = schema_builder.create_object(status="data", token=token, message=generated_text)
                     yield json.dumps(response)
                     time.sleep(0.1)
-                yield json.dumps(create_response_object(stream_response_schema, status="end"))
+                yield json.dumps(schema_builder.create_object(status="end"))
             else:
                 logger.error("Empty or invalid model output")
-                yield json.dumps(create_response_object(stream_response_schema, status="error", message="Empty or invalid model output"))
+                yield json.dumps(schema_builder.create_object(status="error", message="Empty or invalid model output"))
         else:
             logger.info(f"Using OpenAI model: {current_model}")
             openai_client = get_openai_client()
             if openai_client is None:
                 logger.error("OpenAI client is not initialized")
-                yield json.dumps(create_response_object(stream_response_schema, status="error", message="OpenAI client is not initialized"))
+                yield json.dumps(schema_builder.create_object(status="error", message="OpenAI client is not initialized"))
                 return
 
             try:
@@ -172,15 +156,15 @@ def generate_and_stream():
                 )
             except Exception as e:
                 logger.error(f"Error generating with OpenAI model: {str(e)}")
-                yield json.dumps(create_response_object(stream_response_schema, status="error", message=f"OpenAI generation failed: {str(e)}"))
+                yield json.dumps(schema_builder.create_object(status="error", message=f"OpenAI generation failed: {str(e)}"))
                 return
 
             for token in output.split():
-                response = create_response_object(stream_response_schema, status="data", token=token, message=output)
+                response = schema_builder.create_object(status="data", token=token, message=output)
                 yield json.dumps(response)
                 time.sleep(0.1)
-            yield json.dumps(create_response_object(stream_response_schema, status="end"))
+            yield json.dumps(schema_builder.create_object(status="end"))
     except Exception as e:
         logger.error(f"Unexpected error in generate_and_stream: {str(e)}")
         logger.error(traceback.format_exc())
-        yield json.dumps(create_response_object(stream_response_schema, status="error", message=f"Unexpected error: {str(e)}"))
+        yield json.dumps(schema_builder.create_object(status="error", message=f"Unexpected error: {str(e)}"))
