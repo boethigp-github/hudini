@@ -164,7 +164,7 @@ If you prefer to start each service manually, follow these steps:
 
    ```bash
    cd src/backend
-   python server.py
+   python run.py
    ```
 
 2. **Frontend Development Server:**
@@ -243,7 +243,7 @@ The test suite for Hudini's backend is located in the `src/backend/tests` direct
 
    ```bash
    cd src/backend
-   python server.py
+   python run.py
    ```
 
 3. **Navigate to the test directory:**

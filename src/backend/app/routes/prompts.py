@@ -48,6 +48,13 @@ def save_prompt_route():
             logger.warning("No prompt provided for saving")
             return jsonify({"error": "No prompt provided"}), 400
 
+        # Check if the prompt already exists
+        existing_prompt = Prompt.query.filter_by(prompt=new_prompt).first()
+        if existing_prompt:
+            logger.info(f"Prompt already exists with id: {existing_prompt.id}")
+            return jsonify({"status": "Prompt not changed", "id": str(existing_prompt.id)}), 200
+
+        # Save the new prompt if it does not already exist
         prompt = Prompt(prompt=new_prompt)
         db.session.add(prompt)
         db.session.commit()
@@ -59,6 +66,7 @@ def save_prompt_route():
         logger.error(f"Unexpected error in save_prompt: {str(e)}")
         logger.error(traceback.format_exc())
         return jsonify({"error": "An unexpected error occurred"}), 500
+
 
 @prompts_blueprint.route('/delete_prompt/<uuid:id>', methods=['DELETE'])
 def delete_prompt_route(id):
