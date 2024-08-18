@@ -3,6 +3,8 @@ import requests
 import os
 from dotenv import load_dotenv
 import json
+import yaml
+from jsonschema import validate
 
 # Get the current file's directory
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -12,6 +14,14 @@ env_path = os.path.join(current_dir, '..', '..', '.env.local')
 
 # Load environment variables from .env.local
 load_dotenv(env_path)
+
+# Load the Swagger YAML file
+swagger_path = os.path.join(os.path.abspath(__file__), '..', '..', '..', '..', 'swagger.yaml')
+with open(swagger_path, 'r') as file:
+    swagger_def = yaml.safe_load(file)
+
+# Extract the StreamResponse schema
+stream_response_schema = swagger_def['components']['schemas']['StreamResponse']
 
 class TestGenerateAndStream(unittest.TestCase):
     BASE_URL = os.getenv('SERVER_URL', 'http://localhost:5000')
@@ -50,9 +60,6 @@ class TestGenerateAndStream(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['Content-Type'], 'application/json')
 
-        # Define expected properties based on the StreamResponse schema
-        expected_properties = ["status", "model", "token", "timestamp", "user", "prompt", "prompt_id"]
-
         # Handle streaming responses
         buffer = ""
         for i, line in enumerate(response.iter_lines()):
@@ -62,14 +69,15 @@ class TestGenerateAndStream(unittest.TestCase):
                 try:
                     # Try to parse the buffer as JSON
                     event_data = json.loads(buffer)
-                    # Check if all expected properties exist in the event data
-                    for prop in expected_properties:
-                        self.assertIn(prop, event_data, f"Property '{prop}' is missing from the event data")
+                    # Validate the event data against the StreamResponse schema
+                    validate(instance=event_data, schema=stream_response_schema)
                     # Reset buffer after successful parsing
                     buffer = ""
                 except json.JSONDecodeError:
                     # If JSON is not fully formed, continue reading more lines
                     continue
+                except Exception as e:
+                    self.fail(f"Schema validation failed: {str(e)}")
             if i >= 50:  # Safeguard to avoid infinite loops in case of an issue
                 break
 

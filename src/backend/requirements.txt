@@ -75,6 +75,7 @@ Pygments==2.18.0
 pypandoc==1.13
 pyperclip==1.9.0
 pytest==8.3.2
+pytest-testdox==3.1.0
 python-dotenv==1.0.1
 PyYAML==6.0.2
 referencing==0.35.1
