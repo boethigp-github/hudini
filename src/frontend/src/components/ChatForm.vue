@@ -1,7 +1,7 @@
+<!--suppress CheckImageSize -->
 <template>
     <div class="chat-container">
         <div class="header">
-            <!--suppress CheckImageSize -->
             <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="120" />
             <div class="title-container">
                 <h1 class="title">{{ t('hudini_title') }}</h1>
@@ -70,7 +70,7 @@ export default {
         const { t } = useI18n();
         const prompt = ref('');
         const responses = ref([]);
-        const currentResponse = ref('');
+        const currentResponse = ref(null); // Modified to hold an object instead of a string
         const loading = ref(false);
         const modelsStore = useModelsStore();
         const updateTrigger = ref(0);
@@ -109,12 +109,14 @@ export default {
             }
 
             loading.value = true;
-            currentResponse.value = '';
+            currentResponse.value = null; // Reset the currentResponse object
 
             const promptData = {
                 prompt: prompt.value.trim(),
                 models: modelsStore.selectedModels,
             };
+
+            const responseIndexMap = new Map();
 
             await streamPrompt(
                 promptData,
@@ -127,12 +129,37 @@ export default {
                         return;
                     }
 
-                    // Handle the status of the chunk
-                    if (parsedChunk.status === "end") {
-                        responses.value.push(currentResponse.value.trim());
-                        currentResponse.value = '';
-                    } else if (parsedChunk.status === "data") {
-                        currentResponse.value += " " + parsedChunk.token;
+                    const promptId = parsedChunk.prompt_id;
+
+                    if (parsedChunk.status === "data") {
+                        if (responseIndexMap.has(promptId)) {
+                            // Update the current response object
+                            const index = responseIndexMap.get(promptId);
+                            responses.value[index].token += " " + parsedChunk.token;
+                            currentResponse.value.token += " " + parsedChunk.token; // Update the token in currentResponse
+                        } else {
+                            // Initialize the response object if it doesn't exist
+                            const newResponse = {
+                                status: "data",
+                                token: parsedChunk.token,
+                                data: parsedChunk.data,
+                                timestamp: parsedChunk.timestamp,
+                                user: parsedChunk.user,
+                                prompt: parsedChunk.prompt,
+                                prompt_id: parsedChunk.prompt_id,
+                                model: parsedChunk.model,
+                            };
+                            responseIndexMap.set(promptId, responses.value.length);
+                            responses.value.push(newResponse);
+                            currentResponse.value = { ...newResponse }; // Set currentResponse to this new response
+                        }
+                    } else if (parsedChunk.status === "end") {
+                        // Finalize the response for this prompt_id
+                        if (responseIndexMap.has(promptId)) {
+                            const index = responseIndexMap.get(promptId);
+                            responses.value[index].status = "complete";
+                        }
+                        currentResponse.value = null; // Clear the currentResponse object
                     } else if (parsedChunk.status === "error") {
                         currentResponse.value = `Error: ${parsedChunk.error}`;
                     }
@@ -165,16 +192,12 @@ export default {
 </script>
 
 <style scoped>
-.header {
-    display: flex;
-    align-items: center;
-    padding: 1rem;
-    background-color: #f0f2f5;
-}
+
 
 .title {
     font-size: 2.0rem;
     font-weight: bold;
     margin-bottom: 0.5rem;
 }
+
 </style>

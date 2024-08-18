@@ -1,16 +1,29 @@
+<!--suppress CssUnusedSymbol -->
 <template>
     <div id="response" class="response">
-        <!-- Render the list of completed responses in reverse order -->
-        <div v-for="(item, index) in reversedResponses" :key="index" class="response-item">
-            {{ item }}
+        <div v-for="(item, index) in displayedResponses" :key="index" :class="[item.status === 'complete' ? 'response-item' : 'incomplete-item']">
+            <div v-if="item.status === 'complete' && item.token?.trim().length">
+                <div class="response-metadata">
+                    <span class="timestamp">{{ item.timestamp }}</span>
+                    <span class="model">{{ item.model }}</span>
+                </div>
+                <div class="response-content">
+                    {{ item.token }}
+                </div>
+            </div>
         </div>
 
         <!-- Render the current response at the bottom -->
-        <div v-if="currentResponse" class="response-item current-response">
-            {{ currentResponse }}
+        <div v-if="currentResponse?.token?.trim().length" class="response-item current-response">
+            <div class="response-metadata">
+                <span class="timestamp">{{ currentResponse.timestamp }}</span>
+                <span class="model">{{ currentResponse.model }}</span>
+            </div>
+            <div class="response-content">
+                {{ currentResponse.token }}
+            </div>
         </div>
 
-        <!-- Placeholder message if no responses are present -->
         <div v-if="responses.length === 0 && !currentResponse" class="placeholder">
             {{ $t('your_response') }}
         </div>
@@ -27,15 +40,20 @@ export default {
             default: () => [],
         },
         currentResponse: {
-            type: String,
-            default: '',
+            type: Object,
+            default: () => null,
         },
     },
+    data() {
+        return {
+            reversed: false, // Track if the responses are reversed
+        };
+    },
     computed: {
-        reversedResponses() {
-            // Reverse the responses to display the latest at the bottom
-            return [...this.responses];
-        }
+        displayedResponses() {
+            // Reverse the responses only if they have been reversed already
+            return this.responses;
+        },
     },
     methods: {
         scrollToBottom() {
@@ -43,10 +61,11 @@ export default {
                 const responseElement = this.$el;
                 responseElement.scrollTop = responseElement.scrollHeight;
             });
-        }
+        },
     },
     watch: {
         responses() {
+
             this.scrollToBottom();
         },
         currentResponse() {
@@ -58,31 +77,59 @@ export default {
 
 <style scoped>
 .response {
-    max-height: 50vh; /* Max height as 60% of the viewport height */
-    overflow-y: auto; /* Enable vertical scrolling if content exceeds max height */
+    max-height: 50vh;
+    overflow-y: auto;
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 5px;
     background-color: #f9f9f9;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     display: flex;
-    flex-direction: column; /* Ensure new text appears at the bottom */
+    flex-direction: column;
+}
+
+.response-item {
+    border: 2px solid #4CAF50;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    margin-top: 10px;
+}
+
+.response-metadata {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    color: #666;
+    font-size: 0.875rem;
+}
+
+.timestamp {
+    font-size: 12px;
+    color: #666;
+}
+
+.model {
+    color: #999;
+    font-weight: bold;
+    margin-top: -5px;
+}
+
+.response-content {
+    font-size: 0.9rem;
+    color: #333;
+}
+
+.current-response {
+    border: 2px solid #2196F3;
+    background-color: #e3f2fd;
 }
 
 .placeholder {
     color: #aaa;
 }
 
-.response-item {
-    border: 2px solid #4CAF50; /* Customize border color */
-    border-radius: 10px; /* Rounded corners */
-    padding: 10px;
-    background-color: #f9f9f9; /* Light background color */
-    margin-top: 10px; /* Space between items */
-}
-
-.current-response {
-    border: 2px solid #2196F3; /* Different color for current response */
-    background-color: #e3f2fd; /* Light background color for current response */
+.incomplete-item{
+    border: none;
 }
 </style>

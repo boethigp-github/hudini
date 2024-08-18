@@ -20,45 +20,72 @@ const i18n = createI18n({
 describe('ResponsePanel.vue', () => {
     it('renders correctly with an empty response', () => {
         const wrapper = mount(ResponsePanel, {
-            props: { responses: [], currentResponse: '' },
+            props: { responses: [], currentResponse: null },
             global: {
                 plugins: [i18n],
             },
         });
 
         expect(wrapper.find('.placeholder').exists()).toBe(true);
-        expect(wrapper.text()).toContain('Your response will appear here'); // Ensure this matches the i18n message
+        expect(wrapper.text()).toContain('Your response will appear here');
     });
 
-    it('renders the response correctly', async () => {
+    it('renders the current response correctly', async () => {
         const wrapper = mount(ResponsePanel, {
-            props: { responses: [], currentResponse: 'This is a test response' },
+            props: { responses: [], currentResponse: { token: 'This is a test response', timestamp: '2024-08-18 14:00:00', model: 'gpt-3.5-turbo' } },
             global: {
                 plugins: [i18n],
             },
         });
 
         expect(wrapper.find('.placeholder').exists()).toBe(false);
-        expect(wrapper.find('.current-response').text()).toBe('This is a test response');
+        expect(wrapper.find('.current-response .response-content').text()).toBe('This is a test response');
+        expect(wrapper.find('.current-response .timestamp').text()).toBe('2024-08-18 14:00:00');
+        expect(wrapper.find('.current-response .model').text()).toBe('gpt-3.5-turbo');
     });
 
-    it('calls scrollToBottom when response changes', async () => {
+    it('renders completed responses correctly', async () => {
         const wrapper = mount(ResponsePanel, {
-            props: { responses: [], currentResponse: 'Initial response' },
+            props: {
+                responses: [
+                    { status: 'complete', token: 'This is a completed response', timestamp: '2024-08-18 14:00:00', model: 'gpt-3.5-turbo' },
+                ],
+                currentResponse: null,
+            },
+            global: {
+                plugins: [i18n],
+            },
+        });
+
+        expect(wrapper.find('.response-item').exists()).toBe(true);
+        expect(wrapper.find('.response-item .response-content').text()).toBe('This is a completed response');
+        expect(wrapper.find('.response-item .timestamp').text()).toBe('2024-08-18 14:00:00');
+        expect(wrapper.find('.response-item .model').text()).toBe('gpt-3.5-turbo');
+    });
+
+
+
+    it('calls scrollToBottom when responses change', async () => {
+        const wrapper = mount(ResponsePanel, {
+            props: { responses: [], currentResponse: null },
             global: {
                 plugins: [i18n],
             },
         });
 
         const scrollToBottomSpy = vi.spyOn(wrapper.vm, 'scrollToBottom');
-        await wrapper.setProps({ responses: [], currentResponse: 'Updated response' });
+        await wrapper.setProps({
+            responses: [
+                { status: 'complete', token: 'This is a new response', timestamp: '2024-08-18 14:00:00', model: 'gpt-3.5-turbo' },
+            ],
+        });
 
         expect(scrollToBottomSpy).toHaveBeenCalled();
     });
 
-    it('scrolls to bottom when response changes', async () => {
+    it('scrolls to bottom when current response changes', async () => {
         const wrapper = mount(ResponsePanel, {
-            props: { responses: [], currentResponse: 'Initial response' },
+            props: { responses: [], currentResponse: { token: 'Initial response', timestamp: '2024-08-18 14:00:00', model: 'gpt-3.5-turbo' } },
             global: {
                 plugins: [i18n],
             },
@@ -76,12 +103,10 @@ describe('ResponsePanel.vue', () => {
             value: 100,
         });
 
-        await wrapper.setProps({ currentResponse: 'New response' });
+        await wrapper.setProps({ currentResponse: { token: 'New response', timestamp: '2024-08-18 14:05:00', model: 'gpt-3.5-turbo' } });
 
-        // Wait for the next DOM update
         await wrapper.vm.$nextTick();
 
-        // Verify the scrollTop value is updated
         expect(responseElement.scrollTop).toBe(responseElement.scrollHeight);
     });
 });
