@@ -99,3 +99,36 @@ export const getPromptHistory = async () => {
         throw error;
     }
 };
+
+export const loadAndValidateModels = async (selectedModels, setSelectedModels) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/get_models`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        const localModels = data.local_models;
+        const openaiModels = data.openai_models;
+
+        // Combine all available models
+        const availableModels = [...localModels, ...openaiModels];
+        // Validate selected models
+        const validSelectedModels = selectedModels.filter(model => availableModels.includes(model));
+
+        if (validSelectedModels.length > 0) {
+            setSelectedModels(validSelectedModels);
+        } else {
+            // If no valid selected models, set the first available model as default
+            if (localModels.length > 0) {
+                setSelectedModels([localModels[0]]);
+            } else if (openaiModels.length > 0) {
+                setSelectedModels([openaiModels[0]]);
+            }
+        }
+
+        return { localModels, openaiModels, validSelectedModels };
+    } catch (error) {
+        console.error('Error loading and validating models:', error);
+        throw error;
+    }
+};

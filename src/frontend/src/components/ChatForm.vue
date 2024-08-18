@@ -1,7 +1,7 @@
-<!--suppress CheckImageSize -->
 <template>
     <div class="chat-container">
         <div class="header">
+            <!--suppress CheckImageSize -->
             <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="120" />
             <div class="title-container">
                 <h1 class="title">{{ t('hudini_title') }}</h1>
@@ -61,7 +61,7 @@ import ResponsePanel from './ResponsePanel.vue';
 import LanguageSwitch from './LanguageSwitch.vue';
 import ModelSelection from './ModelSelection.vue';
 import { message } from 'ant-design-vue';
-import { streamPrompt, getModels, savePrompt } from './../services/api';
+import { streamPrompt, getModels } from './../services/api';
 
 export default {
     name: 'ChatForm',
@@ -108,10 +108,13 @@ export default {
                 const data = await getModels();
                 localModels.value = data.local_models;
                 openaiModels.value = data.openai_models;
-                if (localModels.value.length > 0 && modelsStore.selectedModels.length === 0) {
-                    modelsStore.setSelectedModels([localModels.value[0]]);
-                } else if (openaiModels.value.length > 0 && modelsStore.selectedModels.length === 0) {
-                    modelsStore.setSelectedModels([openaiModels.value[0]]);
+
+                if (modelsStore.selectedModels.length === 0) {
+                    if (localModels.value.length > 0) {
+                        modelsStore.setSelectedModels([localModels.value[0]]);
+                    } else if (openaiModels.value.length > 0) {
+                        modelsStore.setSelectedModels([openaiModels.value[0]]);
+                    }
                 }
             } catch (error) {
                 message.error(t('failed_to_load_models'));
@@ -155,7 +158,7 @@ export default {
                         responses.value.push(currentResponse.value.trim());
                         currentResponse.value = '';
                     } else if (parsedChunk.status === "data") {
-                        currentResponse.value += " "+parsedChunk.token;
+                        currentResponse.value += " " + parsedChunk.token;
                     } else if (parsedChunk.status === "error") {
                         currentResponse.value = `Error: ${parsedChunk.error}`;
                     }
@@ -172,12 +175,9 @@ export default {
             );
         };
 
-
-
-
-        onMounted(() => {
+        onMounted(async () => {
+            await modelsStore.loadFromStorage(); // Load selected models from storage when the component mounts
             loadModels();
-            modelsStore.loadFromStorage(); // Load selected models from storage when the component mounts
         });
 
         return {
@@ -198,7 +198,6 @@ export default {
 </script>
 
 <style scoped>
-
 .header {
     display: flex;
     align-items: center;
@@ -206,11 +205,9 @@ export default {
     background-color: #f0f2f5;
 }
 
-
 .title {
     font-size: 2.0rem;
     font-weight: bold;
     margin-bottom: 0.5rem;
 }
-
 </style>
