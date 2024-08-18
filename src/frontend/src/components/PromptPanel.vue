@@ -1,27 +1,30 @@
+<!--suppress CssUnusedSymbol -->
 <template>
-    <a-collapse  :style="{ background: '#fff9f9', marginBottom: '10px' }" v-model:activeKey="activeKey" accordion>
-        <a-collapse-panel v-for="prompt in previousPrompts" :key="prompt.id" :style="{ background: '#fff9f9' }">
-            <template #header>
-                <div class="panel-header">
-                    <span class="timestamp">{{ formatTimestamp(prompt.timestamp) }}</span>
-                    <div class="header-actions">
-                        <icon-copy @click.stop="copyToClipboard(prompt.prompt)" class="copy-icon" />
-                        <a-button type="link" @click.stop="deletePrompt(prompt.id)" class="delete-button">
-                            {{ $t('delete') }}
-                        </a-button>
+    <div class="prompt-panel">
+        <a-collapse v-model:activeKey="activeKey" accordion>
+            <a-collapse-panel v-for="prompt in previousPrompts" :key="prompt.id">
+                <template #header>
+                    <div class="panel-header">
+                        <span class="timestamp">{{ formatTimestamp(prompt.timestamp) }}</span>
+                        <div class="header-actions">
+                            <icon-copy @click.stop="copyToClipboard(prompt.prompt)" class="copy-icon" />
+                            <a-button type="link" @click.stop="deletePrompt(prompt.id)" class="delete-button">
+                                {{ $t('delete') }}
+                            </a-button>
+                        </div>
                     </div>
+                    <span class="title">{{ getTitle(prompt) }}</span>
+                </template>
+                <div class="prompt-content">
+                    {{ prompt.prompt }}
+                    <icon-copy @click.stop="copyToClipboard(prompt.prompt)" class="copy-icon" />
+                    <a-button type="link" @click="deletePrompt(prompt.id)" class="delete-button">
+                        {{ $t('delete') }}
+                    </a-button>
                 </div>
-                <span class="title">{{ getTitle(prompt) }}</span>
-            </template>
-            <div class="prompt-content">
-                {{ prompt.prompt }}
-                <icon-copy @click.stop="copyToClipboard(prompt.prompt)" class="copy-icon" />
-                <a-button type="link" @click="deletePrompt(prompt.id)" class="delete-button">
-                    {{ $t('delete') }}
-                </a-button>
-            </div>
-        </a-collapse-panel>
-    </a-collapse>
+            </a-collapse-panel>
+        </a-collapse>
+    </div>
 </template>
 
 <script>
@@ -127,3 +130,52 @@ export default defineComponent({
     }
 });
 </script>
+
+<style scoped>
+.prompt-panel {
+    max-height: 70vh; /* Adjust this value to control the panel height */
+    overflow-y: auto; /* Ensure the content is scrollable */
+    padding-right: 8px; /* Add some padding to avoid cutting off content */
+}
+
+.acollapse {
+    max-height: 100%; /* Make sure the collapse container fills the parent height */
+    overflow-y: auto; /* Ensure content inside the collapse panel is scrollable */
+}
+
+.acollapse-panel {
+    background: #fff9f9; /* Adjust the background color */
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.timestamp {
+    font-size: 12px;
+    color: #666;
+}
+
+.header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.copy-icon {
+    cursor: pointer;
+    font-size: 16px;
+    color: #999;
+}
+
+.delete-button {
+    color: red;
+    font-size: 12px;
+}
+
+.prompt-content {
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+</style>

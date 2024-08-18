@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { createI18n } from 'vue-i18n';
 import ResponsePanel from './ResponsePanel.vue';
 
@@ -20,7 +20,7 @@ const i18n = createI18n({
 describe('ResponsePanel.vue', () => {
     it('renders correctly with an empty response', () => {
         const wrapper = mount(ResponsePanel, {
-            props: { responses: [], currentResponse: null },
+            props: { responses: [] },
             global: {
                 plugins: [i18n],
             },
@@ -30,27 +30,17 @@ describe('ResponsePanel.vue', () => {
         expect(wrapper.text()).toContain('Your response will appear here');
     });
 
-    it('renders the current response correctly', async () => {
-        const wrapper = mount(ResponsePanel, {
-            props: { responses: [], currentResponse: { token: 'This is a test response', timestamp: '2024-08-18 14:00:00', model: 'gpt-3.5-turbo' } },
-            global: {
-                plugins: [i18n],
-            },
-        });
-
-        expect(wrapper.find('.placeholder').exists()).toBe(false);
-        expect(wrapper.find('.current-response .response-content').text()).toBe('This is a test response');
-        expect(wrapper.find('.current-response .timestamp').text()).toBe('2024-08-18 14:00:00');
-        expect(wrapper.find('.current-response .model').text()).toBe('gpt-3.5-turbo');
-    });
-
-    it('renders completed responses correctly', async () => {
+    it('renders completed responses correctly', () => {
         const wrapper = mount(ResponsePanel, {
             props: {
                 responses: [
-                    { status: 'complete', token: 'This is a completed response', timestamp: '2024-08-18 14:00:00', model: 'gpt-3.5-turbo' },
+                    {
+                        status: 'complete',
+                        token: 'This is a completed response',
+                        timestamp: '2024-08-18 14:00:00',
+                        model: 'gpt-3.5-turbo',
+                    },
                 ],
-                currentResponse: null,
             },
             global: {
                 plugins: [i18n],
@@ -63,50 +53,27 @@ describe('ResponsePanel.vue', () => {
         expect(wrapper.find('.response-item .model').text()).toBe('gpt-3.5-turbo');
     });
 
-
-
-    it('calls scrollToBottom when responses change', async () => {
+    it('renders incomplete responses correctly', () => {
         const wrapper = mount(ResponsePanel, {
-            props: { responses: [], currentResponse: null },
+            props: {
+                responses: [
+                    {
+                        status: 'incomplete',
+                        token: 'This is an incomplete response',
+                        timestamp: '2024-08-18 14:00:00',
+                        model: 'gpt-3.5-turbo',
+                    },
+                ],
+            },
             global: {
                 plugins: [i18n],
             },
         });
 
-        const scrollToBottomSpy = vi.spyOn(wrapper.vm, 'scrollToBottom');
-        await wrapper.setProps({
-            responses: [
-                { status: 'complete', token: 'This is a new response', timestamp: '2024-08-18 14:00:00', model: 'gpt-3.5-turbo' },
-            ],
-        });
-
-        expect(scrollToBottomSpy).toHaveBeenCalled();
+        expect(wrapper.find('.incomplete-item').exists()).toBe(true);
+        expect(wrapper.find('.incomplete-item .response-content').text()).toBe('This is an incomplete response');
     });
 
-    it('scrolls to bottom when current response changes', async () => {
-        const wrapper = mount(ResponsePanel, {
-            props: { responses: [], currentResponse: { token: 'Initial response', timestamp: '2024-08-18 14:00:00', model: 'gpt-3.5-turbo' } },
-            global: {
-                plugins: [i18n],
-            },
-        });
 
-        // Mock scrollTop and scrollHeight properties
-        const responseElement = wrapper.find('#response').element;
 
-        Object.defineProperty(responseElement, 'scrollTop', {
-            writable: true,
-            value: 0,
-        });
-        Object.defineProperty(responseElement, 'scrollHeight', {
-            writable: true,
-            value: 100,
-        });
-
-        await wrapper.setProps({ currentResponse: { token: 'New response', timestamp: '2024-08-18 14:05:00', model: 'gpt-3.5-turbo' } });
-
-        await wrapper.vm.$nextTick();
-
-        expect(responseElement.scrollTop).toBe(responseElement.scrollHeight);
-    });
 });

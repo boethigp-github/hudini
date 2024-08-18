@@ -1,8 +1,12 @@
 <!--suppress CssUnusedSymbol -->
 <template>
     <div id="response" class="response">
-        <div v-for="(item, index) in displayedResponses" :key="index" :class="[item.status === 'complete' ? 'response-item' : 'incomplete-item']">
-            <div v-if="item.status === 'complete' && item.token?.trim().length">
+        <!-- Render the list of responses -->
+        <div v-for="(item, index) in responses"
+            :key="index"
+            :class="[item.status === 'complete' ? 'response-item' : 'incomplete-item']"
+        >
+            <div v-if="item.token?.trim().length">
                 <div class="response-metadata">
                     <span class="timestamp">{{ item.timestamp }}</span>
                     <span class="model">{{ item.model }}</span>
@@ -13,24 +17,16 @@
             </div>
         </div>
 
-        <!-- Render the current response at the bottom -->
-        <div v-if="currentResponse?.token?.trim().length" class="response-item current-response">
-            <div class="response-metadata">
-                <span class="timestamp">{{ currentResponse.timestamp }}</span>
-                <span class="model">{{ currentResponse.model }}</span>
-            </div>
-            <div class="response-content">
-                {{ currentResponse.token }}
-            </div>
-        </div>
-
-        <div v-if="responses.length === 0 && !currentResponse" class="placeholder">
+        <!-- Placeholder message if no responses are present -->
+        <div v-if="responses.length === 0" class="placeholder">
             {{ $t('your_response') }}
         </div>
     </div>
 </template>
 
 <script>
+import { nextTick, watch } from 'vue';
+
 export default {
     name: 'ResponsePanel',
     props: {
@@ -39,45 +35,34 @@ export default {
             required: true,
             default: () => [],
         },
-        currentResponse: {
-            type: Object,
-            default: () => null,
-        },
     },
-    data() {
-        return {
-            reversed: false, // Track if the responses are reversed
-        };
-    },
-    computed: {
-        displayedResponses() {
-            // Reverse the responses only if they have been reversed already
-            return this.responses;
-        },
-    },
-    methods: {
-        scrollToBottom() {
-            this.$nextTick(() => {
-                const responseElement = this.$el;
+    setup(props) {
+        const scrollToBottom = () => {
+            nextTick(() => {
+                const responseElement = document.getElementById('response');
                 responseElement.scrollTop = responseElement.scrollHeight;
             });
-        },
-    },
-    watch: {
-        responses() {
+        };
 
-            this.scrollToBottom();
-        },
-        currentResponse() {
-            this.scrollToBottom();
-        }
+        watch(
+            () => props.responses,
+            () => {
+                scrollToBottom();
+            },
+            { deep: true } // Ensure deep watching of the array's content
+        );
+
+        return {
+            scrollToBottom,
+        };
     }
 };
 </script>
 
 <style scoped>
 .response {
-    max-height: 50vh;
+    max-height: 54vh;
+    height: 54vh;
     overflow-y: auto;
     padding: 10px;
     border: 1px solid #ddd;
@@ -94,6 +79,12 @@ export default {
     padding: 10px;
     background-color: #f9f9f9;
     margin-top: 10px;
+}
+
+.incomplete-item {
+    border: none;
+    margin-top: 10px;
+    border: #4CAF50;
 }
 
 .response-metadata {
@@ -120,16 +111,7 @@ export default {
     color: #333;
 }
 
-.current-response {
-    border: 2px solid #2196F3;
-    background-color: #e3f2fd;
-}
-
 .placeholder {
     color: #aaa;
-}
-
-.incomplete-item{
-    border: none;
 }
 </style>

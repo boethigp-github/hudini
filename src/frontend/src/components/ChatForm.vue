@@ -2,7 +2,7 @@
 <template>
     <div class="chat-container">
         <div class="header">
-            <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="120" />
+            <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="60" />
             <div class="title-container">
                 <h1 class="title">{{ t('hudini_title') }}</h1>
                 <div class="language-switch-container">
@@ -13,12 +13,10 @@
         <div class="content">
             <div class="chat-area">
                 <ResponsePanel
-                    ref="responsePanel"
                     :responses="responses"
-                    :currentResponse="currentResponse"
                 />
                 <a-form layout="vertical" class="form">
-                    <ModelSelection />
+                    <ModelSelection />s
                     <a-form-item class="textarea-container">
                         <a-textarea
                             v-model:value="prompt"
@@ -70,7 +68,6 @@ export default {
         const { t } = useI18n();
         const prompt = ref('');
         const responses = ref([]);
-        const currentResponse = ref(null); // Modified to hold an object instead of a string
         const loading = ref(false);
         const modelsStore = useModelsStore();
         const updateTrigger = ref(0);
@@ -109,14 +106,11 @@ export default {
             }
 
             loading.value = true;
-            currentResponse.value = null; // Reset the currentResponse object
 
             const promptData = {
                 prompt: prompt.value.trim(),
                 models: modelsStore.selectedModels,
             };
-
-            const responseIndexMap = new Map();
 
             await streamPrompt(
                 promptData,
@@ -129,18 +123,19 @@ export default {
                         return;
                     }
 
-                    const promptId = parsedChunk.prompt_id;
+                    if (parsedChunk.status === "end") {
+                        const finalResponse = responses.value.pop();
+                        if (finalResponse) {
+                            responses.value.push({ ...finalResponse, status: 'complete' });
+                        }
+                    } else if (parsedChunk.status === "data") {
+                        const lastResponse = responses.value[responses.value.length - 1];
 
-                    if (parsedChunk.status === "data") {
-                        if (responseIndexMap.has(promptId)) {
-                            // Update the current response object
-                            const index = responseIndexMap.get(promptId);
-                            responses.value[index].token += " " + parsedChunk.token;
-                            currentResponse.value.token += " " + parsedChunk.token; // Update the token in currentResponse
+                        if (lastResponse && lastResponse.status !== 'complete') {
+                            lastResponse.token += ` ${parsedChunk.token}`;
                         } else {
-                            // Initialize the response object if it doesn't exist
-                            const newResponse = {
-                                status: "data",
+                            responses.value.push({
+                                status: 'incomplete',
                                 token: parsedChunk.token,
                                 data: parsedChunk.data,
                                 timestamp: parsedChunk.timestamp,
@@ -148,25 +143,21 @@ export default {
                                 prompt: parsedChunk.prompt,
                                 prompt_id: parsedChunk.prompt_id,
                                 model: parsedChunk.model,
-                            };
-                            responseIndexMap.set(promptId, responses.value.length);
-                            responses.value.push(newResponse);
-                            currentResponse.value = { ...newResponse }; // Set currentResponse to this new response
+                            });
                         }
-                    } else if (parsedChunk.status === "end") {
-                        // Finalize the response for this prompt_id
-                        if (responseIndexMap.has(promptId)) {
-                            const index = responseIndexMap.get(promptId);
-                            responses.value[index].status = "complete";
-                        }
-                        currentResponse.value = null; // Clear the currentResponse object
                     } else if (parsedChunk.status === "error") {
-                        currentResponse.value = `Error: ${parsedChunk.error}`;
+                        responses.value.push({
+                            status: 'error',
+                            token: `Error: ${parsedChunk.error}`,
+                        });
                     }
                 },
                 (error) => {
                     console.error('Stream error:', error);
-                    currentResponse.value = t('server_connection_error');
+                    responses.value.push({
+                        status: 'error',
+                        token: t('server_connection_error'),
+                    });
                     loading.value = false;
                 },
                 () => {
@@ -179,7 +170,6 @@ export default {
         return {
             prompt,
             responses,
-            currentResponse,
             loading,
             modelsStore,
             handleKeydown,
@@ -192,7 +182,6 @@ export default {
 </script>
 
 <style scoped>
-
 
 .title {
     font-size: 2.0rem;
