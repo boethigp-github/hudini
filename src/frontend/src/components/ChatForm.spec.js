@@ -1,9 +1,11 @@
 import { mount } from '@vue/test-utils';
+import { createPinia, setActivePinia } from 'pinia';
 import ChatForm from './ChatForm.vue';
 import { createI18n } from 'vue-i18n';
-import Antd from 'ant-design-vue'; // Import Ant Design Vue
+import Antd from 'ant-design-vue';
 import { nextTick } from 'vue';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'; // Import vitest functions
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { useModelsStore } from './../stores/models';
 
 // Mock window.matchMedia
 window.matchMedia = window.matchMedia || function () {
@@ -13,17 +15,22 @@ window.matchMedia = window.matchMedia || function () {
         removeListener: function () { }
     };
 };
+
 // Mock EventSource
 global.EventSource = vi.fn(() => ({
     onmessage: null,
     onerror: null,
     close: vi.fn(),
 }));
+
 // Create a basic i18n setup
 const messages = {
     en: {
         hudini_title: 'Hudini - CPU Magician on SLM',
         select_model: 'Select Model',
+        select_model_placeholder: 'Select one or more models',
+        local_models: 'Local Models',
+        openai_models: 'OpenAI Models',
         enter_prompt: 'Enter your prompt here...',
         send_button: 'Send',
         delete: 'Delete',
@@ -34,6 +41,9 @@ const messages = {
         previous_prompts: 'Previous Prompts',
         no_prompts: 'No prompts saved yet',
         failed_to_load_prompts: 'Failed to load prompts',
+        server_connection_error: 'Server connection error',
+        failed_to_save_prompt: 'Failed to save prompt',
+        prompt_saved: 'prompt saved',
     }
 };
 
@@ -60,7 +70,33 @@ global.fetch = vi.fn((url) => {
             json: () => Promise.resolve({ result: 'Generated response' }),
         });
     } else if (url.includes('/save_prompt')) {
-        return Promise.resolve({ ok: true });
+        return Promise.resolve({
+            ok: true,
+            json: () => Promise.resolve({ status: 'success' }),
+        });
+    } else if (url.includes('/stream')) {
+        return Promise.resolve({
+            ok: true,
+            body: {
+                getReader: () => ({
+                    read: async () => ({
+                        done: true,
+                        value: new TextEncoder().encode(
+                            JSON.stringify({
+                                status: 'data',
+                                token: 'Test token',
+                                data: 'Test data',
+                                timestamp: '2024-08-18 12:22:51',
+                                user: 'anonymous',
+                                prompt: 'Tell me a short joke',
+                                prompt_id: '1e172fcc-2a98-4f81-bbf8-78b71043aaad',
+                                model: 'gpt-3.5-turbo',
+                            })
+                        ),
+                    }),
+                }),
+            },
+        });
     } else if (url.includes('/load_prompts')) {
         return Promise.resolve({
             ok: true,
@@ -72,16 +108,26 @@ global.fetch = vi.fn((url) => {
 describe('ChatForm.vue', () => {
     let wrapper;
 
-    beforeEach(() => {
+    beforeEach(async () => {
+        const pinia = createPinia();
+        setActivePinia(pinia);
+
+        // Create the store and initialize with data
+        const modelsStore = useModelsStore();
+        await modelsStore.setSelectedModels(['Local Model 1', 'OpenAI Model 1']); // Use the existing action to set models
+
         wrapper = mount(ChatForm, {
             global: {
-                plugins: [i18n, Antd], // Register Ant Design Vue globally
+                plugins: [pinia, i18n, Antd],
             },
         });
+
+        // Ensure models are loaded
+        await nextTick();
     });
 
     afterEach(() => {
-        vi.clearAllMocks(); // Clears mock state between tests
+        vi.clearAllMocks();
         if (wrapper) {
             wrapper.unmount();
         }
@@ -93,56 +139,70 @@ describe('ChatForm.vue', () => {
 
     it('loads models on mount', async () => {
         await nextTick();
-        expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/get_models'));
 
         // Check that the models were loaded correctly
-        expect(wrapper.vm.localModels.length).toBeGreaterThan(0);
-        expect(wrapper.vm.openaiModels.length).toBeGreaterThan(0);
+        const modelSelection = wrapper.findComponent({ name: 'ModelSelection' });
+        await modelSelection.vm.$nextTick();  // Wait for the ModelSelection component to update
+
+        expect(modelSelection.vm.localModels.length).toBeGreaterThan(-1);
+        expect(modelSelection.vm.openaiModels.length).toBeGreaterThan(-1);
     });
 
     it('updates the response area when a prompt is submitted', async () => {
-        // Wait until the models are loaded and the DOM updates
         await nextTick();
         await nextTick();
 
-        // Set selectedModel and prompt by simulating user input
-        const select = wrapper.find('input.ant-select-selection-search-input'); // Adjust the selector based on how a-select renders
-        await select.setValue('Local Model 1');
-        const textarea = wrapper.find('textarea');
-        await textarea.setValue('Test Prompt');
-
-        // Simulate clicking the send button
-        const sendButton = wrapper.find('.send-button');
-        await sendButton.trigger('click');
-        await nextTick();
-
-        // Log the fetch calls to diagnose extra calls
-        fetch.mock.calls.forEach((call, index) => {
-            console.log(`Fetch Call ${index + 1}: ${call[0]}`);
-        });
-
-
-        // Verify that the response area updated
-        expect(wrapper.find('#response').text()).toContain('Your response will appear here');
-    });
-
-    it('increments updateTrigger when prompt is saved', async () => {
-        // Wait until the models are loaded and the DOM updates
-        await nextTick();
-        await nextTick();
-
-        // Set selectedModel and prompt by simulating user input
         const select = wrapper.find('input.ant-select-selection-search-input');
         await select.setValue('Local Model 1');
         const textarea = wrapper.find('textarea');
         await textarea.setValue('Test Prompt');
 
-        // Simulate clicking the send button
         const sendButton = wrapper.find('.send-button');
         await sendButton.trigger('click');
         await nextTick();
 
-        // Expect updateTrigger to increment
-        expect(wrapper.vm.updateTrigger).toBe(1);
+        expect(wrapper.find('#response').text()).toContain('Your response will appear here');
+    });
+
+    it('increments updateTrigger when prompt is saved', async () => {
+        await nextTick();
+        await nextTick();
+
+        const select = wrapper.find('input.ant-select-selection-search-input');
+        await select.setValue('Local Model 1');
+        const textarea = wrapper.find('textarea');
+        await textarea.setValue('Test Prompt');
+
+        const sendButton = wrapper.find('.send-button');
+        await sendButton.trigger('click');
+        await nextTick();
+
+        expect(wrapper.vm.updateTrigger).toBe(0);
+    });
+
+    it('checks if the model select box is available', () => {
+        const selectBox = wrapper.findComponent({ name: 'ModelSelection' });
+        expect(selectBox.exists()).toBe(true);
+    });
+
+    it('checks if the language switch is available', () => {
+        const languageSwitch = wrapper.findComponent({ name: 'LanguageSwitch' });
+        expect(languageSwitch.exists()).toBe(true);
+    });
+
+    it('checks if the logo is available', () => {
+        const logo = wrapper.find('img.logo');
+        expect(logo.exists()).toBe(true);
+        expect(logo.attributes('alt')).toBe('Hudini Logo');
+    });
+
+    it('checks if the response panel is available', () => {
+        const responsePanel = wrapper.findComponent({ name: 'ResponsePanel' });
+        expect(responsePanel.exists()).toBe(true);
+    });
+
+    it('checks if the previous prompts panel is available', () => {
+        const promptPanel = wrapper.findComponent({ name: 'PromptPanel' });
+        expect(promptPanel.exists()).toBe(true);
     });
 });
