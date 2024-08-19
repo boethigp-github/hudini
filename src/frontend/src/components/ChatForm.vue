@@ -55,8 +55,8 @@ import ResponsePanel from './ResponsePanel.vue';
 import LanguageSwitch from './LanguageSwitch.vue';
 import ModelSelection from './ModelSelection.vue';
 import { message } from 'ant-design-vue';
-import { streamPrompt, savePrompt } from './../services/api';
-
+import {streamPrompt, createPrompt} from './../services/api';
+import { v4 as uuidv4 } from 'uuid';
 export default {
     name: 'ChatForm',
     components: {
@@ -74,7 +74,7 @@ export default {
         const updateTrigger = ref(0);
         const storedPrompt = ref({status:'initialized', prompt:null, prompt_id:null});
 
-        const savePromptToServer = async () => {
+        const createPromptServerside = async () => {
             if (!prompt.value || typeof prompt.value !== 'string' || prompt.value.trim() === '') {
                 message.error(t('invalid_prompt'));
                 return;
@@ -82,11 +82,13 @@ export default {
 
             const promptData = {
                 prompt: prompt.value.trim(),
-                models: modelsStore.selectedModels,
+                user: 'anonymous',
+                status: 'prompt-saved',
+                id: uuidv4(),
             };
 
             try {
-                storedPrompt.value = await savePrompt(promptData);
+                storedPrompt.value = await createPrompt(promptData);
                 message.success(t('prompt_saved'));
                 updateTrigger.value++;
             } catch (error) {
@@ -164,7 +166,7 @@ export default {
                 },
                 () => {
                     loading.value = false;
-                    savePromptToServer();
+                    createPromptServerside();
                 }
             );
         };

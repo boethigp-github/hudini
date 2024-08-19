@@ -64,9 +64,10 @@ export const getModels = async () => {
  * @param {Object} promptData - The prompt data to save.
  * @returns {Promise<Object>} A promise that resolves to the server's response.
  */
-export const savePrompt = async (promptData) => {
+
+export const createPrompt = async (promptData) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/save_prompt`, {
+        const response = await fetch(`${API_BASE_URL}/create_prompt`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

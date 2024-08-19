@@ -7,16 +7,36 @@ info:
 servers:
     - url: http://localhost:5000
 
+tags:
+    - name: Home
+      description: Endpoints related to the home page and general status
+    - name: Models
+      description: Endpoints related to managing and retrieving models
+    - name: Prompts
+      description: Endpoints related to creating, updating, deleting, and retrieving prompts
+    - name: Streaming
+      description: Endpoints related to streaming generated text
+
 paths:
     /:
         get:
+            tags:
+                - Home
             summary: Home page
             responses:
                 '200':
                     description: Renders the index.html template
+                '500':
+                    description: Server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
 
     /ping:
         get:
+            tags:
+                - Home
             summary: Ping the server
             responses:
                 '200':
@@ -25,9 +45,17 @@ paths:
                         text/event-stream:
                             schema:
                                 type: string
+                '500':
+                    description: Server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
 
     /get_models:
         get:
+            tags:
+                - Models
             summary: Get available models
             responses:
                 '200':
@@ -35,19 +63,18 @@ paths:
                     content:
                         application/json:
                             schema:
-                                type: object
-                                properties:
-                                    local_models:
-                                        type: array
-                                        items:
-                                            type: string
-                                    openai_models:
-                                        type: array
-                                        items:
-                                            type: string
+                                $ref: '#/components/schemas/ModelsResponse'
+                '500':
+                    description: Server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
 
     /generate:
         post:
+            tags:
+                - Prompts
             summary: Set current prompt and model
             requestBody:
                 required: true
@@ -57,17 +84,29 @@ paths:
                             type: object
                             properties:
                                 prompt:
-                                    type: string
+                                    $ref: '#/components/schemas/Prompt'
                                 model:
                                     type: string
             responses:
                 '200':
                     description: Prompt and model received successfully
                 '400':
-                    description: No prompt or model provided
+                    description: Invalid request
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '500':
+                    description: Server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
 
     /stream:
         get:
+            tags:
+                - Streaming
             summary: Stream generated text
             responses:
                 '200':
@@ -78,9 +117,21 @@ paths:
                                 $ref: '#/components/schemas/StreamResponse'
                 '400':
                     description: No prompt or model available for streaming
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '500':
+                    description: Server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
 
     /load_prompts:
         get:
+            tags:
+                - Prompts
             summary: Load saved prompts
             responses:
                 '200':
@@ -90,64 +141,92 @@ paths:
                             schema:
                                 type: array
                                 items:
-                                    type: object
-                                    properties:
-                                        id:
-                                            type: string
-                                        prompt:
-                                            type: string
-                                        timestamp:
-                                            type: string
-
-    /save_prompt:
-        post:
-            summary: Save a new prompt
-            requestBody:
-                required: true
-                content:
-                    application/json:
-                        schema:
-                            type: object
-                            properties:
-                                prompt:
-                                    type: string
-                                    description: The prompt to be saved
-                            required:
-                                - prompt
-                            additionalProperties: false
-            responses:
-                '200':
-                    description: Prompt saved successfully
-                    content:
-                        application/json:
-                            schema:
-                                type: object
-                                properties:
-                                    status:
-                                        type: string
-                                    id:
-                                        type: string
-                '400':
-                    description: Invalid request
-                    content:
-                        application/json:
-                            schema:
-                                type: object
-                                properties:
-                                    error:
-                                        type: string
+                                    $ref: '#/components/schemas/Prompt'
                 '500':
                     description: Server error
                     content:
                         application/json:
                             schema:
-                                type: object
-                                properties:
-                                    error:
-                                        type: string
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /create_prompt:
+        post:
+            tags:
+                - Prompts
+            summary: Create a new prompt
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Prompt'
+            responses:
+                '200':
+                    description: Prompt created successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Prompt'
+                '400':
+                    description: Invalid request
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '500':
+                    description: Server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+
+    /update_prompt/{id}:
+        patch:
+            tags:
+                - Prompts
+            summary: Update an existing prompt
+            parameters:
+                - in: path
+                  name: id
+                  required: true
+                  schema:
+                      type: string
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/Prompt'
+            responses:
+                '200':
+                    description: Prompt updated successfully
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Prompt'
+                '400':
+                    description: Invalid request
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '404':
+                    description: Prompt not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '500':
+                    description: Server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
 
     /delete_prompt/{id}:
         delete:
+            tags:
+                - Prompts
             summary: Delete a saved prompt
             parameters:
                 - in: path
@@ -160,9 +239,21 @@ paths:
                     description: Prompt deleted successfully
                 '404':
                     description: Prompt not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
+                '500':
+                    description: Server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
 
     /swagger.yaml:
         get:
+            tags:
+                - Home
             summary: Get Swagger YAML
             description: Retrieve the Swagger YAML file describing the API
             responses:
@@ -172,6 +263,12 @@ paths:
                         application/x-yaml:
                             schema:
                                 type: string
+                '500':
+                    description: Server error
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/ErrorResponse'
 
 components:
     schemas:
@@ -180,6 +277,10 @@ components:
             properties:
                 status:
                     type: string
+                    enum:
+                        - data
+                        - end
+                        - error
                     description: Status of the stream (e.g., start, data, end, error)
                     example: "data"
                 model:
@@ -211,4 +312,75 @@ components:
                     type: string
                     format: uuid
                     description: The prompt that was used for generation
+            required:
+                - status
+                - model
+                - message
+                - token
+                - user
+                - timestamp
+                - prompt
+                - prompt_id
 
+        Prompt:
+            type: object
+            properties:
+                id:
+                    type: string
+                    format: uuid
+                    description: The unique identifier of the prompt
+                user:
+                    type: string
+                    description: The user who created the prompt
+                    minLength: 5
+                    maxLength: 30
+                status:
+                    type: string
+                    enum:
+                        - initialized
+                        - prompt-saved
+                        - prompt-updated
+                        - prompt-deleted
+                    description: The current status of the prompt
+                    example: "initialized"
+                prompt:
+                    type: string
+                    description: The prompt text
+                timestamp:
+                    type: string
+                    format: date-time
+                    description: The time when the prompt was created
+            required:
+                - id
+                - user
+                - prompt
+                - status
+            additionalProperties: false
+
+        ModelsResponse:
+            type: object
+            properties:
+                local_models:
+                    type: array
+                    items:
+                        type: string
+                openai_models:
+                    type: array
+                    items:
+                        type: string
+            required:
+                - local_models
+                - openai_models
+
+        ErrorResponse:
+            type: object
+            properties:
+                error:
+                    type: string
+                    description: A detailed error message explaining what went wrong
+                details:
+                    type: string
+                    description: Additional details about the error
+            required:
+                - error
+                - details
