@@ -3,6 +3,7 @@ import requests
 import os
 import uuid
 import sys
+import logging
 from dotenv import load_dotenv
 from jsonschema import validate, ValidationError
 
@@ -42,6 +43,7 @@ class TestPrompts(unittest.TestCase):
         self.assertIsInstance(data, list)
 
         for prompt in data:
+
             self.validate_response(prompt)
 
     def test_create_and_delete_prompt(self):
