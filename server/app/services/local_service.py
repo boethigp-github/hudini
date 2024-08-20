@@ -1,6 +1,6 @@
 import os
 import logging
-from server.clients.ClientFactory import ClientFactory
+from server.app.clients.client_factory import ClientFactory
 
 logger = logging.getLogger(__name__)
 

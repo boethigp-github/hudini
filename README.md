@@ -4,7 +4,7 @@ Here's an updated version of your README with an added **Inhaltsverzeichnis** (T
 
 # Hudini - CPU Magician on SLM
 
-![Hudini Logo](src/frontend/src/assets/hidini2.webp)
+![Hudini Logo](src/client/vue/assets/hidini2.webp)
 
 **CAUTION: FOR TESTING PURPOSES ONLY. NOT FOR PRODUCTION USE.**
 
@@ -57,7 +57,7 @@ Hudini is an interactive chat interface that works with CPU magic on SLM, allowi
 
 ```bash
 git clone <repository-url>
-cd llama-cpp-chat/frontend
+cd llama-cpp-chat/client
 npm install
 ```
 
@@ -94,7 +94,7 @@ conda activate aider-ollama
 The `requirements.txt` file is located at `src/backend/requirements.txt`. To install the required Python packages, navigate to this directory and run:
 
 ```bash
-cd src/backend
+cd src/server
 pip install -r requirements.txt
 ```
 
@@ -163,7 +163,7 @@ If you prefer to start each service manually, follow these steps:
    Navigate to the backend directory and start the server:
 
    ```bash
-   cd src/backend
+   cd src/server
    python run.py
    ```
 
@@ -172,7 +172,7 @@ If you prefer to start each service manually, follow these steps:
    Navigate to the frontend directory and start the development server:
 
    ```bash
-   cd frontend
+   cd client
    npm run dev
    ```
 
@@ -242,14 +242,14 @@ The test suite for Hudini's backend is located in the `src/backend/tests` direct
 2. **Ensure the backend server is running.** If it's not, start it in a separate terminal:
 
    ```bash
-   cd src/backend
+   cd src/server
    python run.py
    ```
 
 3. **Navigate to the test directory:**
 
    ```bash
-   cd src/backend/tests
+   cd src/server/tests
 
 
    ```

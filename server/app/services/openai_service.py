@@ -1,6 +1,6 @@
 # app/services/openai_service.py
 import os
-from server.clients.ClientFactory import ClientFactory
+from server.app.clients.client_factory import ClientFactory
 
 def get_openai_client():
     openai_api_key = os.getenv('API_KEY_OPEN_AI')

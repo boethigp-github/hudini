@@ -1,22 +1,74 @@
-# app/routes/models.py
 import logging
-from flask import Blueprint, jsonify
-from server.app import get_local_models, get_openai_models
+from flask import Blueprint, jsonify, Response
+from ..clients.local_client import LocalClient
+from ..clients.openai_client import OpenAIClient
+from ..config import Config  # Import the Config class
 
 # Set up logger for this module
 logger = logging.getLogger(__name__)
 
-models_blueprint = Blueprint('models', __name__)
+class ModelsController:
+    """
+    A controller class responsible for handling routes related to models.
 
-@models_blueprint.route('/get_models', methods=['GET'])
-def get_models():
-    try:
-        local_models = get_local_models()
-        openai_models = get_openai_models()  # Fetch models from OpenAI
+    This class sets up the necessary routes to retrieve models from local storage and OpenAI,
+    and handles requests for the favicon.
+    """
+
+    def __init__(self):
+        """
+        Initializes the ModelsController instance.
+
+        This method creates a Flask Blueprint for the models routes and registers the necessary routes.
+        """
+        # Create the blueprint for this controller
+        self.blueprint = Blueprint('models', __name__)
+        # Register the routes
+        self.register_routes()
+
+    def register_routes(self):
+        """
+        Registers routes to the Flask blueprint.
+
+        This method maps the /get_models and /favicon.ico routes to their respective handler methods.
+        """
+        self.blueprint.add_url_rule('/get_models', 'get_models', self.get_models, methods=['GET'])
+        self.blueprint.add_url_rule('/favicon.ico', 'favicon', self.favicon)
+
+    @staticmethod
+    def get_models():
+        """
+        Handles the /get_models route.
+
+        This method retrieves available models from both local storage and OpenAI,
+        and returns them as a JSON response.
+
+        Returns:
+            flask.Response: A JSON response containing lists of local and OpenAI models.
+        """
+        models_path = Config.MODEL_PATH
+        api_key = Config.OPENAI_API_KEY
+        local_models = LocalClient(models_path).get_available_models()
+        openai_models = OpenAIClient(api_key).get_available_models()
+        logger.debug(f"Retrieved local models: {local_models}")
+        logger.debug(f"Retrieved OpenAI models: {openai_models}")
         return jsonify({
             'local_models': local_models,
             'openai_models': openai_models
         })
-    except Exception as e:
-        logger.exception("An error occurred while fetching models.")
-        return jsonify({"error": str(e)}), 500
+
+    @staticmethod
+    def favicon():
+        """
+        Handles the /favicon.ico route.
+
+        This method returns a 204 No Content response for the favicon.ico request.
+
+        Returns:
+            flask.Response: An empty response with a 204 status code.
+        """
+        return Response(status=204)
+
+
+# Create an instance of the controller
+models_controller = ModelsController()

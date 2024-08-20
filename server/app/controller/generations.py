@@ -7,10 +7,8 @@ import uuid
 import yaml
 import os
 from typing import Dict, Any
-from server.app import get_local_client
-from server.app import get_openai_client
-from server.app import SchemaToModelBuilder
-from server.app import get_local_models, get_openai_models
+
+from server.app.utils.schema_to_model_builder  import SchemaToModelBuilder
 
 generations_blueprint = Blueprint('generations', __name__)
 logger = logging.getLogger(__name__)

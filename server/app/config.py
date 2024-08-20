@@ -1,16 +1,22 @@
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env.local
-env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '.env.local'))
-if not os.path.exists(env_path):
-    raise FileNotFoundError(f".env.local file not found at {env_path}. Please ensure the file exists.")
-load_dotenv(env_path)
 
 class Config:
-    # Flask settings
-    DEBUG = True  # Enable debug mode
-    TESTING = False  # Disable testing mode
+    # Load the .env.local file
+    env_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), '..', '..', 'infrastructure', 'environment', '.env.local'))
+    if not os.path.exists(env_path):
+        raise FileNotFoundError(f".env.local file not found at {env_path}. Please ensure the file exists.")
+
+    load_dotenv(env_path)
+
+    # Flask settings as class attributes
+    FLASK_DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() in ('true', '1', 't')
+    FLASK_ENV = os.getenv('FLASK_ENV')
+    APP_LOG_LEVEL = os.getenv('APP_LOG_LEVEL')
+    APP_PROJECT_NAME = os.getenv('APP_PROJECT_NAME')
+    TESTING = True  # Disable testing mode
 
     # Swagger settings
     SWAGGER_URL = '/api/docs'  # URL for exposing Swagger UI (without trailing '/')
@@ -31,4 +37,3 @@ class Config:
     if not SQLALCHEMY_DATABASE_URI:
         raise ValueError("Database URL not set. Please check your .env.local file.")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-

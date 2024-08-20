@@ -1,7 +1,7 @@
 import os
 import logging
-from .OpenAIClient import OpenAIClient  # Correctly import OpenAIClient
-from .LocalClient import LocalClient  # Ensure LocalClient is also correctly imported
+from .openai_client import OpenAIClient  # Correctly import OpenAIClient
+from .local_client import LocalClient  # Ensure LocalClient is also correctly imported
 
 logger = logging.getLogger(__name__)
 

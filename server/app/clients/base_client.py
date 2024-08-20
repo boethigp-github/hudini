@@ -8,3 +8,4 @@ class BaseClient(ABC):
     @abstractmethod
     def get_available_models(self):
         pass
+
