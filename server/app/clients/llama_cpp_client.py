@@ -19,6 +19,4 @@ class LocalClient(BaseClient):
     def get_available_models(self):
         return [f for f in os.listdir(self.model_path) if f.endswith('.gguf')]
 
-    def get_local_models(self):
-        return self.get_available_models()
 

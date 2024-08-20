@@ -2,10 +2,10 @@ import os
 from dotenv import load_dotenv
 
 
-class Config:
+class BaseConfig:
     # Load the .env.local file
     env_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), '..', '..', 'infrastructure', 'environment', '.env.local'))
+        os.path.join(os.path.dirname(__file__), '..', '..', '..', 'infrastructure', 'environment', '.env.local'))
     if not os.path.exists(env_path):
         raise FileNotFoundError(f".env.local file not found at {env_path}. Please ensure the file exists.")
 

@@ -1,8 +1,6 @@
 import logging
 from flask import Blueprint, jsonify, Response
-from ..clients.local_client import LocalClient
-from ..clients.openai_client import OpenAIClient
-from ..config import Config  # Import the Config class
+
 
 # Set up logger for this module
 logger = logging.getLogger(__name__)
@@ -46,8 +44,12 @@ class ModelsController:
         Returns:
             flask.Response: A JSON response containing lists of local and OpenAI models.
         """
-        models_path = Config.MODEL_PATH
-        api_key = Config.OPENAI_API_KEY
+        from server.app.config.base_config import BaseConfig
+        from server.app.clients.llama_cpp_client import LocalClient
+        from server.app.clients.openai_client import OpenAIClient
+
+        models_path =  BaseConfig.MODEL_PATH
+        api_key = BaseConfig.OPENAI_API_KEY
         local_models = LocalClient(models_path).get_available_models()
         openai_models = OpenAIClient(api_key).get_available_models()
         logger.debug(f"Retrieved local models: {local_models}")

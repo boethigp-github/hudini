@@ -7,9 +7,8 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 
 from flask_migrate import Migrate
-from ..controller.models import models_controller
-# Initialize extensions
-from ..extensions import db
+
+
 
 
 class FlaskAppFactory:
@@ -51,12 +50,14 @@ class FlaskAppFactory:
         self.load_environment(app)
 
         self.setup_logging(app)
+        # Initialize extensions
+        from ..extensions import db
 
         db.init_app(app)
 
         Migrate(app, db)
 
-
+        from ..controller.models import models_controller
         app.register_blueprint(models_controller.blueprint)
 
         self.log_registered_routes(app)
