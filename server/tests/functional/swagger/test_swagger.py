@@ -2,7 +2,7 @@ import unittest
 import requests
 import yaml
 import os
-
+import logging
 
 
 class TestSwagger(unittest.TestCase):

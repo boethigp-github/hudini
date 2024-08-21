@@ -60,6 +60,9 @@ class FlaskAppFactory:
         from ..controller.models import models_controller
         app.register_blueprint(models_controller.blueprint)
 
+        from ..controller.swagger import swagger_controller
+        app.register_blueprint(swagger_controller.blueprint)
+
         self.log_registered_routes(app)
 
         return app
