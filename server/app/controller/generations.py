@@ -75,12 +75,18 @@ def stream_route():
     return Response(generate_and_stream(prompt, models[0], prompt_id), content_type='application/json')
 
 def generate_and_stream(prompt, model, prompt_id):
+    from server.app.config.base_config import BaseConfig
+    from server.app.clients.llama_cpp_client import LLamaCppClient
+    from server.app.clients.openai_client import OpenAIClient
 
     try:
-        local_client = get_local_client()
-        openai_client = get_openai_client()
-        local_models = get_local_models()
-        openai_models = get_openai_models()
+
+
+        llama_cpp_client = LLamaCppClient(BaseConfig.MODEL_PATH)
+        local_models = llama_cpp_client.get_available_models()
+
+        openai_client = OpenAIClient(BaseConfig.OPENAI_API_KEY)
+        openai_models = openai_client.get_available_models()
 
         logBootstrap(prompt, model, prompt_id, local_models, openai_models)
 
@@ -89,13 +95,13 @@ def generate_and_stream(prompt, model, prompt_id):
         if model in local_models:
             logger.info(f"Using local model: {model}")
             try:
-                local_client.load_model(model)
+                llama_cpp_client.load_model(model)
             except Exception as e:
                 logger.error(f"Error loading model {model}: {str(e)}")
                 yield json.dumps(schema_builder.create_object(status="error", message=f"Unable to load model {model}: {str(e)}"))
                 return
             try:
-                output = local_client.generate(
+                output = llama_cpp_client.generate(
                     prompt,
                     max_tokens=1000,
                     temperature=0.9,
@@ -149,7 +155,7 @@ def generate_and_stream(prompt, model, prompt_id):
     except Exception as e:
         logger.error(f"Unexpected error in generate_and_stream: {str(e)}")
         logger.error(traceback.format_exc())
-        yield json.dumps(schema_builder.create_object(status="error", message=f"Unexpected error: {str(e)} localmodels: {local_models}, openai_models: {openai_models}",model=model, prompt=prompt, prompt_id=prompt_ids))
+        yield json.dumps(schema_builder.create_object(status="error", message=f"Unexpected error: {str(e)} localmodels: {local_models}, openai_models: {openai_models}",model=model, prompt=prompt, prompt_id=prompt_id))
 
 def logBootstrap(prompt, model, prompt_id, local_models, openai_models):
     logger.info(f"Using model: {model}")

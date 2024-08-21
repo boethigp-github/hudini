@@ -1,31 +1,45 @@
-from flask import Blueprint, send_file
-from flask_swagger_ui import get_swaggerui_blueprint
+import logging
+from flask import Blueprint,send_file
 import os
+from flask_swagger_ui import get_swaggerui_blueprint
+# Set up logger for this module
+logger = logging.getLogger(__name__)
 
-# Blueprint for serving the swagger.yaml file
-swagger_blueprint = Blueprint('swagger', __name__)
 
-@swagger_blueprint.route('/swagger.yaml')
-def get_swagger_yaml():
-    swagger_yaml_path = os.path.join(os.path.dirname(__file__), '..', '..', 'swagger.yaml')
-    return send_file(swagger_yaml_path, mimetype='application/x-yaml')
 
-# Configuration for Swagger UI
-SWAGGER_URL = '/api/docs'  # URL for exposing Swagger UI (without trailing '/')
-API_URL = '/swagger.yaml'  # Our API url (can of course be a local resource)
+class SwaggerController:
+    """
+    A controller class responsible for handling routes related to models.
 
-# Create Swagger UI blueprint
-swaggerui_blueprint = get_swaggerui_blueprint(
-    SWAGGER_URL,
-    API_URL,
-    config={
-        'app_name': "Hudini API"
-    }
-)
+    This class sets up the necessary routes to retrieve models from local storage and OpenAI,
+    and handles requests for the favicon.
+    """
 
-# Function to register both blueprints
-def register_swagger_blueprints(app):
-    app.register_blueprint(swagger_blueprint)
-    app.register_blueprint(swaggerui_blueprint, url_prefix=SWAGGER_URL)
+    def __init__(self):
+        """
+        Initializes the SwaggerController instance.
 
-# Note: Call register_swagger_blueprints(app) in your main app file
+        This method creates a Flask Blueprint for the models routes and registers the necessary routes.
+        """
+        # Create the blueprint for this controller
+        self.blueprint = Blueprint('models', __name__)
+        # Register the routes
+        self.register_routes()
+
+    def register_routes(self):
+        """
+        Registers routes to the Flask blueprint.
+
+        This method maps the /get_models and /favicon.ico routes to their respective handler methods.
+        """
+        self.blueprint.add_url_rule('/swagger.yaml', '/swagger.yaml', self.get_swagger_yaml, methods=['GET'])
+
+    @staticmethod
+    def get_swagger_yaml():
+        from server.app.utils.swagger_loader import SwaggerLoader
+
+        return send_file(SwaggerLoader("swagger.yaml").file_path(), mimetype='application/x-yaml')
+
+
+# Create an instance of the controller
+swagger_controller = SwaggerController()

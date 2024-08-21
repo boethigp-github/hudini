@@ -2,7 +2,7 @@ import os
 from llama_cpp import Llama
 from .base_client import BaseClient
 
-class LocalClient(BaseClient):
+class LLamaCppClient(BaseClient):
     def __init__(self, model_path):
         self.model_path = model_path
         self.llm = None

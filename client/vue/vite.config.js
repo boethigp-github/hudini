@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
             },
         },
         resolve: {
-            '@': path.resolve(__dirname, './src'),
+            '@': path.resolve(__dirname, './../'),
         },
         define: {
             'import.meta.env.VITE_SERVER_URL': JSON.stringify(env.SERVER_URL),

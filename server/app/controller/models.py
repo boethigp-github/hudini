@@ -45,13 +45,12 @@ class ModelsController:
             flask.Response: A JSON response containing lists of local and OpenAI models.
         """
         from server.app.config.base_config import BaseConfig
-        from server.app.clients.llama_cpp_client import LocalClient
+        from server.app.clients.llama_cpp_client import LLamaCppClient
         from server.app.clients.openai_client import OpenAIClient
 
         models_path =  BaseConfig.MODEL_PATH
-        api_key = BaseConfig.OPENAI_API_KEY
-        local_models = LocalClient(models_path).get_available_models()
-        openai_models = OpenAIClient(api_key).get_available_models()
+        local_models = LLamaCppClient(models_path).get_available_models()
+        openai_models = OpenAIClient(BaseConfig.OPENAI_API_KEY).get_available_models()
         logger.debug(f"Retrieved local models: {local_models}")
         logger.debug(f"Retrieved OpenAI models: {openai_models}")
         return jsonify({
