@@ -1,15 +1,20 @@
+import json
 from server.app.clients.base_client import BaseClient
 from openai import OpenAI
-import logging
-
-# Set up a logger for this module
-logger = logging.getLogger(__name__)
+from cachetools import TTLCache
 
 class OpenAIClient(BaseClient):
     def __init__(self, api_key):
         if not api_key:
             raise ValueError("OpenAI API key is not set")
         self.client = OpenAI(api_key=api_key)
+
+
+        from flask import current_app
+        self.cache = current_app.extensions['cache']
+
+
+        self.logger = current_app.logger
 
     def generate(self, prompt: str, **kwargs):
         """
@@ -30,19 +35,35 @@ class OpenAIClient(BaseClient):
         )
         return response.choices[0].message['content']
 
+
+
+
     def get_available_models(self):
         """
-        Get a list of available models from OpenAI.
+        Get a list of available models from OpenAI, with caching using cachetools.
 
         Returns:
             list: A list of model IDs available in the OpenAI account.
         """
+
+        cached_models = self.cache.get('models')
+        if cached_models:
+            self.logger.debug(f"Cache Hit on get_available_models()")
+            return self.cache.get('models')
+
+        self.logger.debug(f"Cache misses.")
         try:
             # List all models available in the account
             response = self.client.models.list()
-            models = [model.id for model in response]  # Iterate directly over the response
+            models = [model.id for model in response]
+
+            # Cache the result
+            self.cache.set('models', models, expire=3600)
+            self.logger.debug(f"Cache  {len(models)} Models")
+
+
             return models
         except Exception as e:
             # Log the detailed error before raising an exception
-            logger.error(f"Failed to fetch models from OpenAI: {str(e)}", exc_info=True)
+            self.logger.error(f"Failed to fetch models from OpenAI: {str(e)}", exc_info=True)
             raise ValueError(f"Error fetching models from OpenAI: {str(e)}")

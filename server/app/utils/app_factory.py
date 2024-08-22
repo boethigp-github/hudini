@@ -2,12 +2,14 @@
 
 import os
 import logging
-from flask import Flask
+from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 
 from flask_migrate import Migrate
 
+
+from ..extensions import cache
 class FlaskAppFactory:
     def __init__(self):
         self.logger = self.setup_basic_logging()
@@ -35,6 +37,7 @@ class FlaskAppFactory:
         app.logger.debug(f"App {app.config.get('APP_PROJECT_NAME', 'Unknown')} starting.")
         app.logger.debug("Logging setup complete and working.")
 
+
     def create_app(self, config):
         app = Flask(__name__)
 
@@ -45,6 +48,13 @@ class FlaskAppFactory:
         self.load_environment(app)
 
         self.setup_logging(app)
+
+        cache.init_cache(app)
+
+        from server.app.cli.cache_clear import cache_clear
+        app.cli.add_command(cache_clear)
+
+
         # Initialize extensions
         from ..extensions import db
 
@@ -58,9 +68,23 @@ class FlaskAppFactory:
         from ..controller.swagger import swagger_controller
         app.register_blueprint(swagger_controller.blueprint)
 
+
+
         self.log_registered_routes(app)
 
         return app
+
+
+    def register_error_handlers(self, app):
+        """Register global error handlers."""
+        @app.errorhandler(Exception)
+        def handle_exception(e):
+            # Log the exception
+            app.logger.exception('An unhandled exception occurred')
+            # Return a custom error page
+            response = jsonify({'error': str(e)})
+            response.status_code = 500
+            return response
 
     def register_blueprints(self, app):
         try:
