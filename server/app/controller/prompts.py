@@ -9,12 +9,7 @@ from flask import Blueprint, jsonify, request
 from server.app.models.models import Prompt
 from server.app.extensions import db
 
-
 logger = logging.getLogger(__name__)
-
-
-# schema_builder = SchemaToModelBuilder(schema_ref['components']['schemas']['StreamResponse']['properties'])
-
 
 class PromptsController:
     def __init__(self):
@@ -38,8 +33,6 @@ class PromptsController:
         self.blueprint.add_url_rule('/create_prompt', 'create_prompt_route', self.create_prompt_route, methods=['POST'])
         self.blueprint.add_url_rule('/delete_prompt/<uuid:prompt_id>', 'delete_prompt_route', self.delete_prompt_route, methods=['DELETE'])
         self.blueprint.add_url_rule('/update_prompt/<uuid:prompt_id>', 'update_prompt_route', self.update_prompt_route, methods=['PATCH'])
-
-    # Load saved prompts
 
     def load_prompts_route(self):
         logger.info("Loading prompts for client")
@@ -163,8 +156,6 @@ class PromptsController:
                 "error": "111An unexpected error occurred",
                 "details": str(e)
             }), 500
-    #
-    # # Delete a prompt by ID
-    # @prompts_blueprint.route('/delete_prompt/<uuid:id>', methods=['DELETE'])
+
 
 prompts_controller = PromptsController()
