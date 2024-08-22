@@ -1,22 +1,110 @@
-# app/utils/app_factory.py
-
 import os
 import logging
 from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
-
 from flask_migrate import Migrate
-
-
 from ..extensions import cache
+
 class FlaskAppFactory:
     def __init__(self):
         self.logger = self.setup_basic_logging()
-        self.blueprints_registered=False
+        self.blueprints_registered = False
+        self.app = None
+
+    def create_app(self, config):
+        return (
+            self.initialize_app()
+            .configure_app(config)
+            .load_environment()
+            .setup_logging()
+            .initialize_cache()
+            .register_commands()
+            .initialize_extensions()
+            .register_blueprints()
+            .log_registered_routes()
+            .app
+        )
+
+    def initialize_app(self):
+        """Initialize the Flask app and set up CORS."""
+        self.app = Flask(__name__)
+        CORS(self.app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:5173"}})
+        return self
+
+    def configure_app(self, config):
+        """Configure the Flask app."""
+        self.app.config.from_object(config)
+        return self
+
+    def load_environment(self):
+        """Load environment variables."""
+        possible_env_paths = [
+            os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'infrastructure', 'environment', '.env.local')),
+        ]
+
+        env_path = FlaskAppFactory.find_and_load_dotenv(possible_env_paths)
+        if env_path:
+            logging.getLogger(__name__).info(f".env.local file found and loaded from {env_path}")
+        else:
+            logging.getLogger(__name__).error(f".env.local file not found in any of the possible locations: {possible_env_paths}")
+        return self
+
+    def setup_logging(self):
+        """Set up logging for the Flask app."""
+        self.app.logger.setLevel(self.app.config.get('APP_LOG_LEVEL', 'DEBUG'))
+        self.app.logger.debug(f"App {self.app.config.get('APP_PROJECT_NAME', 'Unknown')} starting.")
+        self.app.logger.debug("Logging setup complete and working.")
+        return self
+
+    def initialize_cache(self):
+        """Initialize the cache."""
+        cache.init_cache(self.app)
+        return self
+
+    def register_commands(self):
+        """Register CLI commands."""
+        from server.app.cli.cache_clear import cache_clear
+        self.app.cli.add_command(cache_clear)
+        return self
+
+    def initialize_extensions(self):
+        """Initialize extensions like the database and migrations."""
+        from ..extensions import db
+        db.init_app(self.app)
+        Migrate(self.app, db)
+        return self
+
+    def register_blueprints(self):
+        """Register Flask blueprints."""
+        from ..controller.models import models_controller
+        self.app.register_blueprint(models_controller.blueprint)
+
+        from ..controller.swagger import swagger_controller
+        self.app.register_blueprint(swagger_controller.blueprint)
+        return self
+
+    def log_registered_routes(self):
+        """Log the routes registered with the Flask app."""
+        logger = logging.getLogger(__name__)
+        logger.info("Registered routes:")
+        for rule in self.app.url_map.iter_rules():
+            methods = ','.join(rule.methods)
+            logger.info(f"{rule.endpoint}: {methods} {rule}")
+        return self
+
+    @staticmethod
+    def find_and_load_dotenv(possible_paths):
+        """Find and load environment variables from a .env file."""
+        for path in possible_paths:
+            if os.path.exists(path):
+                load_dotenv(path)
+                return path
+        return None
 
     @staticmethod
     def setup_basic_logging():
+        """Set up basic logging."""
         logging.basicConfig(
             level=logging.INFO,
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -25,96 +113,11 @@ class FlaskAppFactory:
         return logging.getLogger(__name__)
 
     @staticmethod
-    def find_and_load_dotenv(possible_paths):
-        for path in possible_paths:
-            if os.path.exists(path):
-                load_dotenv(path)
-                return path
-        return None
-
-    def setup_logging(self, app):
-        app.logger.setLevel(app.config.get('APP_LOG_LEVEL', 'DEBUG'))
-        app.logger.debug(f"App {app.config.get('APP_PROJECT_NAME', 'Unknown')} starting.")
-        app.logger.debug("Logging setup complete and working.")
-
-
-    def create_app(self, config):
-        app = Flask(__name__)
-
-        CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:5173"}})
-
-        app.config.from_object(config)
-
-        self.load_environment(app)
-
-        self.setup_logging(app)
-
-        cache.init_cache(app)
-
-        from server.app.cli.cache_clear import cache_clear
-        app.cli.add_command(cache_clear)
-
-
-        # Initialize extensions
-        from ..extensions import db
-
-        db.init_app(app)
-
-        Migrate(app, db)
-
-        from ..controller.models import models_controller
-        app.register_blueprint(models_controller.blueprint)
-
-        from ..controller.swagger import swagger_controller
-        app.register_blueprint(swagger_controller.blueprint)
-
-
-
-        self.log_registered_routes(app)
-
-        return app
-
-
-    def register_error_handlers(self, app):
+    def register_error_handlers(app):
         """Register global error handlers."""
         @app.errorhandler(Exception)
         def handle_exception(e):
-            # Log the exception
             app.logger.exception('An unhandled exception occurred')
-            # Return a custom error page
             response = jsonify({'error': str(e)})
             response.status_code = 500
             return response
-
-    def register_blueprints(self, app):
-        try:
-
-            # from ..controller.swagger import register_swagger_blueprints
-            # from ..controller.prompts import prompts_blueprint
-            # from ..controller.generations import generations_blueprint
-
-            # register_swagger_blueprints(app)
-            #
-            # app.register_blueprint(prompts_blueprint)
-            # app.register_blueprint(generations_blueprint)
-            self.logger.info("Blueprints registered successfully.")
-        except Exception as e:
-            self.logger.exception(f"Error registering blueprints: {str(e)}")
-
-    def load_environment(self, app):
-        possible_env_paths = [
-            os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'infrastructure', 'environment','.env.local')),
-        ]
-
-        env_path = self.find_and_load_dotenv(possible_env_paths)
-        if env_path:
-            self.logger.info(f".env.local file found and loaded from {env_path}")
-        else:
-            self.logger.error(f".env.local file not found in any of the possible locations: {possible_env_paths}")
-
-    def log_registered_routes(self, app):
-        self.logger.info("Registered routes:")
-        for rule in app.url_map.iter_rules():
-            methods = ','.join(rule.methods)
-            self.logger.info(f"{rule.endpoint}: {methods} {rule}")
-
