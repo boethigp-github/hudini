@@ -1,9 +1,7 @@
 import logging
-from flask import Blueprint,send_file
+from flask import Blueprint,send_file, jsonify
 
 logger = logging.getLogger(__name__)
-
-
 
 class SwaggerController:
     """
@@ -30,14 +28,15 @@ class SwaggerController:
 
         This method maps the /get_models and /favicon.ico routes to their respective handler methods.
         """
-        self.blueprint.add_url_rule('/swagger/yaml', '/swagger/yaml', self.get_swagger_yaml, methods=['GET'])
+        self.blueprint.add_url_rule('/swagger/yaml', 'swagger_yaml', self.swagger_yaml, methods=['GET'])
 
     @staticmethod
-    def get_swagger_yaml():
+    def swagger_yaml():
         from server.app.utils.swagger_loader import SwaggerLoader
+        yaml_file_path = SwaggerLoader("swagger.yaml").file_path()
+        logger.debug(f"FilePath: {yaml_file_path}")
 
-        return send_file(SwaggerLoader("swagger.yaml").file_path(), mimetype='application/x-yaml')
-
+        return send_file(yaml_file_path, mimetype='application/x-yaml')
 
 # Create an instance of the controller
 swagger_controller = SwaggerController()

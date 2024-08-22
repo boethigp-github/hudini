@@ -1,6 +1,6 @@
 import sys
 import os
-
+from flask import jsonify
 # Assuming your script is being run from inside the server directory
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -16,7 +16,9 @@ def handle_exception(e):
     # Log the exception
     app.logger.exception('An unhandled exception occurred')
     # Return a custom error page
-    return "An unexpected error occurred", 500
+    response = jsonify({'error': str(e)})
+    response.status_code = 500
+    return response
 
 if __name__ == "__main__":
     debug =BaseConfig.FLASK_DEBUG

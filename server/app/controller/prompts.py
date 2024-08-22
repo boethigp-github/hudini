@@ -68,7 +68,7 @@ def create_prompt_route():
         logger.error(f"Unexpected error in create_prompt: {str(e)}")
         logger.error(traceback.format_exc())
         return jsonify({
-            "error": "An unexpected error occurred",
+            "error": "333 An unexpected error occurred",
             "details": str(e)
         }), 500
 
@@ -105,7 +105,6 @@ def update_prompt_route(id):
 
         logger.info(f"Prompt updated successfully with id: {id}")
         return jsonify({
-            "status": "prompt-updated",
             "id": str(id),
             "prompt": prompt.prompt,
             "user": prompt.user,
@@ -117,23 +116,23 @@ def update_prompt_route(id):
         logger.error(f"Unexpected error in update_prompt: {str(e)}")
         logger.error(traceback.format_exc())
         return jsonify({
-            "error": "An unexpected error occurred",
+            "error": "111An unexpected error occurred",
             "details": str(e)
         }), 500
 
 # Delete a prompt by ID
 @prompts_blueprint.route('/delete_prompt/<uuid:id>', methods=['DELETE'])
-def delete_prompt_route(id):
+def delete_prompt_route(prompt_id):
     try:
-        logger.info(f"Attempting to delete prompt with id: {id}")
-        prompt = Prompt.query.get(id)
+        logger.info(f"Attempting to delete prompt with id: {prompt_id}")
+        prompt = Prompt.query.get(prompt_id)
         if prompt:
             db.session.delete(prompt)
             db.session.commit()
-            logger.info(f"Prompt with id {id} deleted successfully")
+            logger.info(f"Prompt with id {prompt_id} deleted successfully")
             return jsonify({"status": "Prompt deleted successfully"}), 200
         else:
-            logger.warning(f"Prompt with id {id} not found")
+            logger.warning(f"Prompt with id {prompt_id} not found")
             return jsonify({"error": "Prompt not found"}), 404
     except Exception as e:
         db.session.rollback()

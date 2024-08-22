@@ -1,8 +1,6 @@
 import logging
 from flask import Blueprint, jsonify, Response
 
-
-# Set up logger for this module
 logger = logging.getLogger(__name__)
 
 class ModelsController:
@@ -32,7 +30,6 @@ class ModelsController:
         """
         self.blueprint.add_url_rule('/get_models', 'get_models', self.get_models, methods=['GET'])
         self.blueprint.add_url_rule('/favicon.ico', 'favicon', self.favicon)
-
     @staticmethod
     def get_models():
         """
@@ -69,6 +66,7 @@ class ModelsController:
             flask.Response: An empty response with a 204 status code.
         """
         return Response(status=204)
+
 
 
 # Create an instance of the controller

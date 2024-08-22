@@ -11,14 +11,16 @@ class SwaggerLoader:
         try:
             from server.app.config.base_config import BaseConfig
 
-            file_path = os.path.dirname(os.path.abspath(__file__))
+            swagger_file_path = os.path.abspath(
+                os.path.join(os.path.dirname(__file__),'..','..','..','infrastructure','swagger','swagger.yaml')
+            )
 
-            if not os.path.exists(file_path):
-                raise FileNotFoundError(f"File {file_path} does not exist")
+            if not os.path.exists(swagger_file_path):
+                raise FileNotFoundError(f"File {swagger_file_path} does not exist")
 
-            self.logger.debug(f"SwaggerFile {file_path} loaded")
+            self.logger.debug(f"SwaggerFile {swagger_file_path} loaded")
 
-            return file_path
+            return swagger_file_path
 
         except Exception as e:
             self.logger.debug(f"Failed to load swaggerFile. Error: {e}")

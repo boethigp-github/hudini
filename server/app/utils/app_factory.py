@@ -8,9 +8,6 @@ from dotenv import load_dotenv
 
 from flask_migrate import Migrate
 
-
-
-
 class FlaskAppFactory:
     def __init__(self):
         self.logger = self.setup_basic_logging()
@@ -44,8 +41,6 @@ class FlaskAppFactory:
         CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:5173"}})
 
         app.config.from_object(config)
-
-
 
         self.load_environment(app)
 
@@ -84,9 +79,7 @@ class FlaskAppFactory:
 
     def load_environment(self, app):
         possible_env_paths = [
-
             os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'infrastructure', 'environment','.env.local')),
-
         ]
 
         env_path = self.find_and_load_dotenv(possible_env_paths)

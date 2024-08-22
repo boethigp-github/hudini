@@ -9,7 +9,7 @@ class TestSwagger(unittest.TestCase):
     BASE_URL = os.getenv('SERVER_URL', 'http://localhost:5000')
 
     def test_swagger_yaml(self):
-        response = requests.get(f"{self.BASE_URL}/swagger.yaml")
+        response = requests.get(f"{self.BASE_URL}/swagger/yaml")
         self.assertEqual(200,response.status_code )
         self.assertEqual(response.headers['Content-Type'], 'application/x-yaml')
 
