@@ -4,9 +4,15 @@ import os
 import yaml
 from typing import Dict, Any
 
+from flask import current_app
+
+from server.app.utils.swagger_loader import SwaggerLoader
+
+
 class SchemaToModelBuilder:
     def __init__(self, schema: Dict[str, Any]):
         self.schema = schema
+        self.logger = current_app.logger
 
     def create_object(self, **kwargs) -> Dict[str, Any]:
         response = {}
@@ -34,14 +40,18 @@ class SchemaToModelBuilder:
         schema = swagger_def['components']['schemas'][schema_name]['properties']
         return cls(schema)
 
-    def load_swagger_definition() -> Dict[str, Any]:
-        swagger_yaml_path = os.path.join(os.path.dirname(__file__), '..', '..', 'swagger.yaml')
+    @classmethod
+    def load_swagger_definition(cls) -> Dict[str, Any]:
+
+        from server.app.utils.swagger_loader import SwaggerLoader
+        swagger_yaml_path = SwaggerLoader("swagger.yaml").file_path()
+
         try:
             with open(swagger_yaml_path, 'r') as file:
                 return yaml.safe_load(file)
         except FileNotFoundError:
-            logger.error(f"Swagger file not found at {swagger_yaml_path}")
+            self.logger.error(f"Swagger file not found at {swagger_yaml_path}")
             raise
         except yaml.YAMLError as e:
-            logger.error(f"Error parsing Swagger YAML: {e}")
+            self.logger.error(f"Error parsing Swagger YAML: {e}")
             raise

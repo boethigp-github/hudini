@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from flask_migrate import Migrate
 from ..extensions import cache
 
+
+
 class FlaskAppFactory:
     def __init__(self):
         self.logger = self.setup_basic_logging()
@@ -14,27 +16,27 @@ class FlaskAppFactory:
 
     def create_app(self, config):
         return (
-            self.initialize_app()
-            .configure_app(config)
+            self.initialize_app(config)
             .load_environment()
             .setup_logging()
+            .set_cors()
             .initialize_cache()
             .register_commands()
-            .initialize_extensions()
-            .register_blueprints()
-            .log_registered_routes()
+            .init_database()
+            .register_route_controller()
             .app
         )
 
-    def initialize_app(self):
-        """Initialize the Flask app and set up CORS."""
-        self.app = Flask(__name__)
-        CORS(self.app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:5173"}})
+    def initialize_app(self, config):
+        """Initialize the Flask app """
+        self.app = Flask(__name__)  # Initialize the app first
+        self.app.config.from_object(config)  # Then configure it
         return self
 
-    def configure_app(self, config):
-        """Configure the Flask app."""
-        self.app.config.from_object(config)
+    def set_cors(self):
+        """Initialize CORS."""
+        origins = self.app.config.get("CORS_ORIGINS", ["http://localhost:5173"])  # Default if not set
+        CORS(self.app, supports_credentials=True, resources={r"/*": {"origins": origins}})
         return self
 
     def load_environment(self):
@@ -68,20 +70,26 @@ class FlaskAppFactory:
         self.app.cli.add_command(cache_clear)
         return self
 
-    def initialize_extensions(self):
+    def init_database(self):
         """Initialize extensions like the database and migrations."""
         from ..extensions import db
         db.init_app(self.app)
         Migrate(self.app, db)
         return self
 
-    def register_blueprints(self):
+    def register_route_controller(self):
         """Register Flask blueprints."""
+
         from ..controller.models import models_controller
         self.app.register_blueprint(models_controller.blueprint)
 
         from ..controller.swagger import swagger_controller
         self.app.register_blueprint(swagger_controller.blueprint)
+
+        from ..controller.prompts import prompts_controller
+        self.app.register_blueprint(prompts_controller.blueprint)
+
+        self.log_registered_routes()
         return self
 
     def log_registered_routes(self):
@@ -110,6 +118,8 @@ class FlaskAppFactory:
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
             handlers=[logging.StreamHandler()]
         )
+
+
         return logging.getLogger(__name__)
 
     @staticmethod

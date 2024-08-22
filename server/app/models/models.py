@@ -18,5 +18,5 @@ class Prompt(db.Model):
             "prompt": self.prompt,
             "timestamp": self.timestamp.isoformat(),
             "user": self.user,
-            "status": self.user
+            "status": self.status
         }
