@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 
 
 class BaseConfig:
+    #URLS
+    SERVER_URL='http://localhost:5000/'
     # Load the .env.local file
     env_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), '..', '..', '..', 'infrastructure', 'environment', '.env.local'))
