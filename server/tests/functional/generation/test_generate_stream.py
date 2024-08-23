@@ -3,7 +3,7 @@ import requests
 import os
 from dotenv import load_dotenv
 import json
-import yaml
+
 from jsonschema import validate
 import time
 
@@ -16,13 +16,7 @@ env_path = os.path.join(current_dir, '..', '..', '.env.local')
 # Load environment variables from .env.local
 load_dotenv(env_path)
 
-# Load the Swagger YAML file
-swagger_path = os.path.join(os.path.abspath(__file__), '..', '..', '..', '..', 'swagger.yaml')
-with open(swagger_path, 'r') as file:
-    swagger_def = yaml.safe_load(file)
 
-# Extract the StreamResponse schema
-stream_response_schema = swagger_def['components']['schemas']['StreamResponse']
 
 class TestGenerateAndStream(unittest.TestCase):
     BASE_URL = os.getenv('SERVER_URL', 'http://localhost:5000')
@@ -74,6 +68,9 @@ class TestGenerateAndStream(unittest.TestCase):
                     # Try to parse the buffer as JSON
                     event_data = json.loads(buffer)
                     # Validate the event data against the StreamResponse schema
+                    from server.app.utils.swagger_loader import SwaggerLoader
+                    swagger_loader = SwaggerLoader("swagger.yaml")
+                    stream_response_schema = swagger_loader.get_component_schema("StreamResponse")
                     validate(instance=event_data, schema=stream_response_schema)
                     # Reset buffer after successful parsing
                     buffer = ""

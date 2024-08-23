@@ -1,5 +1,6 @@
 import os
 import logging
+import yaml
 
 class SwaggerLoader:
     """
@@ -61,3 +62,10 @@ class SwaggerLoader:
             # Log any exceptions that occur during file path construction
             self.logger.debug(f"Failed to load SwaggerFile. Error: {e}")
             raise
+
+    def load_definition(self):
+        with open(self.file_path(), 'r') as file:
+            return yaml.safe_load(file)
+
+    def get_component_schema(self, component_name):
+        return self.load_definition()['components']['schemas'][component_name]
