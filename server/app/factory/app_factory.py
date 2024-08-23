@@ -4,8 +4,7 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 from flask_migrate import Migrate
-from ..extensions import cache
-
+from server.app.extensions import cache
 
 
 class FlaskAppFactory:
@@ -89,8 +88,12 @@ class FlaskAppFactory:
         from ..controller.prompts import prompts_controller
         self.app.register_blueprint(prompts_controller.blueprint)
 
+        # from ..controller.generation import generation_controller
+        # self.app.register_blueprint(generation_controller.blueprint)
+
         self.log_registered_routes()
         return self
+
 
     def log_registered_routes(self):
         """Log the routes registered with the Flask app."""

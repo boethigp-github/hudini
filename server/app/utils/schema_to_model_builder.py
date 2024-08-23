@@ -3,10 +3,7 @@ import uuid
 import os
 import yaml
 from typing import Dict, Any
-
 from flask import current_app
-
-from server.app.utils.swagger_loader import SwaggerLoader
 
 
 class SchemaToModelBuilder:
@@ -35,23 +32,4 @@ class SchemaToModelBuilder:
         else:
             return ''
 
-    @classmethod
-    def from_swagger_definition(cls, swagger_def: Dict[str, Any], schema_name: str):
-        schema = swagger_def['components']['schemas'][schema_name]['properties']
-        return cls(schema)
 
-    @classmethod
-    def load_swagger_definition(cls) -> Dict[str, Any]:
-
-        from server.app.utils.swagger_loader import SwaggerLoader
-        swagger_yaml_path = SwaggerLoader("swagger.yaml").file_path()
-
-        try:
-            with open(swagger_yaml_path, 'r') as file:
-                return yaml.safe_load(file)
-        except FileNotFoundError:
-            self.logger.error(f"Swagger file not found at {swagger_yaml_path}")
-            raise
-        except yaml.YAMLError as e:
-            self.logger.error(f"Error parsing Swagger YAML: {e}")
-            raise

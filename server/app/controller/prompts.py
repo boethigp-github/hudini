@@ -1,4 +1,4 @@
-from server.app.utils.schema_to_model_builder import SchemaToModelBuilder
+
 import logging
 import uuid
 import traceback
@@ -87,10 +87,10 @@ class PromptsController:
             }), 500
 
     def validateSchema(self, data):
-        schema_ref = SchemaToModelBuilder.load_swagger_definition()
-        # Load the prompt schemas from the Swagger definition
-        prompt_schema = schema_ref['components']['schemas']['Prompt']
-        validate(instance=data, schema=prompt_schema)
+
+        from server.app.utils.swagger_loader import SwaggerLoader
+
+        validate(instance=data, schema=SwaggerLoader("swagger.yaml").get_component_schema("Prompt"))
 
     def delete_prompt_route(self, prompt_id:uuid):
         try:

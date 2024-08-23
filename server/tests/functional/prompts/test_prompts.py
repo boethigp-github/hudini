@@ -5,7 +5,7 @@ import uuid
 from dotenv import load_dotenv
 from jsonschema import validate, ValidationError
 
-
+from server.app.utils.swagger_loader import SwaggerLoader
 
 class TestPrompts(unittest.TestCase):
     BASE_URL = None
@@ -14,14 +14,11 @@ class TestPrompts(unittest.TestCase):
     def setUpClass(cls):
         # Load environment variables
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        env_path = os.path.join(current_dir, '..', '..', '.env.local')
+        env_path = os.path.join(current_dir, '..', '..', '..','infrastructure','environment', '.env.local')
         load_dotenv(env_path)
 
         cls.BASE_URL = os.getenv('SERVER_URL', 'http://localhost:5000')
-
-        from server.app.utils.schema_to_model_builder import SchemaToModelBuilder
-        schema_ref = SchemaToModelBuilder.load_swagger_definition()
-        cls.prompt_schema = schema_ref['components']['schemas']['Prompt']
+        cls.prompt_schema = SwaggerLoader("swagger.yaml").get_component_schema("Prompt")
 
     def validate_response(self, data):
         try:
