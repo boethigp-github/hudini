@@ -1,64 +1,35 @@
-from flask import Blueprint, request, Response, stream_with_context
-import logging
-import json
+from flask import Blueprint, request, Response, stream_with_context, jsonify
 import asyncio
-from openai import AsyncOpenAI
-from server.app.config.base_config import  BaseConfig
+from server.app.config.base_config import BaseConfig
+from server.app.clients.openai_client import OpenAIClient
 
 class GenerationController:
     def __init__(self):
         self.blueprint = Blueprint('generation', __name__)
         self.register_routes()
-        self.logger = self.setup_logger()
-        self.openai_client = AsyncOpenAI(api_key=BaseConfig.OPENAI_API_KEY)
-
-    def setup_logger(self):
-        logger = logging.getLogger(__name__)
-        logger.setLevel(logging.DEBUG)
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
-        return logger
+        self.openai_client = OpenAIClient(api_key=BaseConfig.OPENAI_API_KEY)
 
     def register_routes(self):
         self.blueprint.add_url_rule('/stream', 'generate_route', self.generate_route, methods=['POST'])
-
-    async def fetch_completion(self, model, prompt):
-        try:
-            completion = await self.openai_client.chat.completions.create(
-                model=model,
-                messages=[
-                    {"role": "system", "content": "You are a helpful assistant."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.0
-            )
-            return {
-                'model': model,
-                'completion': completion.to_dict()
-            }
-        except Exception as e:
-            self.logger.error(f"Error with model {model}: {str(e)}")
-            return {
-                'model': model,
-                'error': str(e)
-            }
 
     def generate_route(self):
         data = request.json
         models = data.get('models', [])
         prompt = data.get('prompt', '')
 
+        # Check if models list is empty and return a 400 response
+        if not models:
+            return jsonify({"error": "The 'models' list cannot be empty."}), 400
+
         def generate():
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
 
             async def run_completions():
-                tasks = [asyncio.create_task(self.fetch_completion(model, prompt)) for model in models]
+                tasks = [asyncio.create_task(self.openai_client.fetch_completion(model, prompt)) for model in models]
                 for completed_task in asyncio.as_completed(tasks):
                     result = await completed_task
-                    yield json.dumps(result) + '\n'
+                    yield result  # Yield the serialized JSON string from the Pydantic model
 
             async def async_generator():
                 async for item in run_completions():
@@ -77,4 +48,5 @@ class GenerationController:
 
         return Response(stream_with_context(generate()), content_type='application/json')
 
+# Instantiate the GenerationController
 generation_controller = GenerationController()
