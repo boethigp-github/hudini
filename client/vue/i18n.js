@@ -4,6 +4,8 @@ const messages = {
     en: {
         hudini_title: 'Hudini - CPU Magician on SLM',
         select_model: 'Select Model',
+        select_category: 'Select Category',
+        select_category_placeholder: 'Select a category',  // Add this line
         enter_prompt: 'Enter your prompt here...',
         send_button: 'Send',
         delete: 'Delete',
@@ -13,7 +15,7 @@ const messages = {
         prompt_deleted: 'Prompt deleted',
         previous_prompts: 'Previous Prompts',
         no_prompts: 'No prompts saved yet',  // New key
-        failed_to_load_prompts: 'Failed to load prompts',  // Existing key, ensuring it's in sync
+        failed_to_load_prompts: 'Failed to load prompts',  // Existing key
         select_model_placeholder: 'Select one or more models',
         local_models: 'Local Models',
         openai_models: 'OpenAI Models',
@@ -27,6 +29,8 @@ const messages = {
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
         select_model: 'Modell auswählen',
+        select_category: 'Kategorie auswählen',
+        select_category_placeholder: 'Kategorie auswählen',  // Add this line
         enter_prompt: 'Geben Sie Ihren Prompt hier ein...',
         send_button: 'Senden',
         delete: 'Löschen',
@@ -50,6 +54,8 @@ const messages = {
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
         select_model: 'Sélectionner le modèle',
+        select_category: 'Sélectionner une catégorie',
+        select_category_placeholder: 'Sélectionnez une catégorie',  // Add this line
         enter_prompt: 'Entrez votre prompt ici...',
         send_button: 'Envoyer',
         delete: 'Supprimer',
@@ -73,6 +79,8 @@ const messages = {
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
         select_model: 'Выберите модель',
+        select_category: 'Выберите категорию',
+        select_category_placeholder: 'Выберите категорию',  // Add this line
         enter_prompt: 'Введите ваш запрос здесь...',
         send_button: 'Отправить',
         delete: 'Удалить',
@@ -96,6 +104,8 @@ const messages = {
     zh: {
         hudini_title: 'Hudini - SLM上的CPU魔术师',
         select_model: '选择模型',
+        select_category: '选择类别',
+        select_category_placeholder: '选择一个类别',  // Add this line
         enter_prompt: '在此输入您的提示...',
         send_button: '发送',
         delete: '删除',
@@ -117,6 +127,7 @@ const messages = {
         server_connection_error: '连接服务器时发生错误。',
     }
 };
+
 
 const i18n = createI18n({
     legacy: false,
