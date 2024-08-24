@@ -46,9 +46,7 @@ class PromptsController:
 
             # Validate request data against the create prompt schema
             try:
-                # Load the Swagger definition and schema builder
                 self.validateSchema(data)
-
                 logger.info("Request data passed schema validation")
             except ValidationError as validation_error:
                 error_message = validation_error.message
@@ -58,7 +56,13 @@ class PromptsController:
                     "message": error_message,
                 }), 400  # Return 400 Bad Request for validation errors
 
-            # Save the new prompt
+            # Check if a prompt with the same content and user already exists
+            existing_prompt = Prompt.query.filter_by(prompt=data['prompt'], user=data['user']).first()
+            if existing_prompt:
+                logger.info("Prompt with the same content already exists for this user.")
+                return jsonify(existing_prompt.to_dict()), 200
+
+                # Save the new prompt
             new_prompt = Prompt(
                 id=data.get('id', uuid.uuid4()),  # Ensure id is handled correctly
                 prompt=data['prompt'],
@@ -74,7 +78,6 @@ class PromptsController:
                 "id": str(new_prompt.id),
                 "prompt": new_prompt.prompt,
                 "user": new_prompt.user,
-
                 "timestamp": new_prompt.timestamp.isoformat()
             }), 200
         except Exception as e:
@@ -82,7 +85,7 @@ class PromptsController:
             logger.error(f"Unexpected error in create_prompt: {str(e)}")
             logger.error(traceback.format_exc())
             return jsonify({
-                "error": "333 An unexpected error occurred",
+                "error": "An unexpected error occurred",
                 "details": str(e)
             }), 500
 

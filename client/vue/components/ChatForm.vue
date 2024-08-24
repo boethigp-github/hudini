@@ -14,7 +14,7 @@
             <div class="chat-area">
                 <ResponsePanel
                     :responses="responses"
-                    :prompt="storedPrompt"
+
                 />
                 <a-form layout="vertical" class="form">
                     <ModelSelection />
@@ -80,17 +80,19 @@ export default {
                 return;
             }
 
-            const promptData = {
+
+
+          const promptData = {
                 prompt: prompt.value.trim(),
                 user: 'anonymous',
                 status: 'prompt-saved',
                 id: uuidv4(),
             };
+          responses.value.push(promptData)
 
+          updateTrigger.value++;
             try {
-                storedPrompt.value = await createPrompt(promptData);
-                message.success(t('prompt_saved'));
-                updateTrigger.value++;
+                await createPrompt(promptData);
             } catch (error) {
                 message.error(t('failed_to_save_prompt'));
             }
@@ -108,6 +110,8 @@ export default {
                 message.error(t('enter_prompt_and_select_model'));
                 return;
             }
+
+           createPromptServerside();
 
             loading.value = true;
 
@@ -144,7 +148,7 @@ export default {
                 },
                 () => {
                     loading.value = false;
-                    createPromptServerside();
+
                 }
             );
         };
