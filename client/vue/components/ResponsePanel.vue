@@ -18,7 +18,7 @@
                     <span class="model">{{ item.model }}</span>
                 </div>
                 <div class="response-content" >
-                    111 {{ item.completion.choices[0].message.content}}
+                    {{ item.completion.choices[0].message.content}}
                 </div>
             </div>
           <div  v-else>
