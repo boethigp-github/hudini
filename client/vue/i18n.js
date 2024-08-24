@@ -15,7 +15,7 @@ const messages = {
         prompt_deleted: 'Prompt deleted',
         previous_prompts: 'Previous Prompts',
         no_prompts: 'No prompts saved yet',  // New key
-        failed_to_load_prompts: 'Failed to load prompts',  // Existing key
+        failed_to_prompts: 'Failed to load prompts',  // Existing key
         select_model_placeholder: 'Select one or more models',
         local_models: 'Local Models',
         openai_models: 'OpenAI Models',
@@ -40,7 +40,7 @@ const messages = {
         prompt_deleted: 'Prompt gelöscht',
         previous_prompts: 'Bisherige Prompts',
         no_prompts: 'Noch keine Prompts gespeichert',  // New key
-        failed_to_load_prompts: 'Fehler beim Laden der Prompts',  // Existing key
+        failed_to_prompts: 'Fehler beim Laden der Prompts',  // Existing key
         select_model_placeholder: 'Wählen Sie ein oder mehrere Modelle aus',
         local_models: 'Lokale Modelle',
         openai_models: 'OpenAI Modelle',
@@ -65,7 +65,7 @@ const messages = {
         prompt_deleted: 'Prompt supprimé',
         previous_prompts: 'Prompts Précédents',
         no_prompts: 'Aucun prompt enregistré',  // New key
-        failed_to_load_prompts: 'Échec du chargement des prompts',  // Existing key
+        failed_to_prompts: 'Échec du chargement des prompts',  // Existing key
         select_model_placeholder: 'Sélectionnez un ou plusieurs modèles',
         local_models: 'Modèles Locaux',
         openai_models: 'Modèles OpenAI',
@@ -90,7 +90,7 @@ const messages = {
         prompt_deleted: 'Подсказка удалена',
         previous_prompts: 'Предыдущие подсказки',
         no_prompts: 'Пока нет сохраненных подсказок',  // New key
-        failed_to_load_prompts: 'Не удалось загрузить подсказки',  // Existing key
+        failed_to_prompts: 'Не удалось загрузить подсказки',  // Existing key
         select_model_placeholder: 'Выберите одну или несколько моделей',
         local_models: 'Локальные модели',
         openai_models: 'Модели OpenAI',
@@ -115,7 +115,7 @@ const messages = {
         prompt_deleted: '提示已删除',
         previous_prompts: '以前的提示',
         no_prompts: '尚未保存提示',  // New key
-        failed_to_load_prompts: '加载提示失败',  // Existing key
+        failed_to_prompts: '加载提示失败',  // Existing key
         select_model_placeholder: '选择一个或多个模型',
         local_models: '本地模型',
         openai_models: 'OpenAI模型',

@@ -18,7 +18,7 @@ const messages = {
         prompt_deleted: 'Prompt deleted',
         previous_prompts: 'Previous Prompts',
         no_prompts: 'No prompts saved yet',
-        failed_to_load_prompts: 'Failed to load prompts',
+        failed_to_prompts: 'Failed to load prompts',
         prompt_saved: 'prompt saved',
     }
 };

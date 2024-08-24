@@ -26,14 +26,14 @@ class ModelsController:
         """
         Registers routes to the Flask blueprint.
 
-        This method maps the /get_models and /favicon.ico routes to their respective handler methods.
+        This method maps the /models and /favicon.ico routes to their respective handler methods.
         """
-        self.blueprint.add_url_rule('/get_models', 'get_models', self.get_models, methods=['GET'])
+        self.blueprint.add_url_rule('/models', 'models', self.models, methods=['GET'])
         self.blueprint.add_url_rule('/favicon.ico', 'favicon', self.favicon)
     @staticmethod
-    def get_models():
+    def models():
         """
-        Handles the /get_models route.
+        Handles the /models route.
 
         This method retrieves available models from both local storage and OpenAI,
         and returns them as a JSON response.

@@ -48,7 +48,7 @@ export const streamPrompt = async (promptData, onChunk, onError, onComplete) => 
  */
 export const getModels = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/get_models`);
+        const response = await fetch(`${API_BASE_URL}/models`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -72,7 +72,7 @@ export const getModels = async () => {
  */
 export const createPrompt = async (promptData) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/create_prompt`, {
+        const response = await fetch(`${API_BASE_URL}/prompt`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

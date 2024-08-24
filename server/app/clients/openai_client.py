@@ -2,7 +2,7 @@ import logging
 import openai
 from openai import AsyncOpenAI
 from server.app.models.success_generation_model import SuccessGenerationModel
-from server.app.models.error_generation_model import ErrorGenerationModel
+from server.app.models.generation_error_details import ErrorGenerationModel
 from server.app.models.openai_model import OpenAIModel  # Import the new Pydantic model
 
 class OpenAIClient:

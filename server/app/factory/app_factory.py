@@ -41,14 +41,16 @@ class FlaskAppFactory:
     def load_environment(self):
         """Load environment variables."""
         possible_env_paths = [
-            os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'infrastructure', 'environment', '.env.local')),
+            os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'infrastructure', 'environment',
+                                         '.env.local')),
         ]
 
         env_path = FlaskAppFactory.find_and_load_dotenv(possible_env_paths)
         if env_path:
             logging.getLogger(__name__).info(f".env.local file found and loaded from {env_path}")
         else:
-            logging.getLogger(__name__).error(f".env.local file not found in any of the possible locations: {possible_env_paths}")
+            logging.getLogger(__name__).error(
+                f".env.local file not found in any of the possible locations: {possible_env_paths}")
         return self
 
     def setup_logging(self):
@@ -82,18 +84,17 @@ class FlaskAppFactory:
         from ..controller.models import models_controller
         self.app.register_blueprint(models_controller.blueprint)
 
-        from ..controller.swagger import swagger_controller
-        self.app.register_blueprint(swagger_controller.blueprint)
-
         from ..controller.prompts import prompts_controller
         self.app.register_blueprint(prompts_controller.blueprint)
 
         from ..controller.generation import generation_controller
         self.app.register_blueprint(generation_controller.blueprint)
 
+        from ..controller.swagger_ui import swagger_ui_controller
+        self.app.register_blueprint(swagger_ui_controller.blueprint)
+        self.app.register_blueprint(swagger_ui_controller.swagger_ui_blueprint)
+
         return self
-
-
 
 
     @staticmethod
@@ -105,6 +106,7 @@ class FlaskAppFactory:
                 return path
         return None
 
+
     @staticmethod
     def setup_basic_logging():
         """Set up basic logging."""
@@ -114,12 +116,13 @@ class FlaskAppFactory:
             handlers=[logging.StreamHandler()]
         )
 
-
         return logging.getLogger(__name__)
+
 
     @staticmethod
     def register_error_handlers(app):
         """Register global error handlers."""
+
         @app.errorhandler(Exception)
         def handle_exception(e):
             app.logger.exception('An unhandled exception occurred')

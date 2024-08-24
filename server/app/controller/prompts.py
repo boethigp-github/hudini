@@ -27,22 +27,22 @@ class PromptsController:
         """
         Registers routes to the Flask blueprint.
 
-        This method maps the /get_models and /favicon.ico routes to their respective handler methods.
+        This method maps the /models and /favicon.ico routes to their respective handler methods.
         """
-        self.blueprint.add_url_rule('/load_prompts', 'load_prompts_route', self.load_prompts_route, methods=['GET'])
-        self.blueprint.add_url_rule('/create_prompt', 'create_prompt_route', self.create_prompt_route, methods=['POST'])
-        self.blueprint.add_url_rule('/delete_prompt/<uuid:prompt_id>', 'delete_prompt_route', self.delete_prompt_route, methods=['DELETE'])
-        self.blueprint.add_url_rule('/update_prompt/<uuid:prompt_id>', 'update_prompt_route', self.update_prompt_route, methods=['PATCH'])
+        self.blueprint.add_url_rule('/prompt', 'prompts_route', self.prompts_route, methods=['GET'])
+        self.blueprint.add_url_rule('/prompt', 'post_prompt_route', self.post_prompt_route, methods=['POST'])
+        self.blueprint.add_url_rule('/prompt/<uuid:prompt_id>', 'delete_prompt_route', self.delete_prompt_route, methods=['DELETE'])
+        self.blueprint.add_url_rule('/prompt/<uuid:prompt_id>', 'patch_prompt_route', self.patch_prompt_route, methods=['PATCH'])
 
-    def load_prompts_route(self):
+    def prompts_route(self):
         logger.info("Loading prompts for client")
         prompts = Prompt.query.order_by(Prompt.timestamp.desc()).all()
         return jsonify([prompt.to_dict() for prompt in prompts])
 
-    def create_prompt_route(self):
+    def post_prompt_route(self):
         try:
             data = request.json
-            logger.info(f"Received create_prompt request with data: {data}")
+            logger.info(f"Received prompt request with data: {data}")
 
             # Validate request data against the create prompt schema
             try:
@@ -82,7 +82,7 @@ class PromptsController:
             }), 200
         except Exception as e:
             db.session.rollback()
-            logger.error(f"Unexpected error in create_prompt: {str(e)}")
+            logger.error(f"Unexpected error in prompt: {str(e)}")
             logger.error(traceback.format_exc())
             return jsonify({
                 "error": "An unexpected error occurred",
@@ -109,15 +109,15 @@ class PromptsController:
                 logger.warning(error_message)
                 return jsonify({"error": error_message}), 404
         except Exception as e:
-            logger.error(f"Error in delete_prompt: {str(e)}")
+            logger.error(f"Error in prompt: {str(e)}")
             db.session.rollback()
             logger.error(traceback.format_exc())
             return jsonify({"error": str(e)}), 500
 
-    def update_prompt_route(self, prompt_id:uuid):
+    def patch_prompt_route(self, prompt_id:uuid):
         try:
             data = request.json
-            logger.info(f"Received update_prompt request with data: {data}")
+            logger.info(f"Received prompt request with data: {data}")
 
             # Validate request data against the update prompt schema
             try:
@@ -153,7 +153,7 @@ class PromptsController:
             }), 200
         except Exception as e:
             db.session.rollback()
-            logger.error(f"Unexpected error in update_prompt: {str(e)}")
+            logger.error(f"Unexpected error in prompt: {str(e)}")
             logger.error(traceback.format_exc())
             return jsonify({
                 "error": "111An unexpected error occurred",

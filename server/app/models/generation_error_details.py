@@ -1,14 +1,14 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any,Union
 
-class ErrorDetail(BaseModel):
+class GenerationErrorDetail(BaseModel):
     message: str
     type: str
     param: str
     code: Optional[Any] = None
 
 class ErrorModel(BaseModel):
-    error: ErrorDetail
+    error: GenerationErrorDetail
 
 class ErrorGenerationModel(BaseModel):
     model: str
