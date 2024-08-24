@@ -184,8 +184,8 @@ export default defineComponent({
     background-color: #fff;
     padding: 20px;
     border-radius: 10px;
-    width:60%;
-    max-width:60%!important;
+    width:100%;
+    max-width:100%!important;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     height: 83vh;
     align-items: center; /* Optional: Center vertically */

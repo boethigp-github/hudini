@@ -1,8 +1,8 @@
 <template>
   <!-- Category Selection -->
-  <a-form-item :label="$t('select_category', 'Select Category')">
+  <a-form-item :label="$t('select_category_and_model', 'Select Category / Model') "  style="min-width:100%;max-width: 30%!important;float:left">
     <a-select
-        style="min-width: 100%!important;"
+        style="min-width: 30%!important;float:left; margin-right: 5px"
         v-model="selectedCategory"
         :placeholder="$t('select_category_placeholder', 'Select a category')"
         @change="filterModels"
@@ -10,20 +10,15 @@
       <a-select-option v-for="category in availableCategories" :key="category" :value="category">
         {{ category }}
       </a-select-option>
-    </a-select>
-  </a-form-item>
 
-  <!-- Models Selection -->
-  <a-form-item :label="$t('select_model', 'Select Models')">
+    </a-select>
     <a-select
-        style="min-width: 100%!important;"
+        style="min-width: 65%!important;float:right "
         :value="modelsStore.selectedModels"
         mode="multiple"
         :placeholder="$t('select_model_placeholder', 'Select one or more models')"
         @change="updateModels"
     >
-
-
       <!-- OpenAI Models Group -->
       <a-select-opt-group :label="$t('openai_models', 'OpenAI Models')">
         <a-select-option v-for="model in filteredOpenaiModels" :key="model.id" :value="model.id">
@@ -32,6 +27,7 @@
       </a-select-opt-group>
     </a-select>
   </a-form-item>
+
 </template>
 
 <script>
