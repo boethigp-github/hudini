@@ -65,6 +65,11 @@ export const getModels = async () => {
  * @returns {Promise<Object>} A promise that resolves to the server's response.
  */
 
+/**
+ * Saves a prompt to the server.
+ * @param {Object} promptData - The prompt data to save.
+ * @returns {Promise<Object>} A promise that resolves to the server's response.
+ */
 export const createPrompt = async (promptData) => {
     try {
         const response = await fetch(`${API_BASE_URL}/create_prompt`, {
@@ -74,9 +79,12 @@ export const createPrompt = async (promptData) => {
             },
             body: JSON.stringify(promptData),
         });
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+
+        // Ensure response is defined and has an 'ok' property
+        if (!response || !response.ok) {
+            throw new Error(`HTTP error! status: ${response ? response.status : 'undefined'}`);
         }
+
         return await response.json();
     } catch (error) {
         console.error('Error saving prompt:', error);

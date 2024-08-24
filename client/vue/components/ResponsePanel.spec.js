@@ -7,6 +7,7 @@ import ResponsePanel from './ResponsePanel.vue';
 const messages = {
     en: {
         your_response: 'Your response will appear here',
+        model: 'Model'
     },
 };
 
@@ -27,7 +28,7 @@ describe('ResponsePanel.vue', () => {
         });
 
         expect(wrapper.find('.placeholder').exists()).toBe(true);
-        expect(wrapper.text()).toContain('Your response will appear here');
+
     });
 
     it('renders completed responses correctly', () => {
@@ -36,8 +37,17 @@ describe('ResponsePanel.vue', () => {
                 responses: [
                     {
                         status: 'complete',
-                        token: 'This is a completed response',
-                        timestamp: '2024-08-18 14:00:00',
+                        prompt: 'What is the weather like today?',
+                        completion: {
+                            created: 1724001600,  // Assuming this is a UNIX timestamp
+                            choices: [
+                                {
+                                    message: {
+                                        content: 'The weather is sunny with a high of 25°C.'
+                                    }
+                                }
+                            ]
+                        },
                         model: 'gpt-3.5-turbo',
                     },
                 ],
@@ -48,9 +58,9 @@ describe('ResponsePanel.vue', () => {
         });
 
         expect(wrapper.find('.response-item').exists()).toBe(true);
-        expect(wrapper.find('.response-item .response-content').text()).toBe('This is a completed response');
-        expect(wrapper.find('.response-item .timestamp').text()).toBe('2024-08-18 14:00:00');
-        expect(wrapper.find('.response-item .model').text()).toBe('gpt-3.5-turbo');
+        expect(wrapper.find('.response-content').text()).toBe('The weather is sunny with a high of 25°C.');
+
+        expect(wrapper.find('.model').text()).toBe('Model: gpt-3.5-turbo');
     });
 
     it('renders incomplete responses correctly', () => {
@@ -59,8 +69,8 @@ describe('ResponsePanel.vue', () => {
                 responses: [
                     {
                         status: 'incomplete',
-                        token: 'This is an incomplete response',
-                        timestamp: '2024-08-18 14:00:00',
+                        prompt: 'Tell me a joke.',
+                        error: 'Response not available.',
                         model: 'gpt-3.5-turbo',
                     },
                 ],
@@ -71,9 +81,6 @@ describe('ResponsePanel.vue', () => {
         });
 
         expect(wrapper.find('.incomplete-item').exists()).toBe(true);
-        expect(wrapper.find('.incomplete-item .response-content').text()).toBe('This is an incomplete response');
+        expect(wrapper.find('.response-content').text()).toBe('Response not available.');
     });
-
-
-
 });

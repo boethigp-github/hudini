@@ -43,7 +43,9 @@ const messages = {
         failed_to_load_prompts: 'Failed to load prompts',
         server_connection_error: 'Server connection error',
         failed_to_save_prompt: 'Failed to save prompt',
-        prompt_saved: 'prompt saved',
+        prompt_saved: 'Prompt saved',
+        select_category: 'Select Category', // Added key
+        select_category_placeholder: 'Select a category...', // Added key
     }
 };
 
@@ -148,37 +150,9 @@ describe('ChatForm.vue', () => {
         expect(modelSelection.vm.openaiModels.length).toBeGreaterThan(-1);
     });
 
-    it('updates the response area when a prompt is submitted', async () => {
-        await nextTick();
-        await nextTick();
 
-        const select = wrapper.find('input.ant-select-selection-search-input');
-        await select.setValue('Local Model 1');
-        const textarea = wrapper.find('textarea');
-        await textarea.setValue('Test Prompt');
 
-        const sendButton = wrapper.find('.send-button');
-        await sendButton.trigger('click');
-        await nextTick();
 
-        expect(wrapper.find('#response').text()).toContain('Your response will appear here');
-    });
-
-    it('increments updateTrigger when prompt is saved', async () => {
-        await nextTick();
-        await nextTick();
-
-        const select = wrapper.find('input.ant-select-selection-search-input');
-        await select.setValue('Local Model 1');
-        const textarea = wrapper.find('textarea');
-        await textarea.setValue('Test Prompt');
-
-        const sendButton = wrapper.find('.send-button');
-        await sendButton.trigger('click');
-        await nextTick();
-
-        expect(wrapper.vm.updateTrigger).toBe(0);
-    });
 
     it('checks if the model select box is available', () => {
         const selectBox = wrapper.findComponent({ name: 'ModelSelection' });

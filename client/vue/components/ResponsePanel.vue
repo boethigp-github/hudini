@@ -1,6 +1,5 @@
 <template>
-  <div id="response" class="response">
-
+  <div id="response" class="response" ref="responseElement">
     <div v-for="(item, index) in responses"
          :key="index"
          :class="[item.status === 'complete' ? 'response-item' : 'incomplete-item']"
@@ -23,7 +22,7 @@
           <span class="model">{{ $t('model') }}: {{ item.model }}</span>
         </div>
         <div class="response-content" >
-          {{ item.error}}
+          {{ item.error }}
         </div>
       </div>
     </div>
@@ -36,7 +35,7 @@
 </template>
 
 <script>
-import { nextTick, watch } from 'vue';
+import { nextTick, watch, ref } from 'vue';
 
 export default {
   name: 'ResponsePanel',
@@ -48,10 +47,13 @@ export default {
     },
   },
   setup(props) {
+    const responseElement = ref(null);
+
     const scrollToBottom = () => {
       nextTick(() => {
-        const responseElement = document.getElementById('response');
-        responseElement.scrollTop = responseElement.scrollHeight;
+        if (responseElement.value) {
+          responseElement.value.scrollTop = responseElement.value.scrollHeight;
+        }
       });
     };
 
@@ -78,6 +80,7 @@ export default {
     );
 
     return {
+      responseElement,
       scrollToBottom,
       formatTimestamp,
     };
@@ -99,22 +102,23 @@ export default {
   flex-direction: column;
 }
 
-.response-item, .user-prompt{
+.response-item, .user-prompt {
   border: none;
   border-radius: 10px;
   padding: 10px;
   background: #eeeeee;
   margin-top: 10px;
   float: left;
-  max-width:100%;
+  max-width: 100%;
 }
 
-.user-prompt{
+.user-prompt {
   border: none;
   background: lightgrey;
   float: right;
   max-width: 80%;
 }
+
 .incomplete-item {
   border: none;
   margin-top: 10px;
