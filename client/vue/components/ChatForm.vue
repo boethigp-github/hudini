@@ -118,43 +118,21 @@ export default {
 
             await streamPrompt(
                 promptData,
-                (chunk) => {
-                    let parsedChunk;
+                (completion) => {
+
+
+
+                    let parsedCompletion;
                     try {
-                        parsedChunk = JSON.parse(chunk);
+                        parsedCompletion = JSON.parse(completion);
+                      console.log("parsedCompletion", parsedCompletion);
                     } catch (error) {
                         console.error("Error parsing JSON chunk:", error);
                         return;
                     }
 
-                    if (parsedChunk.status === "end") {
-                        const finalResponse = responses.value.pop();
-                        if (finalResponse) {
-                            responses.value.push({ ...finalResponse, status: 'complete' });
-                        }
-                    } else if (parsedChunk.status === "data") {
-                        const lastResponse = responses.value[responses.value.length - 1];
+                  responses.value.push({ ...parsedCompletion, status: 'complete' });
 
-                        if (lastResponse && lastResponse.status !== 'complete') {
-                            lastResponse.token += ` ${parsedChunk.token}`;
-                        } else {
-                            responses.value.push({
-                                status: 'incomplete',
-                                token: parsedChunk.token,
-                                data: parsedChunk.data,
-                                timestamp: parsedChunk.timestamp,
-                                user: parsedChunk.user,
-                                prompt: parsedChunk.prompt,
-                                prompt_id: parsedChunk.prompt_id,
-                                model: parsedChunk.model,
-                            });
-                        }
-                    } else if (parsedChunk.status === "error") {
-                        responses.value.push({
-                            status: 'error',
-                            token: `Error: ${parsedChunk.error}`,
-                        });
-                    }
                 },
                 (error) => {
                     console.error('Stream error:', error);

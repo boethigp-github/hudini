@@ -3,6 +3,8 @@ from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime
 
+
+# SQLAlchemy model
 class Prompt(db.Model):
     __tablename__ = 'prompts'
 

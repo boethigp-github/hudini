@@ -1,24 +1,20 @@
 import time
 import uuid
-import os
-import yaml
 from typing import Dict, Any
 from flask import current_app
-
 
 class SchemaToModelBuilder:
     def __init__(self, schema: Dict[str, Any]):
         self.schema = schema
-        self.logger = current_app.logger
 
     def create_object(self, **kwargs) -> Dict[str, Any]:
         response = {}
         for key, value in self.schema.items():
             if key in kwargs:
                 response[key] = kwargs[key]
-            elif value.get('type') == 'string':
+            elif isinstance(value, dict) and value.get('type') == 'string':  # Check if value is a dict
                 response[key] = self._handle_string_type(key, value)
-            elif value.get('type') == 'number':
+            elif isinstance(value, dict) and value.get('type') == 'number':
                 response[key] = 0
             else:
                 response[key] = None
@@ -31,5 +27,3 @@ class SchemaToModelBuilder:
             return str(uuid.uuid4())
         else:
             return ''
-
-

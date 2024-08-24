@@ -88,21 +88,13 @@ class FlaskAppFactory:
         from ..controller.prompts import prompts_controller
         self.app.register_blueprint(prompts_controller.blueprint)
 
-        # from ..controller.generation import generation_controller
-        # self.app.register_blueprint(generation_controller.blueprint)
+        from ..controller.generation import generation_controller
+        self.app.register_blueprint(generation_controller.blueprint)
 
-        self.log_registered_routes()
         return self
 
 
-    def log_registered_routes(self):
-        """Log the routes registered with the Flask app."""
-        logger = logging.getLogger(__name__)
-        logger.info("Registered routes:")
-        for rule in self.app.url_map.iter_rules():
-            methods = ','.join(rule.methods)
-            logger.info(f"{rule.endpoint}: {methods} {rule}")
-        return self
+
 
     @staticmethod
     def find_and_load_dotenv(possible_paths):

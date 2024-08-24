@@ -12,15 +12,23 @@
             :key="index"
             :class="[item.status === 'complete' ? 'response-item' : 'incomplete-item']"
         >
-            <div v-if="item.token?.trim().length">
-                <div class="response-metadata">
-                    <span class="timestamp">{{ item.timestamp }}</span>
+            <div  v-if="item.completion?.choices?.length">
+                <div class="response-metadata" >
+                    <span class="timestamp">{{ item.completion.created }}</span>
                     <span class="model">{{ item.model }}</span>
                 </div>
-                <div class="response-content">
-                    {{ item.token }}
+                <div class="response-content" >
+                    111 {{ item.completion.choices[0].message.content}}
                 </div>
             </div>
+          <div  v-else>
+            <div class="response-metadata" >
+              <span class="model">{{ item.model }}</span>
+            </div>
+            <div class="response-content" >
+              {{ item.error}}
+            </div>
+          </div>
         </div>
 
         <!-- Placeholder message if no responses are present -->

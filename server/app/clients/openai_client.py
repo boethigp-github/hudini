@@ -1,7 +1,9 @@
 import json
 from server.app.clients.base_client import BaseClient
 from openai import OpenAI
-from cachetools import TTLCache
+from server.app.models.stream_response import StreamResponse
+import time
+from flask import current_app
 
 class OpenAIClient(BaseClient):
     def __init__(self, api_key):
@@ -9,12 +11,9 @@ class OpenAIClient(BaseClient):
             raise ValueError("OpenAI API key is not set")
         self.client = OpenAI(api_key=api_key)
 
-
-        from flask import current_app
         self.cache = current_app.extensions['cache']
 
 
-        self.logger = current_app.logger
 
     def generate(self, prompt: str, **kwargs):
         """
@@ -48,22 +47,42 @@ class OpenAIClient(BaseClient):
 
         cached_models = self.cache.get('models')
         if cached_models:
-            self.logger.debug(f"Cache Hit on get_available_models()")
             return self.cache.get('models')
 
-        self.logger.debug(f"Cache misses.")
         try:
             # List all models available in the account
             response = self.client.models.list()
             models = [model.id for model in response]
-
             # Cache the result
             self.cache.set('models', models, expire=3600)
-            self.logger.debug(f"Cache  {len(models)} Models")
-
-
             return models
         except Exception as e:
-            # Log the detailed error before raising an exception
-            self.logger.error(f"Failed to fetch models from OpenAI: {str(e)}", exc_info=True)
+
             raise ValueError(f"Error fetching models from OpenAI: {str(e)}")
+
+    def stream_response(self, model, prompt, prompt_id):
+        try:
+            output = self.generate(
+                prompt,
+                model=model,
+                max_tokens=1000,
+                temperature=0.9
+            )
+
+            for token in output.split():
+
+                stream_reponse = StreamResponse(status="data",
+                                          token=token,
+                                          message=output,
+                                          model=model,
+                                          prompt=prompt,
+                                          prompt_id=prompt_id)
+
+
+
+                yield stream_reponse.model_dump_json()
+                time.sleep(0.1)
+
+            yield StreamResponse(status="end").model_dump_json()
+        except Exception as e:
+            yield StreamResponse(status="error", message=f"OpenAI generation failed: {str(e)}").model_dump_json()

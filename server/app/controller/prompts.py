@@ -6,7 +6,7 @@ import logging
 from flask import Blueprint, jsonify, Response
 from jsonschema import validate, ValidationError
 from flask import Blueprint, jsonify, request
-from server.app.models.models import Prompt
+from server.app.models.prompts import Prompt
 from server.app.extensions import db
 
 logger = logging.getLogger(__name__)
