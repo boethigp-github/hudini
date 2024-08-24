@@ -5,23 +5,24 @@
          :class="[item.status === 'complete' ? 'response-item' : 'incomplete-item', 'fade-in']"
     >
       <div v-if="item.prompt" class="user-prompt fade-in">
-        <user-outlined class="user-icon" />
-        <span class="prompt-text">{{item.prompt}}</span>
+        <user-outlined class="user-icon"/>
+        <span class="prompt-text">{{ item.prompt }}</span>
       </div>
 
       <div v-if="item.completion?.choices?.length" class="bot-response fade-in">
-        <robot-outlined class="bot-icon" />
+        <robot-outlined class="bot-icon"/>
         <div class="response-content">
-          <div class="response-metadata" >
+          <div class="response-metadata">
             <span class="model">{{ $t('model') }}: {{ item.model }}</span><br>
             <span class="timestamp">{{ formatTimestamp(item.completion.created) }}</span>
           </div>
-          <div v-html="renderMarkdown(item.completion.choices[0].message.content)">
-          </div>
+
+          <!-- Replace v-html with vue3-markdown-it -->
+          <VueMarkdownITueMarkdownIT :plugins="plugins" :source="item.completion.choices[0].message.content"/>
         </div>
       </div>
       <div v-else-if="item.error" class="bot-response fade-in">
-        <robot-outlined class="bot-icon" />
+        <robot-outlined class="bot-icon"/>
         <div class="response-content">
           <div class="response-metadata" v-if="item.model">
             <span class="model">{{ $t('model') }}: {{ item.model }}</span>
@@ -37,21 +38,33 @@
 </template>
 
 <script>
-import { nextTick, watch, ref, onMounted } from 'vue';
-import MarkdownIt from 'markdown-it';
-import { UserOutlined, RobotOutlined } from '@ant-design/icons-vue';
-import Prism from 'prismjs';
-import 'prismjs/themes/prism.css'; // You can choose a different theme if you prefer
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-python';
-import 'prismjs/components/prism-java';
+import {nextTick, watch, ref, onMounted} from 'vue';
+
+import {UserOutlined, RobotOutlined} from '@ant-design/icons-vue';
+import 'highlight.js/styles/googlecode.css';
 // Import more language components as needed
+import MarkdownItStrikethroughAlt from 'markdown-it-strikethrough-alt';
+import MarkdownIt from 'markdown-it';
+import MarkdownItHighlightJs from 'markdown-it-highlightjs';
+import MarkdownItAbbr from 'markdown-it-abbr';
+import MarkdownItAncor from 'markdown-it-anchor';
+import MarkdownItDefList from 'markdown-it-deflist';
+import MarkdownItFootnote from 'markdown-it-footnote';
+import MarkdownItIn from 'markdown-it-ins';
+import MarkdownSub from 'markdown-it-sub';
+import MarkdownSup from 'markdown-it-sup';
+import MarkdownTaskList from 'markdown-it-task-lists';
+import MarkdownMark from 'markdown-it-mark';
+
+import MarkdownTocDoneRight from 'markdown-it-toc-done-right';
+import Markdown from 'vue3-markdown-it';
 
 export default {
   name: 'ResponsePanel',
   components: {
     UserOutlined,
     RobotOutlined,
+    VueMarkdownITueMarkdownIT: Markdown
   },
   props: {
     responses: {
@@ -76,6 +89,52 @@ export default {
       });
     };
 
+    const plugins = [
+      {
+        plugin: MarkdownItHighlightJs
+      },
+      {
+        plugin: MarkdownItStrikethroughAlt
+      },
+      {
+        plugin: MarkdownIt
+      }
+      , {
+        plugin: MarkdownItAbbr
+      },
+      {
+        plugin: MarkdownItAncor
+      }
+      ,
+      {
+        plugin: MarkdownItDefList
+      },
+      {
+        plugin: MarkdownItFootnote
+      },
+      {
+        plugin: MarkdownItIn
+      },
+      {
+        plugin: MarkdownSub
+      },
+      {
+        plugin: MarkdownSup
+      },
+
+      {
+        plugin: MarkdownIt
+      },
+      {
+        plugin: MarkdownTaskList
+      },
+      {
+        plugin: MarkdownTocDoneRight
+      } , {
+        plugin: MarkdownMark
+      }
+    ]
+
     const formatTimestamp = (timestamp) => {
       const date = new Date(timestamp * 1000);
       const year = date.getFullYear();
@@ -94,7 +153,8 @@ export default {
             return '<pre class="language-' + lang + '"><code>' +
                 Prism.highlight(str, Prism.languages[lang], lang) +
                 '</code></pre>';
-          } catch (__) {}
+          } catch (__) {
+          }
         }
         return '<pre class="language-' + lang + '"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
       }
@@ -109,21 +169,21 @@ export default {
         () => {
           scrollToBottom();
           nextTick(() => {
-            Prism.highlightAll();
+
           });
         },
-        { deep: true }
+        {deep: true}
     );
 
     onMounted(() => {
-      Prism.highlightAll();
+
     });
 
     return {
       responseElement,
       scrollToBottom,
       formatTimestamp,
-      renderMarkdown,
+      plugins
     };
   }
 };
@@ -194,8 +254,12 @@ export default {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .response-metadata {

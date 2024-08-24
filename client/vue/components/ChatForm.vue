@@ -1,3 +1,4 @@
+<!--suppress CheckImageSize -->
 <template>
   <div class="chat-container">
     <div class="header">
@@ -161,11 +162,6 @@ export default {
 </script>
 
 <style scoped>
-.title {
-  font-size: 2.0rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
 
 .prompt_input{
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -184,7 +180,7 @@ export default {
 
 .chat-area{
 
-  width: 230%;
-  max-width: 230%;
+  width: 100%;
+  max-width: 100%;
 }
 </style>
