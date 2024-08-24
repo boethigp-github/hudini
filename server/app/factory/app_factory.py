@@ -4,7 +4,8 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 from flask_migrate import Migrate
-from ..extensions import cache
+from server.app.extensions import cache
+
 
 class FlaskAppFactory:
     def __init__(self):
@@ -14,40 +15,42 @@ class FlaskAppFactory:
 
     def create_app(self, config):
         return (
-            self.initialize_app()
-            .configure_app(config)
+            self.initialize_app(config)
             .load_environment()
             .setup_logging()
+            .set_cors()
             .initialize_cache()
             .register_commands()
-            .initialize_extensions()
-            .register_blueprints()
-            .log_registered_routes()
+            .init_database()
+            .register_route_controller()
             .app
         )
 
-    def initialize_app(self):
-        """Initialize the Flask app and set up CORS."""
-        self.app = Flask(__name__)
-        CORS(self.app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:5173"}})
+    def initialize_app(self, config):
+        """Initialize the Flask app """
+        self.app = Flask(__name__)  # Initialize the app first
+        self.app.config.from_object(config)  # Then configure it
         return self
 
-    def configure_app(self, config):
-        """Configure the Flask app."""
-        self.app.config.from_object(config)
+    def set_cors(self):
+        """Initialize CORS."""
+        origins = self.app.config.get("CORS_ORIGINS", ["http://localhost:5173"])  # Default if not set
+        CORS(self.app, supports_credentials=True, resources={r"/*": {"origins": origins}})
         return self
 
     def load_environment(self):
         """Load environment variables."""
         possible_env_paths = [
-            os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'infrastructure', 'environment', '.env.local')),
+            os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', 'infrastructure', 'environment',
+                                         '.env.local')),
         ]
 
         env_path = FlaskAppFactory.find_and_load_dotenv(possible_env_paths)
         if env_path:
             logging.getLogger(__name__).info(f".env.local file found and loaded from {env_path}")
         else:
-            logging.getLogger(__name__).error(f".env.local file not found in any of the possible locations: {possible_env_paths}")
+            logging.getLogger(__name__).error(
+                f".env.local file not found in any of the possible locations: {possible_env_paths}")
         return self
 
     def setup_logging(self):
@@ -68,30 +71,31 @@ class FlaskAppFactory:
         self.app.cli.add_command(cache_clear)
         return self
 
-    def initialize_extensions(self):
+    def init_database(self):
         """Initialize extensions like the database and migrations."""
         from ..extensions import db
         db.init_app(self.app)
         Migrate(self.app, db)
         return self
 
-    def register_blueprints(self):
+    def register_route_controller(self):
         """Register Flask blueprints."""
+
         from ..controller.models import models_controller
         self.app.register_blueprint(models_controller.blueprint)
 
-        from ..controller.swagger import swagger_controller
-        self.app.register_blueprint(swagger_controller.blueprint)
+        from ..controller.prompts import prompts_controller
+        self.app.register_blueprint(prompts_controller.blueprint)
+
+        from ..controller.generation import generation_controller
+        self.app.register_blueprint(generation_controller.blueprint)
+
+        from ..controller.swagger_ui import swagger_ui_controller
+        self.app.register_blueprint(swagger_ui_controller.blueprint)
+        self.app.register_blueprint(swagger_ui_controller.swagger_ui_blueprint)
+
         return self
 
-    def log_registered_routes(self):
-        """Log the routes registered with the Flask app."""
-        logger = logging.getLogger(__name__)
-        logger.info("Registered routes:")
-        for rule in self.app.url_map.iter_rules():
-            methods = ','.join(rule.methods)
-            logger.info(f"{rule.endpoint}: {methods} {rule}")
-        return self
 
     @staticmethod
     def find_and_load_dotenv(possible_paths):
@@ -102,6 +106,7 @@ class FlaskAppFactory:
                 return path
         return None
 
+
     @staticmethod
     def setup_basic_logging():
         """Set up basic logging."""
@@ -110,11 +115,14 @@ class FlaskAppFactory:
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
             handlers=[logging.StreamHandler()]
         )
+
         return logging.getLogger(__name__)
+
 
     @staticmethod
     def register_error_handlers(app):
         """Register global error handlers."""
+
         @app.errorhandler(Exception)
         def handle_exception(e):
             app.logger.exception('An unhandled exception occurred')

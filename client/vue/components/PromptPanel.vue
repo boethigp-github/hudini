@@ -59,7 +59,7 @@ export default defineComponent({
         };
 
         const loadPrompts = () => {
-            fetch(`${serverUrl}/load_prompts`)
+            fetch(`${serverUrl}/prompt`)
                 .then(res => {
                     if (!res.ok) {
                         throw new Error("Failed to load prompts");
@@ -71,12 +71,12 @@ export default defineComponent({
                 })
                 .catch(error => {
                     console.error("Error loading prompts:", error);
-                    message.error(t('failed_to_load_prompts'));
+                    message.error(t('failed_to_prompts'));
                 });
         };
 
         const deletePrompt = (id) => {
-            fetch(`${serverUrl}/delete_prompt/${id}`, {
+            fetch(`${serverUrl}/prompt/${id}`, {
                 method: "DELETE",
             })
                 .then(res => {
@@ -133,7 +133,7 @@ export default defineComponent({
 
 <style >
 .prompt-panel {
-    max-height: 75vh; /* Adjust this value to control the panel height */
+    max-height: 70vh; /* Adjust this value to control the panel height */
     overflow-y: auto; /* Ensure the content is scrollable */
     padding-right: 8px; /* Add some padding to avoid cutting off content */
 }
@@ -187,7 +187,7 @@ export default defineComponent({
     width:60%;
     max-width:60%!important;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    height: 86vh;
+    height: 83vh;
     align-items: center; /* Optional: Center vertically */
 }
 

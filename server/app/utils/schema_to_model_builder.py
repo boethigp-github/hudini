@@ -1,8 +1,7 @@
 import time
 import uuid
-import os
-import yaml
 from typing import Dict, Any
+from flask import current_app
 
 class SchemaToModelBuilder:
     def __init__(self, schema: Dict[str, Any]):
@@ -13,9 +12,9 @@ class SchemaToModelBuilder:
         for key, value in self.schema.items():
             if key in kwargs:
                 response[key] = kwargs[key]
-            elif value.get('type') == 'string':
+            elif isinstance(value, dict) and value.get('type') == 'string':  # Check if value is a dict
                 response[key] = self._handle_string_type(key, value)
-            elif value.get('type') == 'number':
+            elif isinstance(value, dict) and value.get('type') == 'number':
                 response[key] = 0
             else:
                 response[key] = None
@@ -28,20 +27,3 @@ class SchemaToModelBuilder:
             return str(uuid.uuid4())
         else:
             return ''
-
-    @classmethod
-    def from_swagger_definition(cls, swagger_def: Dict[str, Any], schema_name: str):
-        schema = swagger_def['components']['schemas'][schema_name]['properties']
-        return cls(schema)
-
-    def load_swagger_definition() -> Dict[str, Any]:
-        swagger_yaml_path = os.path.join(os.path.dirname(__file__), '..', '..', 'swagger.yaml')
-        try:
-            with open(swagger_yaml_path, 'r') as file:
-                return yaml.safe_load(file)
-        except FileNotFoundError:
-            logger.error(f"Swagger file not found at {swagger_yaml_path}")
-            raise
-        except yaml.YAMLError as e:
-            logger.error(f"Error parsing Swagger YAML: {e}")
-            raise

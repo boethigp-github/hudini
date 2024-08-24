@@ -1,6 +1,9 @@
 import os
 from llama_cpp import Llama
 from .base_client import BaseClient
+from ..models.stream_response import StreamResponse
+import json
+import time
 
 class LLamaCppClient(BaseClient):
     def __init__(self, model_path):
@@ -20,3 +23,24 @@ class LLamaCppClient(BaseClient):
         return [f for f in os.listdir(self.model_path) if f.endswith('.gguf')]
 
 
+
+    def stream_response(self,model, prompt,prompt_id):
+        output = self.generate(
+            prompt,
+            max_tokens=1000,
+            temperature=0.9,
+            top_p=0.95,
+            stop=["Q:", "\n"],
+            echo=False
+        )
+        if 'choices' in output and len(output['choices']) > 0 and output['choices'][0]['text']:
+            generated_text = output['choices'][0]['text']
+            for token in generated_text.split():
+                response = StreamResponse(status="data", token=token,
+                                                             message=generated_text)
+                yield json.dumps(response)
+                time.sleep(0.1)
+            yield json.dumps(StreamResponse(status="end"))
+        else:
+            yield json.dumps(
+                StreamResponse(status="error", message="Empty or invalid local model output", model=model))

@@ -9,3 +9,6 @@ class BaseClient(ABC):
     def get_available_models(self):
         pass
 
+    @abstractmethod
+    def stream_response(self,model, prompt,prompt_id):
+        pass

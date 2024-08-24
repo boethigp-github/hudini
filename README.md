@@ -71,7 +71,7 @@ You need to create an Anaconda environment with the name specified in the `.env.
 **Example `.env.local` content:**
 
 ```plaintext
-ANACONDA_ENV_NAME=aider-ollama
+ANACONDA_ENV_NAME=hudini
 SERVER_URL=http://localhost:5000
 PROJECT_MODEL_PATH=C:\\projects\\llama.cpp\\models\\custom\
 PROJEKT_ROOT=C:\projects\llama.cpp\projects\src\llama-cpp-chat\src
@@ -83,13 +83,13 @@ DATABASE_URL=postgresql://username:password@localhost:5432/hudini
 Then, create the Anaconda environment using the name from the `ANACONDA_ENV_NAME` variable:
 
 ```bash
-conda create --name aider-ollama python=3.8
+conda create --name hudini python=3.8
 ```
 
 Activate the environment:
 
 ```bash
-conda activate aider-ollama
+conda activate hudini
 ```
 
 ### 3. Install Required Python Packages
@@ -174,7 +174,7 @@ This command creates the `prompts` table in the `public` schema of the `hudini` 
 Ensure that your `.env.local` file is properly configured with all the necessary environment variables. Here is an example:
 
 ```plaintext
-ANACONDA_ENV_NAME=aider-ollama
+ANACONDA_ENV_NAME=hudini
 SERVER_URL=http://localhost:5000
 PROJECT_MODEL_PATH=C:\\projects\\llama.cpp\\models\\custom\
 PROJEKT_ROOT=C:\projects\llama.cpp\projects\src\llama-cpp-chat\src

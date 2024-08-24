@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 
 
 class BaseConfig:
+    #URLS
+    SERVER_URL='http://localhost:5000/'
     # Load the .env.local file
     env_path = os.path.abspath(
         os.path.join(os.path.dirname(__file__), '..', '..', '..', 'infrastructure', 'environment', '.env.local'))
@@ -37,3 +39,7 @@ class BaseConfig:
     if not SQLALCHEMY_DATABASE_URI:
         raise ValueError("Database URL not set. Please check your .env.local file.")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+
+    #CORS
+    CORS_ORIGINS = os.getenv('CORS_ORINGIN','http://localhost:5173')  # Default for development
+
