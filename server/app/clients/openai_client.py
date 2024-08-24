@@ -1,13 +1,15 @@
 import logging
+import openai
 from openai import AsyncOpenAI
-from openai import OpenAI
 from server.app.models.success_generation_model import SuccessGenerationModel
 from server.app.models.error_generation_model import ErrorGenerationModel
+from server.app.models.openai_model import OpenAIModel  # Import the new Pydantic model
 
 class OpenAIClient:
     def __init__(self, api_key: str):
-        self.client = AsyncOpenAI(api_key=api_key)
-        self.sync_client = OpenAI(api_key=api_key)
+        self.api_key = api_key
+        self.client = AsyncOpenAI(api_key=api_key)  # For async operations
+        openai.api_key = api_key  # For synchronous operations
         self.logger = self.setup_logger()
 
     def setup_logger(self):
@@ -30,7 +32,6 @@ class OpenAIClient:
                 temperature=0.0
             )
 
-            # Use the SuccessGenerationModel to validate and serialize the response
             return SuccessGenerationModel(
                 model=model,
                 completion=completion.to_dict()
@@ -38,33 +39,27 @@ class OpenAIClient:
 
         except Exception as e:
             self.logger.error(f"Error with model {model}: {str(e)}")
-            # Use the ErrorGenerationModel to validate and serialize the error response
             return ErrorGenerationModel(
                 model=model,
                 error=str(e)
             ).model_dump_json()
 
-    def get_available_models(self):
+    def get_available_models(self) -> list:
         """
-        Get a list of available models from OpenAI, with caching using cachetools.
+        Fetches the list of available models from OpenAI using the synchronous OpenAI client.
 
         Returns:
-            list: A list of model IDs available in the OpenAI account.
+            list: A list of OpenAIModel instances representing the models available in the OpenAI API.
         """
-        # if 'models' in self.cache:
-        #     self.logger.debug(f"Cache Hit on get_available_models()", exc_info=True)
-        #     return self.cache['models']
-
         try:
-            # List all models available in the account
-            response = self.sync_client.models.list()
-            models = [model.id for model in response]
+            response = openai.models.list()  # Synchronous call to fetch models
+            models = [
+                OpenAIModel.from_dict(model.to_dict()).model_dump()  # Use the factory method to create each model
+                for model in response.data
+            ]
 
-            # Cache the result
-            # self.cache['models'] = models
-            # self.logger.debug(f"Cache  {len(models)} Models")
+            self.logger.debug(f"Retrieved {len(models)} models from OpenAI")
             return models
         except Exception as e:
-            # Log the detailed error before raising an exception
             self.logger.error(f"Failed to fetch models from OpenAI: {str(e)}", exc_info=True)
             raise ValueError(f"Error fetching models from OpenAI: {str(e)}")
