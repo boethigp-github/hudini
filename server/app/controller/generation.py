@@ -26,10 +26,15 @@ class GenerationController:
             asyncio.set_event_loop(loop)
 
             async def run_completions():
-                tasks = [asyncio.create_task(self.openai_client.fetch_completion(model, prompt)) for model in models]
+                tasks = []
+                for model in models:
+                    async_task = self.openai_client.fetch_completion(model, prompt)
+                    task = asyncio.create_task(async_task)
+                    tasks.append(task)
+
                 for completed_task in asyncio.as_completed(tasks):
                     result = await completed_task
-                    yield result  # Yield the serialized JSON string from the Pydantic model
+                    yield result  # Yield the serialized JSON result
 
             async def async_generator():
                 async for item in run_completions():

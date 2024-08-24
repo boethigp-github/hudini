@@ -159,6 +159,14 @@ TABLESPACE pg_default;
 -- Set the owner of the prompts table
 ALTER TABLE IF EXISTS public.prompts
     OWNER to postgres;
+    
+CREATE TABLE user_context (
+    id SERIAL PRIMARY KEY,
+    user_id UUID DEFAULT gen_random_uuid(),
+    created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    context_data JSONB
+);    
 ```
 
 This command creates the `prompts` table in the `public` schema of the `hudini` database with the following columns:
