@@ -45,7 +45,7 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useModelsStore } from './../stores/models';
 import PromptPanel from './PromptPanel.vue';
@@ -112,7 +112,6 @@ export default {
 
       createPromptServerside();
 
-
       const promptData = {
         prompt: prompt.value.trim(),
         models: modelsStore.selectedModels,
@@ -146,6 +145,13 @@ export default {
       );
     };
 
+    // Watch for changes in loading, and clear the prompt when loading is set to false
+    watch(loading, (newValue) => {
+      if (!newValue) {
+        prompt.value = '';
+      }
+    });
+
     return {
       prompt,
       responses,
@@ -159,6 +165,7 @@ export default {
     };
   },
 };
+
 </script>
 
 <style scoped>

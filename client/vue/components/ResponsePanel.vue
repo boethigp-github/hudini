@@ -18,7 +18,7 @@
           </div>
 
           <!-- Replace v-html with vue3-markdown-it -->
-          <VueMarkdownITueMarkdownIT :plugins="plugins" :source="item.completion.choices[0].message.content"/>
+          <VueMarkdownITueMarkdownIT  :breaks="true" :plugins="plugins" :source="item.completion.choices[0].message.content"/>
         </div>
       </div>
       <div v-else-if="item.error" class="bot-response fade-in">
@@ -45,6 +45,7 @@ import 'highlight.js/styles/googlecode.css';
 // Import more language components as needed
 import MarkdownItStrikethroughAlt from 'markdown-it-strikethrough-alt';
 import MarkdownIt from 'markdown-it';
+
 import MarkdownItHighlightJs from 'markdown-it-highlightjs';
 import MarkdownItAbbr from 'markdown-it-abbr';
 import MarkdownItAncor from 'markdown-it-anchor';
@@ -55,6 +56,7 @@ import MarkdownSub from 'markdown-it-sub';
 import MarkdownSup from 'markdown-it-sup';
 import MarkdownTaskList from 'markdown-it-task-lists';
 import MarkdownMark from 'markdown-it-mark';
+
 
 import MarkdownTocDoneRight from 'markdown-it-toc-done-right';
 import Markdown from 'vue3-markdown-it';
