@@ -41,7 +41,7 @@
 import {nextTick, watch, ref, onMounted} from 'vue';
 
 import {UserOutlined, RobotOutlined} from '@ant-design/icons-vue';
-import 'highlight.js/styles/googlecode.css';
+import './ResponsePanel/Highlite.css';
 // Import more language components as needed
 import MarkdownItStrikethroughAlt from 'markdown-it-strikethrough-alt';
 import MarkdownIt from 'markdown-it';
@@ -148,23 +148,7 @@ export default {
       return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     };
 
-    const md = new MarkdownIt({
-      highlight: function (str, lang) {
-        if (lang && Prism.languages[lang]) {
-          try {
-            return '<pre class="language-' + lang + '"><code>' +
-                Prism.highlight(str, Prism.languages[lang], lang) +
-                '</code></pre>';
-          } catch (__) {
-          }
-        }
-        return '<pre class="language-' + lang + '"><code>' + md.utils.escapeHtml(str) + '</code></pre>';
-      }
-    });
 
-    const renderMarkdown = (text) => {
-      return md.render(text);
-    };
 
     watch(
         () => props.responses,
@@ -329,8 +313,24 @@ p {
 
 code {
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  background-color: #f0f0f0;
+  background-color: #000;
   padding: 2px 4px;
   border-radius: 4px;
 }
+
+.hljs  {
+  background: yellow;
+  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  text-align: left;
+  white-space: pre;
+  word-spacing: normal;
+  word-break: normal;
+  word-wrap: normal;
+  line-height: 1.5;
+  tab-size: 4;
+  hyphens: none;
+
+}
+
+
 </style>

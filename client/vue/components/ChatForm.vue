@@ -79,6 +79,7 @@ export default {
         return;
       }
 
+
       const promptData = {
         prompt: prompt.value.trim(),
         user: 'anonymous',
