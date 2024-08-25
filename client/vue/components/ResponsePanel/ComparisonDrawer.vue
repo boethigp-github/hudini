@@ -1,12 +1,38 @@
 <template>
   <a-drawer
-      title="Response Comparison"
+      :title="$t('model_comparison', 'model comparison')"
       placement="right"
       :visible="drawerVisible"
       @close="closeDrawer"
       :width="width"
   >
     <div v-if="comparisonData.length > 0">
+      <!-- Search inputs -->
+<!--      <div class="search-fields">-->
+<!--        <a-input-->
+<!--            placeholder="Search Model"-->
+<!--            v-model="searchTerms.model"-->
+<!--            @input="filterData"-->
+<!--            style="margin-bottom: 8px;"-->
+<!--        />-->
+<!--        <a-input-->
+<!--            placeholder="Search Content"-->
+<!--            v-model="searchTerms.content"-->
+<!--            @input="filterData"-->
+<!--            style="margin-bottom: 8px;"-->
+<!--        />-->
+<!--        <a-input-->
+<!--            placeholder="Search Timestamp"-->
+<!--            v-model="searchTerms.timestamp"-->
+<!--            @input="filterData"-->
+<!--            style="margin-bottom: 8px;"-->
+<!--        />-->
+<!--        <a-input-->
+<!--            placeholder="Search Error"-->
+<!--            v-model="searchTerms.error"-->
+<!--            @input="filterData"-->
+<!--        />-->
+<!--      </div>-->
       <a-table
           bordered
           size="small"
@@ -16,14 +42,12 @@
           :pagination="false"
           :rowClassName="getRowClass"
       >
-        <!-- Define body cells for the 'model' column -->
         <template  v-slot:bodyCell="{ record, column, index }">
           <VueMarkdownIT style="margin-top:11px" v-if="column.dataIndex==='content'"  :breaks="true" :plugins="plugins" :source="record.content" />
           <div v-else>
             {{record[column.dataIndex]}}
           </div>
         </template>
-
       </a-table>
     </div>
     <div v-else>
@@ -46,8 +70,6 @@ export default defineComponent({
     'VueMarkdownIT': Markdown,
   },
   props: {
-
-
     comparisonData: {
       type: Array,
       required: true,
@@ -70,6 +92,17 @@ export default defineComponent({
       const event = new CustomEvent("comparison-close", {  });
       window.dispatchEvent(event);
     }
+    const searchTerms = ref({
+      model: '',
+      content: '',
+      timestamp: '',
+      error: ''
+    });
+
+
+    const filterData = () => {
+      // Filtering logic handled by computed property
+    };
 
     const closeComparison = () => {
       drawerVisible.value = false;
@@ -128,7 +161,9 @@ export default defineComponent({
       plugins: props.plugins,
       closeDrawer,
       drawerVisible,
-      getRowClass
+      getRowClass,
+      searchTerms,
+      filterData
     };
   },
 });

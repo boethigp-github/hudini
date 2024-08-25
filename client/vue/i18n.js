@@ -32,13 +32,14 @@ const messages = {
         models: 'Models',
         compare: 'Compare', // Added this line
         // existing keys...
-        table: {
-            model: 'Model',
-            content: 'Content',
-            timestamp: 'Timestamp',
-            error: 'Error',
-            // any other table related translations...
-        }
+        model_selection: 'Model Selection',
+        prompt_submission: 'Prompt Submission',
+        content: 'Content',
+        timestamp: 'Timestamp',
+        error: 'Error',
+        model_comparison: 'Model Comparison',
+        user_prompt: 'User Prompt',
+        no_error: 'No error'
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -69,7 +70,15 @@ const messages = {
         model_responses: 'Modellantworten',
         prompts: 'Prompts',
         models: 'Modelle',
-        compare: 'Vergleichen' // Added this line
+        compare: 'Vergleichen',
+        model_selection: 'Modellauswahl',
+        prompt_submission: 'Eingabeaufforderung',
+        content: 'Inhalt',
+        timestamp: 'Zeitstempel',
+        error: 'Fehler',
+        model_comparison: 'Modellvergleich',
+        user_prompt: 'Benutzereingabe',
+        no_error: 'Kein Fehler'
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -100,7 +109,16 @@ const messages = {
         model_responses: 'Réponses du modèle',
         prompts: 'Prompts',
         models: 'Modèles',
-        compare: 'Comparer' // Added this line
+        compare: 'Comparer',
+        model_selection: 'Sélection de Modèle',
+        prompt_submission: 'Soumission d\'Invite',
+        content: 'Contenu',
+        timestamp: 'Horodatage',
+        error: 'Erreur',
+        model_comparison: 'Comparaison de modèles',
+        user_prompt: 'Invite de l\'utilisateur',
+        no_error: 'Pas d\'erreur'
+
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
@@ -131,7 +149,15 @@ const messages = {
         model_responses: 'Ответы модели',
         prompts: 'Подсказки',
         models: 'Модели',
-        compare: 'Сравнить' // Added this line
+        compare: 'Сравнить',
+        model_selection: 'Выбор Модели',
+        prompt_submission: 'Отправка Запроса',
+        content: 'Содержание',
+        timestamp: 'Временная метка',
+        error: 'Ошибка',
+        model_comparison: 'Сравнение моделей',
+        user_prompt: 'Запрос пользователя',
+        no_error: 'Нет ошибки'
     },
     zh: {
         hudini_title: 'Hudini - SLM上的CPU魔术师',
@@ -162,7 +188,15 @@ const messages = {
         model_responses: '模型回应',
         prompts: '提示',
         models: '模型',
-        compare: '比较' // Added this line
+        compare: '比较',
+        model_selection: '模型选择',
+        prompt_submission: '提示提交',
+        content: '内容',
+        timestamp: '时间戳',
+        error: '错误',
+        model_comparison: '模型比较',
+        user_prompt: '用户提示',
+        no_error: '无错误'
     }
 };
 

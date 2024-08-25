@@ -1,48 +1,68 @@
 <template>
-  <div id="response" class="response" ref="responseElement">
-    <div v-for="(item, index) in responses"
-         :key="index"
-         :class="[item.status === 'complete' ? 'response-item' : 'incomplete-item', 'fade-in']">
-      <div v-if="item.prompt" class="user-prompt fade-in">
-        <user-outlined class="user-icon"/>
-        <span class="prompt-text">{{ item.prompt }}</span>
-      </div>
-
-      <div v-if="item.completion?.choices?.length" class="bot-response fade-in">
-        <robot-outlined class="bot-icon"/>
-        <div class="response-content">
-          <div class="response-metadata">
-            <span class="model">{{ $t('model') }}: {{ item.model }}</span><br>
-            <span class="timestamp">{{ formatTimestamp(item.completion.created) }}</span>
+  <a-row >
+    <a-col :span="22">
+      <div id="response" class="response" ref="responseElement">
+        <div v-for="(item, index) in responses"
+             :key="index"
+             :class="[item.status === 'complete' ? 'response-item' : 'incomplete-item', 'fade-in']">
+          <div v-if="item.prompt" class="user-prompt fade-in">
+            <user-outlined class="user-icon"/>
+            <span class="prompt-text">{{ item.prompt }}</span>
           </div>
 
-          <VueMarkdownIT :breaks="true" :plugins="plugins" :source="item.completion.choices[0].message.content"/>
+          <div v-if="item.completion?.choices?.length" class="bot-response fade-in">
+            <robot-outlined class="bot-icon"/>
+            <div class="response-content">
+              <div class="response-metadata">
+                <span class="model">{{ $t('model') }}: {{ item.model }}</span><br>
+                <span class="timestamp">{{ formatTimestamp(item.completion.created) }}</span>
+              </div>
+
+              <VueMarkdownIT :breaks="true" :plugins="plugins" :source="item.completion.choices[0].message.content"/>
+            </div>
+          </div>
+          <div v-else-if="item.error" class="bot-response fade-in">
+            <robot-outlined class="bot-icon"/>
+            <div class="response-content">
+              <div class="response-metadata" v-if="item.model">
+                <span class="model">{{ $t('model') }}: {{ item.model }}</span>
+              </div>
+              <div>
+                {{ item.error }}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div v-else-if="item.error" class="bot-response fade-in">
-        <robot-outlined class="bot-icon"/>
-        <div class="response-content">
-          <div class="response-metadata" v-if="item.model">
-            <span class="model">{{ $t('model') }}: {{ item.model }}</span>
-          </div>
-          <div>
-            {{ item.error }}
-          </div>
-        </div>
-      </div>
-    </div>
-    <a-skeleton :loading="loading" active :paragraph="{ rows: 2 }" style="margin-bottom: 10px"></a-skeleton>
+        <a-skeleton :loading="loading" active :paragraph="{ rows: 2 }" style="margin-bottom: 10px"></a-skeleton>
 
+        <!-- Comparison Drawer Component -->
+        <ComparisonDrawer :plugins="plugins" :comparisonData="comparisonData" width="90%"/>
+      </div>
+    </a-col>
 
-    <!-- Comparison Drawer Component -->
-    <ComparisonDrawer :plugins="plugins" :comparisonData="comparisonData" width="90%"/>
-  </div>
+    <a-col :span="2" class="nav-container">
+      <a-menu
+          title="comparison"
+          size="small"
+          id="response_panel_action"
+          :inlineCollapsed="true"
+          v-model:openKeys="openKeys"
+          v-model:selectedKeys="selectedKeys"
+      >
+        <a-sub-menu size="small" key="sub1" @titleClick="titleClick">
+          <template #icon>
+            <TableOutlined />
+          </template>
+        </a-sub-menu>
+      </a-menu>
+    </a-col>
+  </a-row>
 </template>
 
 <script>
-import {nextTick, watch, ref, onMounted, computed} from 'vue';
-import {UserOutlined, RobotOutlined} from '@ant-design/icons-vue';
-import {Button, Skeleton} from 'ant-design-vue';
+import { nextTick, watch, ref, onMounted, computed } from 'vue';
+import { UserOutlined, RobotOutlined, TableOutlined } from '@ant-design/icons-vue';
+import { Button, Skeleton, Row, Col, Menu } from 'ant-design-vue';
 import MarkdownIt from 'markdown-it';
 import MarkdownItHighlightJs from 'markdown-it-highlightjs';
 import MarkdownItStrikethroughAlt from 'markdown-it-strikethrough-alt';
@@ -65,9 +85,14 @@ export default {
   components: {
     UserOutlined,
     RobotOutlined,
+    TableOutlined,
     VueMarkdownIT: Markdown,
     'a-button': Button,
     'a-skeleton': Skeleton,
+    'a-row': Row,
+    'a-col': Col,
+    'a-menu': Menu,
+    'a-sub-menu': Menu.SubMenu,
     ComparisonDrawer,
   },
   props: {
@@ -84,7 +109,24 @@ export default {
   },
   setup(props) {
     const responseElement = ref(null);
+    const openKeys = ref(['sub1']);
+    const selectedKeys = ref(['1']);
 
+    const handleClick = e => {
+      // Handle click event if needed
+    };
+
+    const titleClick = e => {
+      const event = new CustomEvent("comparison-open", {});
+      window.dispatchEvent(event);
+    };
+
+    watch(
+        () => openKeys,
+        val => {
+          console.log('openKeys', val);
+        },
+    );
 
     const scrollToBottom = () => {
       nextTick(() => {
@@ -93,7 +135,6 @@ export default {
         }
       });
     };
-
 
     const plugins = [
       {plugin: MarkdownItHighlightJs},
@@ -125,10 +166,9 @@ export default {
     // Prepare comparison data
     const comparisonData = computed(() => {
       return props.responses.map((response) => ({
-
-        model: (response.model)?response.model:"UserPrompt",
+        model: (response.model) ? response.model : "UserPrompt",
         content: response.completion?.choices[0].message.content || response.prompt,
-        timestamp: (response.completion?.created)?(formatTimestamp(response.completion?.created)):'',
+        timestamp: (response.completion?.created) ? (formatTimestamp(response.completion?.created)) : '',
         error: response.error || 'No error',
       }));
     });
@@ -142,6 +182,7 @@ export default {
     );
 
     onMounted(() => {
+      // Any mounting logic if needed
     });
 
     return {
@@ -150,19 +191,26 @@ export default {
       formatTimestamp,
       plugins,
       comparisonData,
+      openKeys,
+      handleClick,
+      titleClick,
+      selectedKeys
     };
   },
 };
 </script>
 
-
 <style scoped>
+.main-container {
+  width: 100%;
+}
+
 .response {
-  max-height: 68vh;
-  height: 68vh;
+  max-height: 64vh;
+  height: 64vh;
   overflow-y: auto;
   padding: 5px;
-  margin: 0;
+  margin: 0 10px 0 0;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   background-color: #ffffff;
@@ -170,6 +218,20 @@ export default {
   display: flex;
   flex-direction: column;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  overflow-x: hidden;
+}
+
+.nav-container {
+  background: white;
+  height: 64vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 8px;
+  border-radius: 10px;
+  overflow: hidden; /* This ensures the child elements don't overflow the rounded corners */
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .response-item, .user-prompt, .bot-response {
@@ -222,12 +284,8 @@ export default {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .response-metadata {
@@ -276,30 +334,6 @@ export default {
   hyphens: none;
 }
 
-/* You may want to adjust these global styles or move them to a global stylesheet */
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  line-height: 1.6;
-  color: #333;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  font-family: 'Arial', sans-serif;
-  margin-top: 1.5em;
-  margin-bottom: 0.5em;
-}
-
-p {
-  margin-bottom: 1em;
-}
-
-code {
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  background-color: #000;
-  padding: 2px 4px;
-  border-radius: 4px;
-}
-
 .hljs {
   background: yellow;
   font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
@@ -311,8 +345,5 @@ code {
   line-height: 1.5;
   tab-size: 4;
   hyphens: none;
-
 }
-
-
 </style>

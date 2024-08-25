@@ -182,7 +182,7 @@ export default defineComponent({
 /* Previous Prompts */
 .previous-prompts {
     background-color: #fff;
-    padding: 20px;
+    padding: 10px;
     border-radius: 10px;
     width:100%;
     max-width:100%!important;
