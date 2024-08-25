@@ -7,7 +7,7 @@ class ModelsController:
     """
     A controller class responsible for handling routes related to models.
 
-    This class sets up the necessary routes to retrieve models from local storage and OpenAI,
+    This class sets up the necessary routes to retrieve models from local storage and external services (OpenAI, Anthropic),
     and handles requests for the favicon.
     """
 
@@ -30,27 +30,40 @@ class ModelsController:
         """
         self.blueprint.add_url_rule('/models', 'models', self.models, methods=['GET'])
         self.blueprint.add_url_rule('/favicon.ico', 'favicon', self.favicon)
+
     @staticmethod
     def models():
         """
         Handles the /models route.
 
-        This method retrieves available models from both local storage and OpenAI,
-        and returns them as a JSON response.
+        This method retrieves available models from local storage, OpenAI, and Anthropic,
+        merges them into a single list, and returns them as a JSON response.
 
         Returns:
-            flask.Response: A JSON response containing lists of local and OpenAI models.
+            flask.Response: A JSON response containing a list of all available models.
         """
         from server.app.config.base_config import BaseConfig
         from server.app.clients.llama_cpp_client import LLamaCppClient
         from server.app.clients.openai_client import OpenAIClient
+        from server.app.clients.anthropic_client import AnthropicClient
 
-        models_path =  BaseConfig.MODEL_PATH
-        local_models = LLamaCppClient(models_path).get_available_models()
+        # Retrieve models from local storage (LLama.cpp), OpenAI, and Anthropic
+        models_path = BaseConfig.MODEL_PATH
+       # llama_cpp_models = LLamaCppClient(models_path).get_available_models()
         openai_models = OpenAIClient(BaseConfig.API_KEY_OPEN_AI).get_available_models()
-        logger.debug(f"Retrieved local models: {local_models}")
+        anthropic_models = AnthropicClient(BaseConfig.API_KEY_ANTHROPIC).get_available_models()
+
+        # Merge all models into a single list
+        all_models = openai_models + anthropic_models
+
+        # Log the retrieved models for debugging purposes
+       # logger.debug(f"Retrieved LLama.cpp models: {llama_cpp_models}")
         logger.debug(f"Retrieved OpenAI models: {openai_models}")
-        return jsonify(openai_models)
+        logger.debug(f"Retrieved Anthropic models: {anthropic_models}")
+        logger.debug(f"Total models retrieved: {len(all_models)}")
+
+        # Return the complete list of models as a JSON response
+        return jsonify(all_models)
 
     @staticmethod
     def favicon():
@@ -63,7 +76,6 @@ class ModelsController:
             flask.Response: An empty response with a 204 status code.
         """
         return Response(status=204)
-
 
 
 # Create an instance of the controller

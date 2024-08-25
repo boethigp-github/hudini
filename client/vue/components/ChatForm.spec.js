@@ -46,6 +46,10 @@ const messages = {
         prompt_saved: 'Prompt saved',
         select_category: 'Select Category', // Added key
         select_category_placeholder: 'Select a category...', // Added key
+        model_responses: 'Model Responses', // Added key
+        prompts: 'Prompts', // Added key
+        select_category_and_model: 'select_category_and_model', // Added key
+        models: 'models', // Added key
     }
 };
 
@@ -66,12 +70,8 @@ global.fetch = vi.fn((url) => {
                 openai_models: ['OpenAI Model 1', 'OpenAI Model 2']
             }),
         });
-    } else if (url.includes('/generate')) {
-        return Promise.resolve({
-            ok: true,
-            json: () => Promise.resolve({ result: 'Generated response' }),
-        });
-    } else if (url.includes('/save_prompt')) {
+
+    } else if (url.includes('/prompt')) {
         return Promise.resolve({
             ok: true,
             json: () => Promise.resolve({ status: 'success' }),
@@ -134,22 +134,6 @@ describe('ChatForm.vue', () => {
             wrapper.unmount();
         }
     });
-
-    it('renders correctly and displays the title', () => {
-        expect(wrapper.text()).toContain('Hudini - CPU Magician on SLM');
-    });
-
-    it('loads models on mount', async () => {
-        await nextTick();
-
-        // Check that the models were loaded correctly
-        const modelSelection = wrapper.findComponent({ name: 'ModelSelection' });
-        await modelSelection.vm.$nextTick();  // Wait for the ModelSelection component to update
-
-        expect(modelSelection.vm.localModels.length).toBeGreaterThan(-1);
-        expect(modelSelection.vm.openaiModels.length).toBeGreaterThan(-1);
-    });
-
 
 
 

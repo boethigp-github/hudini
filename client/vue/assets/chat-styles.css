@@ -9,6 +9,7 @@ body {
 
     gap: 10px;
     padding: 10px;
+    background: #e9edf2;
 }
 
 /* Form Area */
@@ -100,7 +101,7 @@ body {
 .content {
     flex-grow: 1;
     display: flex;
-    gap: 20px; /* Space between chat-area and previous-prompts */
+    gap: 10px; /* Space between chat-area and previous-prompts */
 }
 
 

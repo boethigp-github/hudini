@@ -2,6 +2,7 @@
   <div class="chat-container">
     <div class="header">
       <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="60" />
+      <ChatMenu />
       <div class="language-switch-container">
         <LanguageSwitch />
       </div>
@@ -10,30 +11,32 @@
       <div class="chat-area">
         <ResponsePanel
             :responses="responses"
-            :loading="loading"
-        />
-        <a-form layout="vertical" class="form">
-          <ModelSelection />
-
-          <a-form-item class="textarea-container">
-            <a-textarea
-                v-model:value="prompt"
-                :rows="2"
-                :placeholder="t('enter_prompt')"
-                @keydown="handleKeydown"
-                class="prompt_input"
-                :disabled="loading"
-            />
-            <a-button
-                type="primary"
-                @click="handleSubmit"
-                :loading="loading"
-                class="send-button"
-            >
-              {{ t('send_button') }}
-            </a-button>
-          </a-form-item>
-        </a-form>
+            :loading="loading"/>
+        <!-- Ant Design Vue Tabs -->
+        <a-tabs default-active-key="1" class="chat-tabs" style="clear: both">
+          <a-tab-pane key="1" :tab="t('model_selection')">
+            <ModelSelection />
+            <a-form layout="vertical" class="form">
+              <a-form-item class="textarea-container">
+                <a-textarea
+                    v-model:value="prompt"
+                    :rows="2"
+                    :placeholder="t('enter_prompt')"
+                    @keydown="handleKeydown"
+                    class="prompt_input"
+                    :disabled="loading"
+                />
+                <a-button
+                    type="primary"
+                    @click="handleSubmit"
+                    :loading="loading"
+                    class="send-button">
+                  {{ t('send_button') }}
+                </a-button>
+              </a-form-item>
+            </a-form>
+          </a-tab-pane>
+        </a-tabs>
       </div>
       <div class="previous-prompts">
         <h2>{{ t('previous_prompts') }}</h2>
@@ -43,8 +46,9 @@
   </div>
 </template>
 
+
 <script>
-import { ref, watch } from 'vue';
+import { ref, watch , onMounted, onBeforeUnmount} from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useModelsStore } from './../stores/models';
 import PromptPanel from './PromptPanel.vue';
@@ -54,7 +58,9 @@ import ModelSelection from './ModelSelection.vue';
 import { message } from 'ant-design-vue';
 import { streamPrompt, createPrompt } from './../services/api';
 import { v4 as uuidv4 } from 'uuid';
-
+import ChatMenu from './MainMenu.vue';  // Import ChatMenu
+import { Tabs, TabPane } from 'ant-design-vue'; // Make sure Tabs and TabPane are imported
+import { PlusOutlined, SettingOutlined } from '@ant-design/icons-vue';
 export default {
   name: 'ChatForm',
   components: {
@@ -62,6 +68,11 @@ export default {
     ResponsePanel,
     LanguageSwitch,
     ModelSelection,
+    ChatMenu,
+    Tabs,
+    TabPane,
+    PlusOutlined,
+    SettingOutlined
   },
   setup() {
     const { t } = useI18n();
@@ -71,6 +82,24 @@ export default {
     const modelsStore = useModelsStore();
     const updateTrigger = ref(0);
     const storedPrompt = ref({status:'initialized', prompt:null, prompt_id:null});
+    const drawerVisible = ref(false);
+
+
+
+    const showDrawer = () => {
+      drawerVisible.value = true;
+    };
+
+
+    const handleToolbarAction = ({ key }) => {
+      if (key === 'new_chat') {
+        console.log("New Chat Started");
+        // Implement new chat initiation logic
+      } else if (key === 'settings') {
+        console.log("Settings Opened");
+        // Implement settings adjustment logic
+      }
+    };
 
     const createPromptServerside = async () => {
       if (!prompt.value || typeof prompt.value !== 'string' || prompt.value.trim() === '') {
@@ -84,11 +113,14 @@ export default {
         status: 'prompt-saved',
         id: uuidv4(),
       };
+
       responses.value.push(promptData)
+
 
       updateTrigger.value++;
       try {
         await createPrompt(promptData);
+
       } catch (error) {
         message.error(t('failed_to_save_prompt'));
       }
@@ -173,6 +205,10 @@ export default {
       handleKeydown,
       handleSubmit,
       updateTrigger,
+      showDrawer,
+      drawerVisible,
+      handleToolbarAction,
+
       t,
     };
   },
@@ -180,6 +216,20 @@ export default {
 </script>
 
 <style scoped>
+.header {
+  display: flex;
+  align-items: center;
+}
+
+.header .logo {
+  margin-right: 10px;
+}
+
+
+.language-switch-container {
+  width: 100%;
+}
+
 .prompt_input {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #444444;
@@ -188,10 +238,6 @@ export default {
 
 .textarea-container {
   clear: both;
-}
-
-.language-switch-container {
-  width: 100%;
 }
 
 .chat-area {

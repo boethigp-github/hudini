@@ -26,7 +26,20 @@ const messages = {
         failed_to_load_models: 'Failed to load models',
         enter_prompt_and_select_model: 'Please enter a prompt and select at least one model.',
         server_connection_error: 'An error occurred while connecting to the server.',
-        select_category_and_model: 'Please select a category and model', // Added this line
+        select_category_and_model: 'Please select a category and model',
+        model_responses: 'Model Responses',
+        prompts: 'Prompts',
+        models: 'Models',
+        compare: 'Compare', // Added this line
+        // existing keys...
+        model_selection: 'Model Selection',
+        prompt_submission: 'Prompt Submission',
+        content: 'Content',
+        timestamp: 'Timestamp',
+        error: 'Error',
+        model_comparison: 'Model Comparison',
+        user_prompt: 'User Prompt',
+        no_error: 'No error'
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -53,7 +66,19 @@ const messages = {
         failed_to_load_models: 'Fehler beim Laden der Modelle',
         enter_prompt_and_select_model: 'Bitte geben Sie einen Prompt ein und wählen Sie mindestens ein Modell aus.',
         server_connection_error: 'Beim Verbinden mit dem Server ist ein Fehler aufgetreten.',
-        select_category_and_model: 'Bitte wählen Sie eine Kategorie und ein Modell', // Added this line
+        select_category_and_model: 'Bitte wählen Sie eine Kategorie und ein Modell',
+        model_responses: 'Modellantworten',
+        prompts: 'Prompts',
+        models: 'Modelle',
+        compare: 'Vergleichen',
+        model_selection: 'Modellauswahl',
+        prompt_submission: 'Eingabeaufforderung',
+        content: 'Inhalt',
+        timestamp: 'Zeitstempel',
+        error: 'Fehler',
+        model_comparison: 'Modellvergleich',
+        user_prompt: 'Benutzereingabe',
+        no_error: 'Kein Fehler'
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -80,7 +105,20 @@ const messages = {
         failed_to_load_models: 'Échec du chargement des modèles',
         enter_prompt_and_select_model: 'Veuillez entrer un prompt et sélectionner au moins un modèle.',
         server_connection_error: 'Une erreur s\'est produite lors de la connexion au serveur.',
-        select_category_and_model: 'Veuillez sélectionner une catégorie et un modèle', // Added this line
+        select_category_and_model: 'Veuillez sélectionner une catégorie et un modèle',
+        model_responses: 'Réponses du modèle',
+        prompts: 'Prompts',
+        models: 'Modèles',
+        compare: 'Comparer',
+        model_selection: 'Sélection de Modèle',
+        prompt_submission: 'Soumission d\'Invite',
+        content: 'Contenu',
+        timestamp: 'Horodatage',
+        error: 'Erreur',
+        model_comparison: 'Comparaison de modèles',
+        user_prompt: 'Invite de l\'utilisateur',
+        no_error: 'Pas d\'erreur'
+
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
@@ -107,7 +145,19 @@ const messages = {
         failed_to_load_models: 'Не удалось загрузить модели',
         enter_prompt_and_select_model: 'Пожалуйста, введите запрос и выберите хотя бы одну модель.',
         server_connection_error: 'Произошла ошибка при подключении к серверу.',
-        select_category_and_model: 'Пожалуйста, выберите категорию и модель', // Added this line
+        select_category_and_model: 'Пожалуйста, выберите категорию и модель',
+        model_responses: 'Ответы модели',
+        prompts: 'Подсказки',
+        models: 'Модели',
+        compare: 'Сравнить',
+        model_selection: 'Выбор Модели',
+        prompt_submission: 'Отправка Запроса',
+        content: 'Содержание',
+        timestamp: 'Временная метка',
+        error: 'Ошибка',
+        model_comparison: 'Сравнение моделей',
+        user_prompt: 'Запрос пользователя',
+        no_error: 'Нет ошибки'
     },
     zh: {
         hudini_title: 'Hudini - SLM上的CPU魔术师',
@@ -134,7 +184,19 @@ const messages = {
         failed_to_load_models: '加载模型失败',
         enter_prompt_and_select_model: '请输入提示并至少选择一个模型。',
         server_connection_error: '连接服务器时发生错误。',
-        select_category_and_model: '请选择一个类别和一个模型', // Added this line
+        select_category_and_model: '请选择一个类别和一个模型',
+        model_responses: '模型回应',
+        prompts: '提示',
+        models: '模型',
+        compare: '比较',
+        model_selection: '模型选择',
+        prompt_submission: '提示提交',
+        content: '内容',
+        timestamp: '时间戳',
+        error: '错误',
+        model_comparison: '模型比较',
+        user_prompt: '用户提示',
+        no_error: '无错误'
     }
 };
 

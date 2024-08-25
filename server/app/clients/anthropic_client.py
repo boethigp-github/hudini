@@ -1,6 +1,7 @@
 import logging
 import anthropic
 from anthropic import AsyncAnthropic
+from server.app.adapters.anthropic_success_response_mapper import AnthropicResponseToSuccessGenerationResponseAdapter
 from server.app.models.success_generation_model import SuccessGenerationModel
 from server.app.models.generation_error_details import ErrorGenerationModel
 from server.app.models.anthropic_model import AnthropicModel
@@ -25,8 +26,8 @@ class AnthropicClient:
 
     async def fetch_completion(self, model: AnthropicModel, prompt: str) -> str:
         try:
-            self.logger.debug(f"Fetching completion for model: {model.id}")
-            message = await self.client.messages.create(
+
+            response = await self.client.messages.create(
                 model=model.id,
                 max_tokens=1000,
                 temperature=0,
@@ -34,11 +35,10 @@ class AnthropicClient:
                     {"role": "user", "content": prompt}
                 ]
             )
+            self.logger.debug(f"AnthropicClient::fetch_completion: Fetching completion with response: \n ################\n {response.to_dict()}\n ################\n")
+            success_response = AnthropicResponseToSuccessGenerationResponseAdapter.map_to_success_response(response.to_dict(), model.id)
+            return success_response.model_dump_json()
 
-            return SuccessGenerationModel(
-                model=model.id,
-                completion=message.model_dump()
-            ).model_dump_json()
 
         except Exception as e:
             self.logger.error(f"Error with model {model.id}: {str(e)}")
@@ -56,14 +56,14 @@ class AnthropicClient:
         """
         try:
             models = [
-                AnthropicModel(id="claude-3-5-sonnet-20240620", created=None, platform="anthropic"),
-                AnthropicModel(id="claude-3-opus-20240229", created=None, platform="anthropic"),
-                AnthropicModel(id="claude-3-sonnet-20240229", created=None, platform="anthropic"),
-                AnthropicModel(id="claude-3-haiku-20240307", created=None, platform="anthropic")
+                AnthropicModel(id="claude-3-5-sonnet-20240620", created=None, platform="anthropic" , category='text_completion'),
+                AnthropicModel(id="claude-3-opus-20240229", created=None, platform="anthropic", category='embedding'),
+                AnthropicModel(id="claude-3-sonnet-20240229", created=None, platform="anthropic", category='text_completion'),
+                AnthropicModel(id="claude-3-haiku-20240307", created=None, platform="anthropic", category='text_completion')
             ]
 
             self.logger.debug(f"Retrieved {len(models)} models from Anthropic")
             return [model.model_dump() for model in models]
         except Exception as e:
-            self.logger.error(f"Failed to fetch models from Anthropic: {str(e)}", exc_info=True)
-            raise ValueError(f"Error fetching models from Anthropic: {str(e)}")
+            self.logger.error(f"AnthropicClient::get_available_models: Failed to fetch models from Anthropic: {str(e)}", exc_info=True)
+            raise ValueError(f"AnthropicClient::get_available_models: Error fetching models from Anthropic: {str(e)}")

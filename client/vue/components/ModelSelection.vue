@@ -1,6 +1,6 @@
 <template>
   <!-- Category Selection -->
-  <a-form-item :label="$t('select_category_and_model', 'Select Category / Model') "  style="min-width:100%;max-width: 30%!important;float:left">
+  <a-form-item  style="min-width:100%;max-width: 30%!important;float:left">
     <a-select
         style="min-width: 30%!important;float:left; margin-right: 5px"
         v-model="selectedCategory"
@@ -46,8 +46,11 @@ export default defineComponent({
       try {
         const data = await getModels()
 
+
         // Save the complete service response
         await modelsStore.saveServiceResponse(data)
+
+        if(!data?.length) return;
 
         models.value = data.map(model => ({
           id: model.id,

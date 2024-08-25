@@ -1,6 +1,7 @@
 import { createApp } from 'vue';
 import App from './App.vue';
 import Antd from 'ant-design-vue';
+
 import 'ant-design-vue/dist/reset.css'; // Correct import for Ant Design Vue styles
 import './assets/chat-styles.css';
 

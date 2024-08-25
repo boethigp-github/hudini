@@ -36,4 +36,6 @@ export default {
     width: 120px;
     float: right;
 }
+
+
 </style>
