@@ -8,6 +8,10 @@ class ModelCategory(str, Enum):
     EMBEDDING = "embedding"
     GPT_BASE = "gpt_base"
 
+class Platform(str, Enum):
+    ANTHROPIC = "anthropic"
+
+
 class AnthropicModel(BaseModel):
     id: str
     object: str = "model"  # Anthropic models are always of type "model"
@@ -18,6 +22,7 @@ class AnthropicModel(BaseModel):
     parent: Optional[str] = None
     category: Optional[ModelCategory] = Field(default=None)
     description: Optional[str] = None
+    platform: Platform = Platform.ANTHROPIC  # Default platform is Anthropic
 
     @classmethod
     def from_dict(cls, model_dict: dict):
@@ -26,10 +31,12 @@ class AnthropicModel(BaseModel):
         """
         model_id = model_dict.get("id", "")
         category = cls.classify_model(model_id)
+        platform = cls.determine_platform(model_id)
         return cls(
             **model_dict,
             category=category,
-            description=f"Anthropic model {model_id} categorized as {category.value}"
+            platform=platform,
+            description=f"Anthropic model {model_id} categorized as {category.value}, available on {platform.value}"
         )
 
     @staticmethod
@@ -50,6 +57,20 @@ class AnthropicModel(BaseModel):
         else:
             return ModelCategory.GPT_BASE  # Default or fallback category
 
+    @staticmethod
+    def determine_platform(model_id: str) -> Platform:
+        """
+        Determines the platform based on the model ID.
+
+        Args:
+            model_id (str): The ID of the model.
+
+        Returns:
+            Platform: The platform where the model is available.
+        """
+
+        return Platform.ANTHROPIC
+
     model_config = ConfigDict(
         use_enum_values=True  # Ensures that the enum is serialized as a string in the JSON output
-    )  # Ensures that the enum is serialized as a string in the JSON output
+    )

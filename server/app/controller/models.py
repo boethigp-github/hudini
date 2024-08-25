@@ -50,10 +50,7 @@ class ModelsController:
         openai_models = OpenAIClient(BaseConfig.API_KEY_OPEN_AI).get_available_models()
         logger.debug(f"Retrieved local models: {local_models}")
         logger.debug(f"Retrieved OpenAI models: {openai_models}")
-        return jsonify({
-            'local_models': local_models,
-            'openai_models': openai_models
-        })
+        return jsonify(openai_models)
 
     @staticmethod
     def favicon():

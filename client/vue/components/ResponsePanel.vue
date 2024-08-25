@@ -180,7 +180,8 @@ export default {
   max-height: 68vh;
   height: 68vh;
   overflow-y: auto;
-  padding: 15px;
+  padding: 5px;
+  margin: 0;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   background-color: #ffffff;
@@ -193,12 +194,12 @@ export default {
 .response-item, .user-prompt, .bot-response {
   border: none;
   border-radius: 12px;
-  padding: 12px;
+  padding: 5px;
   margin-top: 12px;
   font-size: 16px;
   line-height: 1.5;
   opacity: 0;
-  transition: opacity 0.5s ease-in-out;
+  transition: opacity 0.2s ease-in-out;
   display: flex;
   align-items: flex-start;
 }
@@ -235,7 +236,7 @@ export default {
 }
 
 .fade-in {
-  animation: fadeIn 0.5s ease-in-out forwards;
+  animation: fadeIn 0.2s ease-in-out forwards;
   animation-delay: 0.1s;
 }
 
