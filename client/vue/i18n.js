@@ -30,7 +30,15 @@ const messages = {
         model_responses: 'Model Responses',
         prompts: 'Prompts',
         models: 'Models',
-        compare: 'Compare' // Added this line
+        compare: 'Compare', // Added this line
+        // existing keys...
+        table: {
+            model: 'Model',
+            content: 'Content',
+            timestamp: 'Timestamp',
+            error: 'Error',
+            // any other table related translations...
+        }
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',

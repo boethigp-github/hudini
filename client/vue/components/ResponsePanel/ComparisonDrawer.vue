@@ -36,7 +36,7 @@
 import {defineComponent, onBeforeUnmount, onMounted, ref} from 'vue';
 import { Drawer, Table } from 'ant-design-vue';
 import Markdown from 'vue3-markdown-it';
-
+import { useI18n } from 'vue-i18n';
 
 export default defineComponent({
   name: 'ComparisonDrawer',
@@ -65,7 +65,7 @@ export default defineComponent({
     },
   },
   setup(props) {
-
+    const { t } = useI18n(); // Use i18n
     const closeDrawer = ()=>{
       const event = new CustomEvent("comparison-close", {  });
       window.dispatchEvent(event);
@@ -97,33 +97,31 @@ export default defineComponent({
 
     let drawerVisible = ref(false)
 
-    const columns = [
+    const columns = ref([
       {
-        title: 'Model / Prompt',
+        title: t('model'),
         dataIndex: 'model',
         key: 'model',
-        width:300
-
+        width: 300,
       },
       {
-        title: 'Content',
+        title: t('content'),
         dataIndex: 'content',
         key: 'content',
-
       },
       {
-        title: 'Timestamp',
+        title: t('timestamp'),
         dataIndex: 'timestamp',
         key: 'timestamp',
-        width: 170
+        width: 170,
       },
       {
-        title: 'Error',
+        title: t('error'),
         dataIndex: 'error',
         key: 'error',
-        width: 100
+        width: 100,
       },
-    ];
+    ]);
 
     return {
       columns,
