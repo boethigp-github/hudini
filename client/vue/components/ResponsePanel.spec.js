@@ -2,7 +2,14 @@ import { mount } from '@vue/test-utils';
 import { describe, it, expect } from 'vitest';
 import { createI18n } from 'vue-i18n';
 import ResponsePanel from './ResponsePanel.vue';
-
+// Mock window.matchMedia
+window.matchMedia = window.matchMedia || function () {
+    return {
+        matches: false,
+        addListener: function () { },
+        removeListener: function () { }
+    };
+};
 // Create a basic i18n setup
 const messages = {
     en: {
@@ -155,6 +162,29 @@ describe('ResponsePanel.vue', () => {
         //expect(wrapper.find('.response-content').text()).toContain('The weather is sunny with a high of 25°C.');
     });
 
+    it('renders the navigation menu', () => {
+        const wrapper = mount(ResponsePanel, {
+            props: {
+                responses: [],
+                loading: false,
+                drawerVisible: false,
+            },
+            global: {
+                plugins: [i18n],
+            },
+        });
+
+        // Check if the navigation container exists
+        expect(wrapper.find('.nav-container').exists()).toBe(true);
+
+        // Check if the menu exists
+        expect(wrapper.find('#response_panel_action').exists()).toBe(true);
+
+
+
+        // Check if the TableOutlined icon is present
+        expect(wrapper.findComponent({ name: 'TableOutlined' }).exists()).toBe(true);
+    });
 
 
 });

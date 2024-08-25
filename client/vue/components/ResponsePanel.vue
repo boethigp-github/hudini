@@ -1,46 +1,49 @@
 <template>
-  <a-row >
-    <a-col :span="22">
-      <div id="response" class="response" ref="responseElement">
-        <div v-for="(item, index) in responses"
-             :key="index"
-             :class="[item.status === 'complete' ? 'response-item' : 'incomplete-item', 'fade-in']">
-          <div v-if="item.prompt" class="user-prompt fade-in">
-            <user-outlined class="user-icon"/>
-            <span class="prompt-text">{{ item.prompt }}</span>
-          </div>
+  <a-row>
+    <a-col :span="23">
 
-          <div v-if="item.completion?.choices?.length" class="bot-response fade-in">
-            <robot-outlined class="bot-icon"/>
-            <div class="response-content">
-              <div class="response-metadata">
-                <span class="model">{{ $t('model') }}: {{ item.model }}</span><br>
-                <span class="timestamp">{{ formatTimestamp(item.completion.created) }}</span>
+          <div id="response" class="response" ref="responseElement">
+            <div v-for="(item, index) in responses"
+                 :key="index"
+                 :class="[item.status === 'complete' ? 'response-item' : 'incomplete-item', 'fade-in']">
+              <div v-if="item.prompt" class="user-prompt fade-in">
+                <user-outlined class="user-icon"/>
+                <span class="prompt-text">{{ item.prompt }}</span>
               </div>
 
-              <VueMarkdownIT :breaks="true" :plugins="plugins" :source="item.completion.choices[0].message.content"/>
+              <div v-if="item.completion?.choices?.length" class="bot-response fade-in">
+                <robot-outlined class="bot-icon"/>
+                <div class="response-content">
+                  <div class="response-metadata">
+                    <span class="model">{{ $t('model') }}: {{ item.model }}</span><br>
+                    <span class="timestamp">{{ formatTimestamp(item.completion.created) }}</span>
+                  </div>
+
+                  <VueMarkdownIT :breaks="true" :plugins="plugins"
+                                 :source="item.completion.choices[0].message.content"/>
+                </div>
+              </div>
+              <div v-else-if="item.error" class="bot-response fade-in">
+                <robot-outlined class="bot-icon"/>
+                <div class="response-content">
+                  <div class="response-metadata" v-if="item.model">
+                    <span class="model">{{ $t('model') }}: {{ item.model }}</span>
+                  </div>
+                  <div>
+                    {{ item.error }}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-          <div v-else-if="item.error" class="bot-response fade-in">
-            <robot-outlined class="bot-icon"/>
-            <div class="response-content">
-              <div class="response-metadata" v-if="item.model">
-                <span class="model">{{ $t('model') }}: {{ item.model }}</span>
-              </div>
-              <div>
-                {{ item.error }}
-              </div>
-            </div>
-          </div>
-        </div>
-        <a-skeleton :loading="loading" active :paragraph="{ rows: 2 }" style="margin-bottom: 10px"></a-skeleton>
+            <a-skeleton :loading="loading" active :paragraph="{ rows: 2 }" style="margin-bottom: 10px"></a-skeleton>
 
-        <!-- Comparison Drawer Component -->
-        <ComparisonDrawer :plugins="plugins" :comparisonData="comparisonData" width="90%"/>
-      </div>
+            <!-- Comparison Drawer Component -->
+            <ComparisonDrawer :plugins="plugins" :comparisonData="comparisonData" width="90%"/>
+          </div>
+
     </a-col>
 
-    <a-col :span="2" class="nav-container">
+    <a-col :span="1" class="nav-container">
       <a-menu
           title="comparison"
           size="small"
@@ -51,7 +54,7 @@
       >
         <a-sub-menu size="small" key="sub1" @titleClick="titleClick">
           <template #icon>
-            <TableOutlined />
+            <TableOutlined/>
           </template>
         </a-sub-menu>
       </a-menu>
@@ -60,9 +63,9 @@
 </template>
 
 <script>
-import { nextTick, watch, ref, onMounted, computed } from 'vue';
-import { UserOutlined, RobotOutlined, TableOutlined } from '@ant-design/icons-vue';
-import { Button, Skeleton, Row, Col, Menu } from 'ant-design-vue';
+import {nextTick, watch, ref, onMounted, computed} from 'vue';
+import {UserOutlined, RobotOutlined, TableOutlined} from '@ant-design/icons-vue';
+import {Button, Skeleton, Row, Col, Menu} from 'ant-design-vue';
 import MarkdownIt from 'markdown-it';
 import MarkdownItHighlightJs from 'markdown-it-highlightjs';
 import MarkdownItStrikethroughAlt from 'markdown-it-strikethrough-alt';
@@ -209,7 +212,7 @@ export default {
   max-height: 64vh;
   height: 64vh;
   overflow-y: auto;
-  padding: 5px;
+  padding: 10px;
   margin: 0 10px 0 0;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
@@ -252,12 +255,14 @@ export default {
   float: right;
   max-width: 80%;
   margin-left: auto;
+  padding: 15px;
 }
 
 .bot-response {
   background: #f5f5f5;
-  float: left;
   max-width: 100%;
+  padding :15px;
+  min-width: 70%;
 }
 
 .user-icon, .bot-icon {
@@ -284,8 +289,12 @@ export default {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .response-metadata {

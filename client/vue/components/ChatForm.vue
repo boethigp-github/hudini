@@ -11,11 +11,7 @@
       <div class="chat-area">
         <ResponsePanel
             :responses="responses"
-            :loading="loading"
-        />
-
-
-
+            :loading="loading"/>
         <!-- Ant Design Vue Tabs -->
         <a-tabs default-active-key="1" class="chat-tabs" style="clear: both">
           <a-tab-pane key="1" :tab="t('model_selection')">
@@ -34,14 +30,12 @@
                     type="primary"
                     @click="handleSubmit"
                     :loading="loading"
-                    class="send-button"
-                >
+                    class="send-button">
                   {{ t('send_button') }}
                 </a-button>
               </a-form-item>
             </a-form>
           </a-tab-pane>
-
         </a-tabs>
       </div>
       <div class="previous-prompts">
