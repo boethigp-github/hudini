@@ -27,8 +27,9 @@ const messages = {
         enter_prompt_and_select_model: 'Please enter a prompt and select at least one model.',
         server_connection_error: 'An error occurred while connecting to the server.',
         select_category_and_model: 'Please select a category and model',
-        model_responses: 'Model Responses', // Added this line
-        prompts: 'Prompts', // Added this line
+        model_responses: 'Model Responses',
+        prompts: 'Prompts',
+        models: 'Models' // Added this line
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -56,8 +57,9 @@ const messages = {
         enter_prompt_and_select_model: 'Bitte geben Sie einen Prompt ein und wählen Sie mindestens ein Modell aus.',
         server_connection_error: 'Beim Verbinden mit dem Server ist ein Fehler aufgetreten.',
         select_category_and_model: 'Bitte wählen Sie eine Kategorie und ein Modell',
-        model_responses: 'Modellantworten', // Added this line
-        prompts: 'Prompts', // Added this line
+        model_responses: 'Modellantworten',
+        prompts: 'Prompts',
+        models: 'Modelle' // Added this line
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -85,8 +87,9 @@ const messages = {
         enter_prompt_and_select_model: 'Veuillez entrer un prompt et sélectionner au moins un modèle.',
         server_connection_error: 'Une erreur s\'est produite lors de la connexion au serveur.',
         select_category_and_model: 'Veuillez sélectionner une catégorie et un modèle',
-        model_responses: 'Réponses du modèle', // Added this line
-        prompts: 'Prompts', // Added this line
+        model_responses: 'Réponses du modèle',
+        prompts: 'Prompts',
+        models: 'Modèles' // Added this line
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
@@ -114,8 +117,9 @@ const messages = {
         enter_prompt_and_select_model: 'Пожалуйста, введите запрос и выберите хотя бы одну модель.',
         server_connection_error: 'Произошла ошибка при подключении к серверу.',
         select_category_and_model: 'Пожалуйста, выберите категорию и модель',
-        model_responses: 'Ответы модели', // Added this line
-        prompts: 'Подсказки', // Added this line
+        model_responses: 'Ответы модели',
+        prompts: 'Подсказки',
+        models: 'Модели' // Added this line
     },
     zh: {
         hudini_title: 'Hudini - SLM上的CPU魔术师',
@@ -143,11 +147,11 @@ const messages = {
         enter_prompt_and_select_model: '请输入提示并至少选择一个模型。',
         server_connection_error: '连接服务器时发生错误。',
         select_category_and_model: '请选择一个类别和一个模型',
-        model_responses: '模型回应', // Added this line
-        prompts: '提示', // Added this line
+        model_responses: '模型回应',
+        prompts: '提示',
+        models: '模型' // Added this line
     }
 };
-
 
 const i18n = createI18n({
     legacy: false,
