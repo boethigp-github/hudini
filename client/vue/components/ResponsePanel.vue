@@ -17,8 +17,7 @@
             <span class="timestamp">{{ formatTimestamp(item.completion.created) }}</span>
           </div>
 
-          <!-- Replace v-html with vue3-markdown-it -->
-          <VueMarkdownITueMarkdownIT  :breaks="true" :plugins="plugins" :source="item.completion.choices[0].message.content"/>
+          <VueMarkdownIT :breaks="true" :plugins="plugins" :source="item.completion.choices[0].message.content"/>
         </div>
       </div>
       <div v-else-if="item.error" class="bot-response fade-in">
@@ -34,19 +33,22 @@
       </div>
     </div>
     <a-skeleton :loading="loading" active :paragraph="{ rows: 2 }" style="margin-bottom: 10px"></a-skeleton>
+
+    <!-- Compare Button -->
+    <a-button type="primary" @click="showDrawer">Compare</a-button>
+
+    <!-- Comparison Drawer Component -->
+    <ComparisonDrawer :plugins="plugins" :visible="drawerVisible" :comparisonData="comparisonData" width="90%" @close="drawerVisible = false" />
   </div>
 </template>
 
 <script>
-import {nextTick, watch, ref, onMounted} from 'vue';
-
-import {UserOutlined, RobotOutlined} from '@ant-design/icons-vue';
-import './ResponsePanel/Highlite.css';
-// Import more language components as needed
-import MarkdownItStrikethroughAlt from 'markdown-it-strikethrough-alt';
+import { nextTick, watch, ref, onMounted, computed } from 'vue';
+import { UserOutlined, RobotOutlined } from '@ant-design/icons-vue';
+import { Button, Skeleton } from 'ant-design-vue';
 import MarkdownIt from 'markdown-it';
-
 import MarkdownItHighlightJs from 'markdown-it-highlightjs';
+import MarkdownItStrikethroughAlt from 'markdown-it-strikethrough-alt';
 import MarkdownItAbbr from 'markdown-it-abbr';
 import MarkdownItAncor from 'markdown-it-anchor';
 import MarkdownItDefList from 'markdown-it-deflist';
@@ -56,17 +58,20 @@ import MarkdownSub from 'markdown-it-sub';
 import MarkdownSup from 'markdown-it-sup';
 import MarkdownTaskList from 'markdown-it-task-lists';
 import MarkdownMark from 'markdown-it-mark';
-
-
 import MarkdownTocDoneRight from 'markdown-it-toc-done-right';
 import Markdown from 'vue3-markdown-it';
+import './ResponsePanel/Highlite.css';
+import ComparisonDrawer from './ResponsePanel/ComparisonDrawer.vue';
 
 export default {
   name: 'ResponsePanel',
   components: {
     UserOutlined,
     RobotOutlined,
-    VueMarkdownITueMarkdownIT: Markdown
+    VueMarkdownIT: Markdown,
+    'a-button': Button,
+    'a-skeleton': Skeleton,
+    ComparisonDrawer,
   },
   props: {
     responses: {
@@ -82,6 +87,7 @@ export default {
   },
   setup(props) {
     const responseElement = ref(null);
+    const drawerVisible = ref(false);
 
     const scrollToBottom = () => {
       nextTick(() => {
@@ -91,51 +97,25 @@ export default {
       });
     };
 
-    const plugins = [
-      {
-        plugin: MarkdownItHighlightJs
-      },
-      {
-        plugin: MarkdownItStrikethroughAlt
-      },
-      {
-        plugin: MarkdownIt
-      }
-      , {
-        plugin: MarkdownItAbbr
-      },
-      {
-        plugin: MarkdownItAncor
-      }
-      ,
-      {
-        plugin: MarkdownItDefList
-      },
-      {
-        plugin: MarkdownItFootnote
-      },
-      {
-        plugin: MarkdownItIn
-      },
-      {
-        plugin: MarkdownSub
-      },
-      {
-        plugin: MarkdownSup
-      },
+    const showDrawer = () => {
+      drawerVisible.value = true;
+    };
 
-      {
-        plugin: MarkdownIt
-      },
-      {
-        plugin: MarkdownTaskList
-      },
-      {
-        plugin: MarkdownTocDoneRight
-      } , {
-        plugin: MarkdownMark
-      }
-    ]
+    const plugins = [
+      { plugin: MarkdownItHighlightJs },
+      { plugin: MarkdownItStrikethroughAlt },
+      { plugin: MarkdownIt },
+      { plugin: MarkdownItAbbr },
+      { plugin: MarkdownItAncor },
+      { plugin: MarkdownItDefList },
+      { plugin: MarkdownItFootnote },
+      { plugin: MarkdownItIn },
+      { plugin: MarkdownSub },
+      { plugin: MarkdownSup },
+      { plugin: MarkdownTaskList },
+      { plugin: MarkdownTocDoneRight },
+      { plugin: MarkdownMark },
+    ];
 
     const formatTimestamp = (timestamp) => {
       const date = new Date(timestamp * 1000);
@@ -148,32 +128,40 @@ export default {
       return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
     };
 
-
+    // Prepare comparison data
+    const comparisonData = computed(() => {
+      return props.responses.map((response) => ({
+        model: response.model,
+        content: response.completion?.choices[0].message.content || 'No content',
+        timestamp: formatTimestamp(response.completion?.created),
+        error: response.error || 'No error',
+      }));
+    });
 
     watch(
         () => props.responses,
         () => {
           scrollToBottom();
-          nextTick(() => {
-
-          });
         },
-        {deep: true}
+        { deep: true }
     );
 
-    onMounted(() => {
-
-    });
+    onMounted(() => {});
 
     return {
       responseElement,
       scrollToBottom,
       formatTimestamp,
-      plugins
+      plugins,
+      showDrawer,
+      drawerVisible,
+      comparisonData,
     };
-  }
+  },
 };
 </script>
+
+
 
 <style scoped>
 .response {
