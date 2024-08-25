@@ -1,18 +1,16 @@
 import logging
-import openai
-from openai import AsyncOpenAI
+import anthropic
+from anthropic import AsyncAnthropic
 from server.app.models.success_generation_model import SuccessGenerationModel
 from server.app.models.generation_error_details import ErrorGenerationModel
-from server.app.models.openai_model import OpenAIModel  # Import the new Pydantic model
+from server.app.models.anthropic_model import AnthropicModel  # Assuming you have this model
 
-class OpenAIClient:
+class AnthropicClient:
     def __init__(self, api_key: str):
         self.api_key = api_key
-        self.client = AsyncOpenAI(api_key=api_key)  # For async operations
-        openai.api_key = api_key  # For synchronous operations
+        self.client = AsyncAnthropic(api_key=api_key)  # For async operations
+        self.sync_client = anthropic.Anthropic(api_key=api_key)  # For synchronous operations
         self.logger = self.setup_logger()
-
-        self.logger.debug(f"OpenAIClient API_KEY: {api_key}")
 
     def setup_logger(self):
         logger = logging.getLogger(__name__)
@@ -25,18 +23,18 @@ class OpenAIClient:
 
     async def fetch_completion(self, model: str, prompt: str) -> str:
         try:
-            completion = await self.client.chat.completions.create(
+            message = await self.client.messages.create(
                 model=model,
+                max_tokens=1000,
+                temperature=0,
                 messages=[
-                    {"role": "system", "content": "You are a helpful assistant."},
                     {"role": "user", "content": prompt}
-                ],
-                temperature=0.0
+                ]
             )
 
             return SuccessGenerationModel(
                 model=model,
-                completion=completion.to_dict()
+                completion=message.model_dump()
             ).model_dump_json()
 
         except Exception as e:
@@ -48,20 +46,21 @@ class OpenAIClient:
 
     def get_available_models(self) -> list:
         """
-        Fetches the list of available models from OpenAI using the synchronous OpenAI client.
+        Returns the list of available models from Anthropic.
 
         Returns:
-            list: A list of OpenAIModel instances representing the models available in the OpenAI API.
+            list: A list of AnthropicModel instances representing the models available in the Anthropic API.
         """
         try:
-            response = openai.models.list()  # Synchronous call to fetch models
             models = [
-                OpenAIModel.from_dict(model.to_dict()).model_dump()  # Use the factory method to create each model
-                for model in response.data
+                AnthropicModel(id="claude-3-5-sonnet-20240620", created=None),
+                AnthropicModel(id="claude-3-opus-20240229", created=None),
+                AnthropicModel(id="claude-3-sonnet-20240229", created=None),
+                AnthropicModel(id="claude-3-haiku-20240307", created=None)
             ]
 
-            self.logger.debug(f"Retrieved {len(models)} models from OpenAI")
-            return models
+            self.logger.debug(f"Retrieved {len(models)} models from Anthropic")
+            return [model.model_dump() for model in models]
         except Exception as e:
-            self.logger.error(f"Failed to fetch models from OpenAI: {str(e)}", exc_info=True)
-            raise ValueError(f"Error fetching models from OpenAI: {str(e)}")
+            self.logger.error(f"Failed to fetch models from Anthropic: {str(e)}", exc_info=True)
+            raise ValueError(f"Error fetching models from Anthropic: {str(e)}")
