@@ -5,7 +5,7 @@
          :class="[item.status === 'complete' ? 'response-item' : 'incomplete-item', 'fade-in']"
     >
       <div v-if="item.prompt" class="user-prompt fade-in">
-        <user-outlined class="user-icon"/>
+        <user-outlined  class="user-icon"/>
         <span class="prompt-text">{{ item.prompt }}</span>
       </div>
 
@@ -34,11 +34,9 @@
     </div>
     <a-skeleton :loading="loading" active :paragraph="{ rows: 2 }" style="margin-bottom: 10px"></a-skeleton>
 
-    <!-- Compare Button -->
-    <a-button type="primary" @click="showDrawer">Compare</a-button>
 
     <!-- Comparison Drawer Component -->
-    <ComparisonDrawer :plugins="plugins" :visible="drawerVisible" :comparisonData="comparisonData" width="90%" @close="drawerVisible = false" />
+    <ComparisonDrawer :plugins="plugins" :drawerVisible="drawerVisible" :comparisonData="comparisonData" width="90%" @close="drawerVisible = false" />
   </div>
 </template>
 
@@ -84,6 +82,11 @@ export default {
       required: true,
       default: false,
     },
+    drawerVisible: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
   },
   setup(props) {
     const responseElement = ref(null);
@@ -97,9 +100,7 @@ export default {
       });
     };
 
-    const showDrawer = () => {
-      drawerVisible.value = true;
-    };
+
 
     const plugins = [
       { plugin: MarkdownItHighlightJs },
@@ -153,8 +154,6 @@ export default {
       scrollToBottom,
       formatTimestamp,
       plugins,
-      showDrawer,
-      drawerVisible,
       comparisonData,
     };
   },

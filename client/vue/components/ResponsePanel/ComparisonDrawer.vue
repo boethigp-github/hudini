@@ -2,8 +2,8 @@
   <a-drawer
       title="Response Comparison"
       placement="right"
-      :visible="visible"
-      @close="$emit('close')"
+      :visible="drawerVisible"
+      @close="closeDrawer"
       :width="width"
   >
     <div v-if="comparisonData.length > 0">
@@ -40,9 +40,9 @@ export default defineComponent({
     'VueMarkdownIT': Markdown,
   },
   props: {
-    visible: {
+    drawerVisible: {
       type: Boolean,
-      required: true,
+      required: false,
     },
     comparisonData: {
       type: Array,
@@ -61,6 +61,12 @@ export default defineComponent({
     },
   },
   setup(props) {
+
+    const closeDrawer = ()=>{
+      const event = new CustomEvent("comparison-close", {  });
+      window.dispatchEvent(event);
+    }
+
     const columns = [
       {
         title: 'Model',
@@ -88,6 +94,7 @@ export default defineComponent({
     return {
       columns,
       plugins: props.plugins,
+      closeDrawer,
     };
   },
 });

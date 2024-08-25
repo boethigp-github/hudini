@@ -11,6 +11,7 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@ant-design/colors": "^7.1.0",
     "@wdns/vue-code-block": "^2.3.3",
     "ant-design-vue": "^4.2.3",
     "localforage": "^1.10.0",

@@ -2,6 +2,10 @@
   <div class="chat-container">
     <div class="header">
       <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="60" />
+
+      <!-- Use ChatMenu Component -->
+      <ChatMenu />
+
       <div class="language-switch-container">
         <LanguageSwitch />
       </div>
@@ -11,8 +15,10 @@
         <ResponsePanel
             :responses="responses"
             :loading="loading"
+            :drawerVisible="drawerVisible"
         />
-        <a-form layout="vertical" class="form">
+
+        <a-form theme="dark" layout="vertical" class="form">
           <ModelSelection />
 
           <a-form-item class="textarea-container">
@@ -44,7 +50,7 @@
 </template>
 
 <script>
-import { ref, watch } from 'vue';
+import { ref, watch , onMounted, onBeforeUnmount} from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useModelsStore } from './../stores/models';
 import PromptPanel from './PromptPanel.vue';
@@ -54,6 +60,7 @@ import ModelSelection from './ModelSelection.vue';
 import { message } from 'ant-design-vue';
 import { streamPrompt, createPrompt } from './../services/api';
 import { v4 as uuidv4 } from 'uuid';
+import ChatMenu from './MainMenu.vue';  // Import ChatMenu
 
 export default {
   name: 'ChatForm',
@@ -62,6 +69,7 @@ export default {
     ResponsePanel,
     LanguageSwitch,
     ModelSelection,
+    ChatMenu,  // Register ChatMenu
   },
   setup() {
     const { t } = useI18n();
@@ -71,6 +79,31 @@ export default {
     const modelsStore = useModelsStore();
     const updateTrigger = ref(0);
     const storedPrompt = ref({status:'initialized', prompt:null, prompt_id:null});
+    const drawerVisible = ref(false);
+
+    const showDrawer = () => {
+      drawerVisible.value = true;
+    };
+
+    const closeComparison = () => {
+      drawerVisible.value = false;
+    };
+
+    const openComparison = () => {
+      drawerVisible.value = true;
+    };
+
+
+    // Handle event listeners in lifecycle hooks
+    onMounted(() => {
+      window.addEventListener("comparison-close", closeComparison);
+      window.addEventListener("comparison-open", openComparison);
+    });
+
+    onBeforeUnmount(() => {
+      window.removeEventListener("comparison-close", closeComparison);
+      window.removeEventListener("comparison-open", openComparison);
+    });
 
     const createPromptServerside = async () => {
       if (!prompt.value || typeof prompt.value !== 'string' || prompt.value.trim() === '') {
@@ -173,6 +206,8 @@ export default {
       handleKeydown,
       handleSubmit,
       updateTrigger,
+      showDrawer,
+      drawerVisible,
       t,
     };
   },
@@ -180,6 +215,20 @@ export default {
 </script>
 
 <style scoped>
+.header {
+  display: flex;
+  align-items: center;
+}
+
+.header .logo {
+  margin-right: 20px;
+}
+
+
+.language-switch-container {
+  width: 100%;
+}
+
 .prompt_input {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #444444;
@@ -188,10 +237,6 @@ export default {
 
 .textarea-container {
   clear: both;
-}
-
-.language-switch-container {
-  width: 100%;
 }
 
 .chat-area {
