@@ -10,14 +10,20 @@
       <a-table
           bordered
           size="small"
-          :dataSource="comparisonData.filter(item => item.model)"
+          :dataSource="comparisonData"
           :columns="columns"
           rowKey="model"
-          pagination={false}
+          :pagination="false"
+          :rowClassName="getRowClass"
       >
-        <template #content="{ text }">
-          <VueMarkdownIT :breaks="true" :plugins="plugins" :source="text" />
+        <!-- Define body cells for the 'model' column -->
+        <template  v-slot:bodyCell="{ record, column, index }">
+          <VueMarkdownIT style="margin-top:11px" v-if="column.dataIndex==='content'"  :breaks="true" :plugins="plugins" :source="record.content" />
+          <div v-else>
+            {{record[column.dataIndex]}}
+          </div>
         </template>
+
       </a-table>
     </div>
     <div v-else>
@@ -73,6 +79,11 @@ export default defineComponent({
       drawerVisible.value = true;
     };
 
+    const getRowClass = (record, index) => {
+      return record.model === 'UserPrompt' ? 'userpromptrow' : 'compare-row';
+    };
+
+
     // Handle event listeners in lifecycle hooks
     onMounted(() => {
       window.addEventListener("comparison-close", closeComparison);
@@ -88,25 +99,29 @@ export default defineComponent({
 
     const columns = [
       {
-        title: 'Model',
+        title: 'Model / Prompt',
         dataIndex: 'model',
         key: 'model',
+        width:300
+
       },
       {
-        title: 'Response Content',
+        title: 'Content',
         dataIndex: 'content',
         key: 'content',
-        slots: { customRender: 'content' },  // Use slots for custom rendering
+
       },
       {
         title: 'Timestamp',
         dataIndex: 'timestamp',
         key: 'timestamp',
+        width: 170
       },
       {
         title: 'Error',
         dataIndex: 'error',
         key: 'error',
+        width: 100
       },
     ];
 
@@ -114,8 +129,20 @@ export default defineComponent({
       columns,
       plugins: props.plugins,
       closeDrawer,
-      drawerVisible
+      drawerVisible,
+      getRowClass
     };
   },
 });
 </script>
+<style >
+
+.userpromptrow {
+  background: #e7e7e7 !important;
+  font-weight: bold;
+}
+
+.compare-row{
+  vertical-align: top!important;
+}
+</style>

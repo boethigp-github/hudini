@@ -99,11 +99,14 @@ export default {
         status: 'prompt-saved',
         id: uuidv4(),
       };
+
       responses.value.push(promptData)
+
 
       updateTrigger.value++;
       try {
         await createPrompt(promptData);
+
       } catch (error) {
         message.error(t('failed_to_save_prompt'));
       }

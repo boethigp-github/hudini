@@ -2,10 +2,9 @@
   <div id="response" class="response" ref="responseElement">
     <div v-for="(item, index) in responses"
          :key="index"
-         :class="[item.status === 'complete' ? 'response-item' : 'incomplete-item', 'fade-in']"
-    >
+         :class="[item.status === 'complete' ? 'response-item' : 'incomplete-item', 'fade-in']">
       <div v-if="item.prompt" class="user-prompt fade-in">
-        <user-outlined  class="user-icon"/>
+        <user-outlined class="user-icon"/>
         <span class="prompt-text">{{ item.prompt }}</span>
       </div>
 
@@ -36,14 +35,14 @@
 
 
     <!-- Comparison Drawer Component -->
-    <ComparisonDrawer :plugins="plugins"  :comparisonData="comparisonData" width="90%" />
+    <ComparisonDrawer :plugins="plugins" :comparisonData="comparisonData" width="90%"/>
   </div>
 </template>
 
 <script>
-import { nextTick, watch, ref, onMounted, computed } from 'vue';
-import { UserOutlined, RobotOutlined } from '@ant-design/icons-vue';
-import { Button, Skeleton } from 'ant-design-vue';
+import {nextTick, watch, ref, onMounted, computed} from 'vue';
+import {UserOutlined, RobotOutlined} from '@ant-design/icons-vue';
+import {Button, Skeleton} from 'ant-design-vue';
 import MarkdownIt from 'markdown-it';
 import MarkdownItHighlightJs from 'markdown-it-highlightjs';
 import MarkdownItStrikethroughAlt from 'markdown-it-strikethrough-alt';
@@ -96,21 +95,20 @@ export default {
     };
 
 
-
     const plugins = [
-      { plugin: MarkdownItHighlightJs },
-      { plugin: MarkdownItStrikethroughAlt },
-      { plugin: MarkdownIt },
-      { plugin: MarkdownItAbbr },
-      { plugin: MarkdownItAncor },
-      { plugin: MarkdownItDefList },
-      { plugin: MarkdownItFootnote },
-      { plugin: MarkdownItIn },
-      { plugin: MarkdownSub },
-      { plugin: MarkdownSup },
-      { plugin: MarkdownTaskList },
-      { plugin: MarkdownTocDoneRight },
-      { plugin: MarkdownMark },
+      {plugin: MarkdownItHighlightJs},
+      {plugin: MarkdownItStrikethroughAlt},
+      {plugin: MarkdownIt},
+      {plugin: MarkdownItAbbr},
+      {plugin: MarkdownItAncor},
+      {plugin: MarkdownItDefList},
+      {plugin: MarkdownItFootnote},
+      {plugin: MarkdownItIn},
+      {plugin: MarkdownSub},
+      {plugin: MarkdownSup},
+      {plugin: MarkdownTaskList},
+      {plugin: MarkdownTocDoneRight},
+      {plugin: MarkdownMark},
     ];
 
     const formatTimestamp = (timestamp) => {
@@ -127,9 +125,10 @@ export default {
     // Prepare comparison data
     const comparisonData = computed(() => {
       return props.responses.map((response) => ({
-        model: response.model,
-        content: response.completion?.choices[0].message.content || 'No content',
-        timestamp: formatTimestamp(response.completion?.created),
+
+        model: (response.model)?response.model:"UserPrompt",
+        content: response.completion?.choices[0].message.content || response.prompt,
+        timestamp: (response.completion?.created)?(formatTimestamp(response.completion?.created)):'',
         error: response.error || 'No error',
       }));
     });
@@ -139,10 +138,11 @@ export default {
         () => {
           scrollToBottom();
         },
-        { deep: true }
+        {deep: true}
     );
 
-    onMounted(() => {});
+    onMounted(() => {
+    });
 
     return {
       responseElement,
@@ -154,7 +154,6 @@ export default {
   },
 };
 </script>
-
 
 
 <style scoped>
@@ -301,7 +300,7 @@ code {
   border-radius: 4px;
 }
 
-.hljs  {
+.hljs {
   background: yellow;
   font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
   text-align: left;

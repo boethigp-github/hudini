@@ -29,7 +29,8 @@ const messages = {
         select_category_and_model: 'Please select a category and model',
         model_responses: 'Model Responses',
         prompts: 'Prompts',
-        models: 'Models' // Added this line
+        models: 'Models',
+        compare: 'Compare' // Added this line
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -59,7 +60,8 @@ const messages = {
         select_category_and_model: 'Bitte wählen Sie eine Kategorie und ein Modell',
         model_responses: 'Modellantworten',
         prompts: 'Prompts',
-        models: 'Modelle' // Added this line
+        models: 'Modelle',
+        compare: 'Vergleichen' // Added this line
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -89,7 +91,8 @@ const messages = {
         select_category_and_model: 'Veuillez sélectionner une catégorie et un modèle',
         model_responses: 'Réponses du modèle',
         prompts: 'Prompts',
-        models: 'Modèles' // Added this line
+        models: 'Modèles',
+        compare: 'Comparer' // Added this line
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
@@ -119,7 +122,8 @@ const messages = {
         select_category_and_model: 'Пожалуйста, выберите категорию и модель',
         model_responses: 'Ответы модели',
         prompts: 'Подсказки',
-        models: 'Модели' // Added this line
+        models: 'Модели',
+        compare: 'Сравнить' // Added this line
     },
     zh: {
         hudini_title: 'Hudini - SLM上的CPU魔术师',
@@ -149,7 +153,8 @@ const messages = {
         select_category_and_model: '请选择一个类别和一个模型',
         model_responses: '模型回应',
         prompts: '提示',
-        models: '模型' // Added this line
+        models: '模型',
+        compare: '比较' // Added this line
     }
 };
 
