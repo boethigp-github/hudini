@@ -2,29 +2,15 @@ from flask import Blueprint, request, Response, stream_with_context, jsonify
 import asyncio
 import json
 import logging
+from typing import List, Tuple, Any
+import importlib
 from server.app.config.base_config import BaseConfig
 from server.app.clients.openai_client import OpenAIClient
 from server.app.clients.anthropic_client import AnthropicClient
-import importlib
 
 # Set up logging
 logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
-
-def get_model_class(platform):
-    try:
-        module_name = f"server.app.models.{platform}_model"
-        module = importlib.import_module(module_name)
-        class_name = f"{platform.capitalize()}Model"
-        model_class = getattr(module, class_name)
-        return model_class
-    except ImportError as e:
-        logger.error(f"Error importing model module for platform '{platform}': {str(e)}")
-    except AttributeError as e:
-        logger.error(f"Error finding model class for platform '{platform}': {str(e)}")
-    except Exception as e:
-        logger.error(f"Unexpected error when getting model class for platform '{platform}': {str(e)}")
-    return None
 
 class GenerationController:
     def __init__(self):
@@ -39,9 +25,62 @@ class GenerationController:
         }
 
     def register_routes(self):
-        self.blueprint.add_url_rule('/stream', 'generate_route', self.generate_route, methods=['POST'])
+        self.blueprint.add_url_rule('/stream', 'generate_route', self.stream_route, methods=['POST'])
 
-    def generate_route(self):
+    @staticmethod
+    def get_model_class(platform):
+        try:
+            module = importlib.import_module(f"server.app.models.{platform}_model")
+            return getattr(module, f"{platform.capitalize()}Model")
+        except ImportError as e:
+            logger.error(f"Error importing model module for platform '{platform}': {str(e)}")
+        except AttributeError as e:
+            logger.error(f"Error finding model class for platform '{platform}': {str(e)}")
+        except Exception as e:
+            logger.error(f"Unexpected error when getting model class for platform '{platform}': {str(e)}")
+        return None
+
+    def validate_models_and_clients(self, models: List[dict], method_name: str) -> List[Tuple[Any, Any, Any]]:
+        valid_models = []
+        for model_data in models:
+            platform = model_data.get('platform')
+            model_class = self.get_model_class(platform)
+            if not model_class:
+                raise ValueError(f"Model class for platform '{platform}' not found")
+
+            platform_client = self.clients.get(platform)
+            if not platform_client:
+                raise ValueError(f"Client for platform '{platform}' not supported")
+
+            if not hasattr(platform_client, method_name):
+                raise ValueError(f"Method '{method_name}' not found for platform '{platform}'")
+
+            valid_models.append((model_class(**model_data), platform_client, getattr(platform_client, method_name)))
+
+        return valid_models
+
+    def validate_request(self, models: List[dict], method_name: str):
+        """
+        Validate the incoming request data.
+
+        Args:
+        models (List[dict]): List of model data dictionaries.
+        method_name (str): Name of the method to be called.
+
+        Raises:
+        ValueError: If the models list is empty or the method is not allowed.
+        """
+        if not models:
+            error_msg = "The 'models' list cannot be empty."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+        if method_name not in self.registered_methods:
+            error_msg = f"The method '{method_name}' is not allowed."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+    def stream_route(self):
         # Log the incoming request
         logger.info("Incoming request to /stream:")
         logger.info(json.dumps(request.json, indent=2))
@@ -52,38 +91,13 @@ class GenerationController:
         prompt = data.get('prompt', '')
         method_name = data.get('method_name', 'fetch_completion')
 
-        if not models:
-            error_msg = "The 'models' list cannot be empty."
-            logger.error(error_msg)
-            return jsonify({"error": error_msg}), 400
 
-        if method_name not in self.registered_methods:
-            error_msg = f"The method '{method_name}' is not allowed."
-            logger.error(error_msg)
-            return jsonify({"error": error_msg}), 400
-
-        # Validate models and clients before starting the generator
-        valid_models = []
-        for model_data in models:
-            platform = model_data.get('platform')
-            model_class = get_model_class(platform)
-            if not model_class:
-                error_msg = f"Model class for platform '{platform}' not found"
-                logger.error(error_msg)
-                return jsonify({"error": error_msg}), 400
-
-            platform_client = self.clients.get(platform)
-            if not platform_client:
-                error_msg = f"Client for platform '{platform}' not supported"
-                logger.error(error_msg)
-                return jsonify({"error": error_msg}), 400
-
-            if not hasattr(platform_client, method_name):
-                error_msg = f"Method '{method_name}' not found for platform '{platform}'"
-                logger.error(error_msg)
-                return jsonify({"error": error_msg}), 400
-
-            valid_models.append((model_class(**model_data), platform_client, getattr(platform_client, method_name)))
+        try:
+            self.validate_request(models, method_name)
+            valid_models = self.validate_models_and_clients(models, method_name)
+        except ValueError as e:
+            logger.error(str(e))
+            return jsonify({"error": str(e)}), 400
 
         def generate():
             loop = asyncio.new_event_loop()
