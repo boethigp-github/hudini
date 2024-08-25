@@ -22,7 +22,7 @@
       <!-- OpenAI Models Group -->
       <a-select-opt-group :label="$t('models', 'Models')">
         <a-select-option v-for="model in filteredModels" :key="model.id" :value="model.id">
-          {{ model.id }} ({{ model.category }})
+          {{ model.category }} - {{ model.platform }} - {{ model.id }}
         </a-select-option>
       </a-select-opt-group>
     </a-select>
