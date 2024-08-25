@@ -13,7 +13,22 @@ logging.basicConfig(level=logging.ERROR)
 logger = logging.getLogger(__name__)
 
 class GenerationController:
+    """
+    Controller to handle text generation requests and streaming responses
+    from multiple platforms like OpenAI and Anthropic.
+
+    Attributes:
+        blueprint (Blueprint): Flask blueprint for registering routes.
+        openai_client (OpenAIClient): Client for interacting with OpenAI API.
+        anthropic_client (AnthropicClient): Client for interacting with Anthropic API.
+        registered_methods (List[str]): List of allowed method names for generation.
+        clients (Dict[str, Any]): Mapping of platform names to their respective clients.
+    """
+
     def __init__(self):
+        """
+        Initialize the GenerationController, set up clients, and register routes.
+        """
         self.blueprint = Blueprint('generation', __name__)
         self.register_routes()
         self.openai_client = OpenAIClient(api_key=BaseConfig.API_KEY_OPEN_AI)
@@ -25,10 +40,26 @@ class GenerationController:
         }
 
     def register_routes(self):
+        """
+        Register the routes for the generation controller.
+        """
         self.blueprint.add_url_rule('/stream', 'generate_route', self.stream_route, methods=['POST'])
 
     @staticmethod
     def get_model_class(platform):
+        """
+        Dynamically import and return the model class for a given platform.
+
+        Args:
+            platform (str): The name of the platform (e.g., 'openai', 'anthropic').
+
+        Returns:
+            type: The model class for the specified platform, or None if not found.
+
+        Raises:
+            ImportError: If the module cannot be imported.
+            AttributeError: If the model class is not found in the module.
+        """
         try:
             module = importlib.import_module(f"server.app.models.{platform}_model")
             return getattr(module, f"{platform.capitalize()}Model")
@@ -41,6 +72,20 @@ class GenerationController:
         return None
 
     def validate_models_and_clients(self, models: List[dict], method_name: str) -> List[Tuple[Any, Any, Any]]:
+        """
+        Validate the models and clients for the specified method.
+
+        Args:
+            models (List[dict]): List of model data dictionaries.
+            method_name (str): Name of the method to validate against the clients.
+
+        Returns:
+            List[Tuple[Any, Any, Any]]: List of tuples containing validated model instances,
+                                        their corresponding clients, and method references.
+
+        Raises:
+            ValueError: If the model class, client, or method is not valid.
+        """
         valid_models = []
         for model_data in models:
             platform = model_data.get('platform')
@@ -64,11 +109,11 @@ class GenerationController:
         Validate the incoming request data.
 
         Args:
-        models (List[dict]): List of model data dictionaries.
-        method_name (str): Name of the method to be called.
+            models (List[dict]): List of model data dictionaries.
+            method_name (str): Name of the method to be called.
 
         Raises:
-        ValueError: If the models list is empty or the method is not allowed.
+            ValueError: If the models list is empty or the method is not allowed.
         """
         if not models:
             error_msg = "The 'models' list cannot be empty."
@@ -81,6 +126,18 @@ class GenerationController:
             raise ValueError(error_msg)
 
     def stream_route(self):
+        """
+        Handle POST requests to the /stream route, streaming the generated response.
+
+        This method validates the incoming request, processes the generation tasks asynchronously,
+        and streams the generated content back to the client.
+
+        Returns:
+            Response: A Flask response object that streams JSON content.
+
+        Raises:
+            ValueError: If the request is invalid.
+        """
         # Log the incoming request
         logger.info("Incoming request to /stream:")
         logger.info(json.dumps(request.json, indent=2))
@@ -90,7 +147,6 @@ class GenerationController:
         models = data.get('models', [])
         prompt = data.get('prompt', '')
         method_name = data.get('method_name', 'fetch_completion')
-
 
         try:
             self.validate_request(models, method_name)
@@ -137,6 +193,7 @@ class GenerationController:
             yield from sync_generator()
 
         return Response(stream_with_context(generate()), content_type='application/json')
+
 
 # Instantiate the GenerationController
 generation_controller = GenerationController()
