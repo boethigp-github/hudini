@@ -14,7 +14,7 @@ class Platform(str, Enum):
     OPENAI = "openai"
 
 
-class OpenAIModel(BaseModel):
+class OpenaiModel(BaseModel):
     id: str
     object: str
     created: Optional[int] = None

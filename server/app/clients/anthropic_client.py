@@ -3,7 +3,7 @@ import anthropic
 from anthropic import AsyncAnthropic
 from server.app.models.success_generation_model import SuccessGenerationModel
 from server.app.models.generation_error_details import ErrorGenerationModel
-from server.app.models.anthropic_model import AnthropicModel  # Assuming you have this model
+from server.app.models.anthropic_model import AnthropicModel
 
 class AnthropicClient:
     def __init__(self, api_key: str):
@@ -11,6 +11,8 @@ class AnthropicClient:
         self.client = AsyncAnthropic(api_key=api_key)  # For async operations
         self.sync_client = anthropic.Anthropic(api_key=api_key)  # For synchronous operations
         self.logger = self.setup_logger()
+
+        self.logger.debug(f"AnthropicClient initialized with API key: {api_key[:5]}...")
 
     def setup_logger(self):
         logger = logging.getLogger(__name__)
@@ -21,10 +23,11 @@ class AnthropicClient:
         logger.addHandler(handler)
         return logger
 
-    async def fetch_completion(self, model: str, prompt: str) -> str:
+    async def fetch_completion(self, model: AnthropicModel, prompt: str) -> str:
         try:
+            self.logger.debug(f"Fetching completion for model: {model.id}")
             message = await self.client.messages.create(
-                model=model,
+                model=model.id,
                 max_tokens=1000,
                 temperature=0,
                 messages=[
@@ -33,14 +36,14 @@ class AnthropicClient:
             )
 
             return SuccessGenerationModel(
-                model=model,
+                model=model.id,
                 completion=message.model_dump()
             ).model_dump_json()
 
         except Exception as e:
-            self.logger.error(f"Error with model {model}: {str(e)}")
+            self.logger.error(f"Error with model {model.id}: {str(e)}")
             return ErrorGenerationModel(
-                model=model,
+                model=model.id,
                 error=str(e)
             ).model_dump_json()
 
@@ -53,10 +56,10 @@ class AnthropicClient:
         """
         try:
             models = [
-                AnthropicModel(id="claude-3-5-sonnet-20240620", created=None),
-                AnthropicModel(id="claude-3-opus-20240229", created=None),
-                AnthropicModel(id="claude-3-sonnet-20240229", created=None),
-                AnthropicModel(id="claude-3-haiku-20240307", created=None)
+                AnthropicModel(id="claude-3-5-sonnet-20240620", created=None, platform="anthropic"),
+                AnthropicModel(id="claude-3-opus-20240229", created=None, platform="anthropic"),
+                AnthropicModel(id="claude-3-sonnet-20240229", created=None, platform="anthropic"),
+                AnthropicModel(id="claude-3-haiku-20240307", created=None, platform="anthropic")
             ]
 
             self.logger.debug(f"Retrieved {len(models)} models from Anthropic")

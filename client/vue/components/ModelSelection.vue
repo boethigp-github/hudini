@@ -19,7 +19,6 @@
         :placeholder="$t('select_model_placeholder', 'Select one or more models')"
         @change="updateModels"
     >
-      <!-- OpenAI Models Group -->
       <a-select-opt-group :label="$t('models', 'Models')">
         <a-select-option v-for="model in filteredModels" :key="model.id" :value="model.id">
           {{ model.category }} - {{ model.platform }} - {{ model.id }}
@@ -27,7 +26,6 @@
       </a-select-opt-group>
     </a-select>
   </a-form-item>
-
 </template>
 
 <script>
@@ -47,7 +45,9 @@ export default defineComponent({
     const loadModels = async () => {
       try {
         const data = await getModels()
-    
+
+        // Save the complete service response
+        await modelsStore.saveServiceResponse(data)
 
         models.value = data.map(model => ({
           id: model.id,

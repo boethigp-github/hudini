@@ -1,4 +1,3 @@
-<!--suppress CheckImageSize -->
 <template>
   <div class="chat-container">
     <div class="header">
@@ -79,7 +78,6 @@ export default {
         return;
       }
 
-
       const promptData = {
         prompt: prompt.value.trim(),
         user: 'anonymous',
@@ -111,11 +109,24 @@ export default {
 
       loading.value = true;
 
-      createPromptServerside();
+      await createPromptServerside();
+
+      const serviceResponse = await modelsStore.getServiceResponse();
+
+      if (!serviceResponse) {
+        message.error(t('failed_to_retrieve_model_information'));
+        loading.value = false;
+        return;
+      }
+
+      const selectedModelInfo = modelsStore.selectedModels.map(modelId => {
+        const fullModelInfo = serviceResponse.find(model => model.id === modelId);
+        return fullModelInfo || { id: modelId, platform: 'unknown' };
+      });
 
       const promptData = {
         prompt: prompt.value.trim(),
-        models: modelsStore.selectedModels,
+        models: selectedModelInfo,
       };
 
       await streamPrompt(
@@ -166,28 +177,24 @@ export default {
     };
   },
 };
-
 </script>
 
 <style scoped>
-
-.prompt_input{
+.prompt_input {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #444444;
   margin-top: 10px;
 }
 
-.textarea-container{
+.textarea-container {
   clear: both;
 }
 
-.language-switch-container{
+.language-switch-container {
   width: 100%;
 }
 
-
-.chat-area{
-
+.chat-area {
   width: 100%;
   max-width: 100%;
 }
