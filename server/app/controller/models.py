@@ -47,13 +47,10 @@ class ModelsController:
 
         models_path =  BaseConfig.MODEL_PATH
         local_models = LLamaCppClient(models_path).get_available_models()
-        openai_models = OpenAIClient(BaseConfig.OPENAI_API_KEY).get_available_models()
+        openai_models = OpenAIClient(BaseConfig.API_KEY_OPEN_AI).get_available_models()
         logger.debug(f"Retrieved local models: {local_models}")
         logger.debug(f"Retrieved OpenAI models: {openai_models}")
-        return jsonify({
-            'local_models': local_models,
-            'openai_models': openai_models
-        })
+        return jsonify(openai_models)
 
     @staticmethod
     def favicon():

@@ -4,8 +4,9 @@ const messages = {
     en: {
         hudini_title: 'Hudini - CPU Magician on SLM',
         select_model: 'Select Model',
+        model: 'Model',
         select_category: 'Select Category',
-        select_category_placeholder: 'Select a category',  // Add this line
+        select_category_placeholder: 'Select a category',
         enter_prompt: 'Enter your prompt here...',
         send_button: 'Send',
         delete: 'Delete',
@@ -14,8 +15,8 @@ const messages = {
         failed_to_copy: 'Failed to copy prompt',
         prompt_deleted: 'Prompt deleted',
         previous_prompts: 'Previous Prompts',
-        no_prompts: 'No prompts saved yet',  // New key
-        failed_to_prompts: 'Failed to load prompts',  // Existing key
+        no_prompts: 'No prompts saved yet',
+        failed_to_prompts: 'Failed to load prompts',
         select_model_placeholder: 'Select one or more models',
         local_models: 'Local Models',
         openai_models: 'OpenAI Models',
@@ -25,12 +26,14 @@ const messages = {
         failed_to_load_models: 'Failed to load models',
         enter_prompt_and_select_model: 'Please enter a prompt and select at least one model.',
         server_connection_error: 'An error occurred while connecting to the server.',
+        select_category_and_model: 'Please select a category and model', // Added this line
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
         select_model: 'Modell auswählen',
+        model: 'Modell',
         select_category: 'Kategorie auswählen',
-        select_category_placeholder: 'Kategorie auswählen',  // Add this line
+        select_category_placeholder: 'Kategorie auswählen',
         enter_prompt: 'Geben Sie Ihren Prompt hier ein...',
         send_button: 'Senden',
         delete: 'Löschen',
@@ -39,8 +42,8 @@ const messages = {
         failed_to_copy: 'Prompt konnte nicht kopiert werden',
         prompt_deleted: 'Prompt gelöscht',
         previous_prompts: 'Bisherige Prompts',
-        no_prompts: 'Noch keine Prompts gespeichert',  // New key
-        failed_to_prompts: 'Fehler beim Laden der Prompts',  // Existing key
+        no_prompts: 'Noch keine Prompts gespeichert',
+        failed_to_prompts: 'Fehler beim Laden der Prompts',
         select_model_placeholder: 'Wählen Sie ein oder mehrere Modelle aus',
         local_models: 'Lokale Modelle',
         openai_models: 'OpenAI Modelle',
@@ -50,12 +53,14 @@ const messages = {
         failed_to_load_models: 'Fehler beim Laden der Modelle',
         enter_prompt_and_select_model: 'Bitte geben Sie einen Prompt ein und wählen Sie mindestens ein Modell aus.',
         server_connection_error: 'Beim Verbinden mit dem Server ist ein Fehler aufgetreten.',
+        select_category_and_model: 'Bitte wählen Sie eine Kategorie und ein Modell', // Added this line
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
         select_model: 'Sélectionner le modèle',
+        model: 'Modèle',
         select_category: 'Sélectionner une catégorie',
-        select_category_placeholder: 'Sélectionnez une catégorie',  // Add this line
+        select_category_placeholder: 'Sélectionnez une catégorie',
         enter_prompt: 'Entrez votre prompt ici...',
         send_button: 'Envoyer',
         delete: 'Supprimer',
@@ -64,8 +69,8 @@ const messages = {
         failed_to_copy: 'Échec de la copie du prompt',
         prompt_deleted: 'Prompt supprimé',
         previous_prompts: 'Prompts Précédents',
-        no_prompts: 'Aucun prompt enregistré',  // New key
-        failed_to_prompts: 'Échec du chargement des prompts',  // Existing key
+        no_prompts: 'Aucun prompt enregistré',
+        failed_to_prompts: 'Échec du chargement des prompts',
         select_model_placeholder: 'Sélectionnez un ou plusieurs modèles',
         local_models: 'Modèles Locaux',
         openai_models: 'Modèles OpenAI',
@@ -75,12 +80,14 @@ const messages = {
         failed_to_load_models: 'Échec du chargement des modèles',
         enter_prompt_and_select_model: 'Veuillez entrer un prompt et sélectionner au moins un modèle.',
         server_connection_error: 'Une erreur s\'est produite lors de la connexion au serveur.',
+        select_category_and_model: 'Veuillez sélectionner une catégorie et un modèle', // Added this line
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
         select_model: 'Выберите модель',
+        model: 'Модель',
         select_category: 'Выберите категорию',
-        select_category_placeholder: 'Выберите категорию',  // Add this line
+        select_category_placeholder: 'Выберите категорию',
         enter_prompt: 'Введите ваш запрос здесь...',
         send_button: 'Отправить',
         delete: 'Удалить',
@@ -89,8 +96,8 @@ const messages = {
         failed_to_copy: 'Не удалось скопировать подсказку',
         prompt_deleted: 'Подсказка удалена',
         previous_prompts: 'Предыдущие подсказки',
-        no_prompts: 'Пока нет сохраненных подсказок',  // New key
-        failed_to_prompts: 'Не удалось загрузить подсказки',  // Existing key
+        no_prompts: 'Пока нет сохраненных подсказок',
+        failed_to_prompts: 'Не удалось загрузить подсказки',
         select_model_placeholder: 'Выберите одну или несколько моделей',
         local_models: 'Локальные модели',
         openai_models: 'Модели OpenAI',
@@ -100,12 +107,14 @@ const messages = {
         failed_to_load_models: 'Не удалось загрузить модели',
         enter_prompt_and_select_model: 'Пожалуйста, введите запрос и выберите хотя бы одну модель.',
         server_connection_error: 'Произошла ошибка при подключении к серверу.',
+        select_category_and_model: 'Пожалуйста, выберите категорию и модель', // Added this line
     },
     zh: {
         hudini_title: 'Hudini - SLM上的CPU魔术师',
         select_model: '选择模型',
+        model: '模型',
         select_category: '选择类别',
-        select_category_placeholder: '选择一个类别',  // Add this line
+        select_category_placeholder: '选择一个类别',
         enter_prompt: '在此输入您的提示...',
         send_button: '发送',
         delete: '删除',
@@ -114,8 +123,8 @@ const messages = {
         failed_to_copy: '无法复制提示',
         prompt_deleted: '提示已删除',
         previous_prompts: '以前的提示',
-        no_prompts: '尚未保存提示',  // New key
-        failed_to_prompts: '加载提示失败',  // Existing key
+        no_prompts: '尚未保存提示',
+        failed_to_prompts: '加载提示失败',
         select_model_placeholder: '选择一个或多个模型',
         local_models: '本地模型',
         openai_models: 'OpenAI模型',
@@ -125,9 +134,9 @@ const messages = {
         failed_to_load_models: '加载模型失败',
         enter_prompt_and_select_model: '请输入提示并至少选择一个模型。',
         server_connection_error: '连接服务器时发生错误。',
+        select_category_and_model: '请选择一个类别和一个模型', // Added this line
     }
 };
-
 
 const i18n = createI18n({
     legacy: false,

@@ -25,9 +25,14 @@ class BaseConfig:
     API_URL = '/swagger.yaml'  # Path to Swagger YAML file
 
     # OpenAI API configuration
-    OPENAI_API_KEY = os.getenv('API_KEY_OPEN_AI')
-    if not OPENAI_API_KEY:
-        raise ValueError("OpenAI API key not set. Please check your .env.local file.")
+    API_KEY_OPEN_AI = os.getenv('API_KEY_OPEN_AI')
+    if not API_KEY_OPEN_AI:
+        raise ValueError("API_KEY_OPEN_AI key not set. Please check your .env.local file.")
+
+    # OpenAI API configuration
+    API_KEY_ANTHROPIC = os.getenv('API_KEY_ANTHROPIC')
+    if not API_KEY_ANTHROPIC:
+        raise ValueError("API_KEY_ANTHROPIC not set. Please check your .env.local file.")
 
     # Model configuration
     MODEL_PATH = os.getenv('PROJECT_MODEL_PATH')

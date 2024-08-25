@@ -9,7 +9,8 @@ localforage.config({
 
 export const useModelsStore = defineStore('models', {
     state: () => ({
-        selectedModels: []
+        selectedModels: [],
+        serviceResponse: null
     }),
     actions: {
         async setSelectedModels(models) {
@@ -17,7 +18,7 @@ export const useModelsStore = defineStore('models', {
             await this.saveToStorage();
         },
         async loadFromStorage() {
-            const storedModels = await localforage.getItem('models');
+            const storedModels = await localforage.getItem('selectedModels');
             if (storedModels) {
                 try {
                     this.selectedModels = JSON.parse(storedModels);
@@ -25,13 +26,44 @@ export const useModelsStore = defineStore('models', {
                     console.error("Failed to parse stored models:", error);
                 }
             }
+
+            const storedResponse = await localforage.getItem('serviceResponse');
+            if (storedResponse) {
+                try {
+                    this.serviceResponse = JSON.parse(storedResponse);
+                } catch (error) {
+                    console.error("Failed to parse stored service response:", error);
+                }
+            }
         },
         async saveToStorage() {
             try {
-                await localforage.setItem('models', JSON.stringify(this.selectedModels));
+                await localforage.setItem('selectedModels', JSON.stringify(this.selectedModels));
+                await localforage.setItem('serviceResponse', JSON.stringify(this.serviceResponse));
             } catch (error) {
-                console.error("Failed to save models to storage:", error);
+                console.error("Failed to save to storage:", error);
             }
+        },
+        async saveServiceResponse(response) {
+            this.serviceResponse = response;
+            await this.saveToStorage();
+        },
+        async getServiceResponse() {
+            if (this.serviceResponse) {
+                return this.serviceResponse;
+            }
+
+            const storedResponse = await localforage.getItem('serviceResponse');
+            if (storedResponse) {
+                try {
+                    this.serviceResponse = JSON.parse(storedResponse);
+                    return this.serviceResponse;
+                } catch (error) {
+                    console.error("Failed to parse stored service response:", error);
+                }
+            }
+
+            return null; // Return null if no service response is found
         }
     },
     persist: true // We'll handle persistence manually

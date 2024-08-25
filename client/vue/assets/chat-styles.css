@@ -83,12 +83,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 10px;
 }
 
 .logo {
     border-radius: 10px; /* Rounded corners for a softer look */
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    height: 45px;
 }
 
 .title {
@@ -103,11 +103,6 @@ body {
     gap: 20px; /* Space between chat-area and previous-prompts */
 }
 
-.chat-area{
-
-    width: 50%;
-    max-width: 50%;
-}
 
 .response {
     height: 300px; /* Höhe anpassen, wie benötigt */
@@ -127,14 +122,6 @@ body {
 
 .form {
     padding-top: 20px;
-}
-
-
-
-
-
-.send-button {
-
 }
 
 .send-button:hover {
