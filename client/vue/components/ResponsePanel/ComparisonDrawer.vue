@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import { defineComponent } from 'vue';
+import {defineComponent, onBeforeUnmount, onMounted, ref} from 'vue';
 import { Drawer, Table } from 'ant-design-vue';
 import Markdown from 'vue3-markdown-it';
 
@@ -40,10 +40,8 @@ export default defineComponent({
     'VueMarkdownIT': Markdown,
   },
   props: {
-    drawerVisible: {
-      type: Boolean,
-      required: false,
-    },
+
+
     comparisonData: {
       type: Array,
       required: true,
@@ -66,6 +64,27 @@ export default defineComponent({
       const event = new CustomEvent("comparison-close", {  });
       window.dispatchEvent(event);
     }
+
+    const closeComparison = () => {
+      drawerVisible.value = false;
+    };
+
+    const openComparison = () => {
+      drawerVisible.value = true;
+    };
+
+    // Handle event listeners in lifecycle hooks
+    onMounted(() => {
+      window.addEventListener("comparison-close", closeComparison);
+      window.addEventListener("comparison-open", openComparison);
+    });
+
+    onBeforeUnmount(() => {
+      window.removeEventListener("comparison-close", closeComparison);
+      window.removeEventListener("comparison-open", openComparison);
+    });
+
+    let drawerVisible = ref(false)
 
     const columns = [
       {
@@ -95,6 +114,7 @@ export default defineComponent({
       columns,
       plugins: props.plugins,
       closeDrawer,
+      drawerVisible
     };
   },
 });

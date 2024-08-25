@@ -36,7 +36,7 @@
 
 
     <!-- Comparison Drawer Component -->
-    <ComparisonDrawer :plugins="plugins" :drawerVisible="drawerVisible" :comparisonData="comparisonData" width="90%" @close="drawerVisible = false" />
+    <ComparisonDrawer :plugins="plugins"  :comparisonData="comparisonData" width="90%" />
   </div>
 </template>
 
@@ -82,15 +82,10 @@ export default {
       required: true,
       default: false,
     },
-    drawerVisible: {
-      type: Boolean,
-      required: true,
-      default: false,
-    },
   },
   setup(props) {
     const responseElement = ref(null);
-    const drawerVisible = ref(false);
+
 
     const scrollToBottom = () => {
       nextTick(() => {

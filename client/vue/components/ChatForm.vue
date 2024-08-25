@@ -15,7 +15,6 @@
         <ResponsePanel
             :responses="responses"
             :loading="loading"
-            :drawerVisible="drawerVisible"
         />
 
         <a-form theme="dark" layout="vertical" class="form">
@@ -85,25 +84,8 @@ export default {
       drawerVisible.value = true;
     };
 
-    const closeComparison = () => {
-      drawerVisible.value = false;
-    };
-
-    const openComparison = () => {
-      drawerVisible.value = true;
-    };
 
 
-    // Handle event listeners in lifecycle hooks
-    onMounted(() => {
-      window.addEventListener("comparison-close", closeComparison);
-      window.addEventListener("comparison-open", openComparison);
-    });
-
-    onBeforeUnmount(() => {
-      window.removeEventListener("comparison-close", closeComparison);
-      window.removeEventListener("comparison-open", openComparison);
-    });
 
     const createPromptServerside = async () => {
       if (!prompt.value || typeof prompt.value !== 'string' || prompt.value.trim() === '') {

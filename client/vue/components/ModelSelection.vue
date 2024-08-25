@@ -49,6 +49,8 @@ export default defineComponent({
         // Save the complete service response
         await modelsStore.saveServiceResponse(data)
 
+        if(!data?.left) return;
+
         models.value = data.map(model => ({
           id: model.id,
           category: model.category || 'Uncategorized',  // Default to 'Uncategorized' if no category
