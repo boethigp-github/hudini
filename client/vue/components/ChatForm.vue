@@ -139,18 +139,21 @@ export default {
         try {
           responseModel = JSON.parse(jsonString);
 
+          // Check if the response with the same prompt_id and model exists
           const responseIndex = responses.value.findIndex(
-              r => r.prompt_id === responseModel.prompt_id
+              r => r.prompt_id === responseModel.prompt_id && r.model === responseModel.model
           );
 
           if (responseIndex !== -1) {
-            // Update existing response
+            // Update existing response by replacing the entire object
             responses.value[responseIndex] = {
               ...responses.value[responseIndex],
-              completion: responseModel.completion
+              completion: responseModel.completion,
             };
+            console.log("Updating response for model:", responseModel.model);
+
           } else {
-            // Add new response
+            // Add new response, ensuring no overwriting occurs
             console.log("Adding new response:", responseModel);
             responses.value.push(responseModel);
           }
@@ -159,6 +162,7 @@ export default {
         }
       }
     };
+
 
     const handleSubmit = async () => {
       if (!prompt.value.trim() || modelsStore.selectedModels.length === 0) {

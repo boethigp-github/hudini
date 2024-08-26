@@ -3,7 +3,7 @@
     <a-col :span="23">
           <div id="response" class="response" ref="responseElement">
             <div v-for="(item, index) in responses"
-                 :key="index"
+                 :key="item.prompt_id"
                  :class="[item.status === 'complete' ? 'response-item' : 'incomplete-item', 'fade-in']">
 
               <div v-if="item.prompt" class="user-prompt fade-in">
