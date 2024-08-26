@@ -104,7 +104,7 @@ class GenerationController:
 
         return valid_models
 
-    def validate_request(self, models: List[dict], method_name: str):
+    def validate_request(self, models: List[dict], method_name: str, prompt_id: str):
         """
         Validate the incoming request data.
 
@@ -117,6 +117,11 @@ class GenerationController:
         """
         if not models:
             error_msg = "The 'models' list cannot be empty."
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+        if not models:
+            error_msg = "The 'prompt_id' cannot be empty."
             logger.error(error_msg)
             raise ValueError(error_msg)
 
@@ -146,10 +151,11 @@ class GenerationController:
         data = request.json
         models = data.get('models', [])
         prompt = data.get('prompt', '')
+        prompt_id = data.get('prompt_id', '')
         method_name = data.get('method_name', 'fetch_completion')
 
         try:
-            self.validate_request(models, method_name)
+            self.validate_request(models, method_name, prompt_id)
             valid_models = self.validate_models_and_clients(models, method_name)
         except ValueError as e:
             logger.error(str(e))
@@ -162,7 +168,7 @@ class GenerationController:
             async def run_generation():
                 tasks = []
                 for model, client, method in valid_models:
-                    async_task = method(model, prompt)
+                    async_task = method(model, prompt, prompt_id)
                     task = asyncio.create_task(async_task)
                     tasks.append(task)
 

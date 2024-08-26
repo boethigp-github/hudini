@@ -101,7 +101,7 @@ export default {
       }
     };
 
-    const createPromptServerside = async () => {
+    const createPromptServerside = async (prompt_id) => {
       if (!prompt.value || typeof prompt.value !== 'string' || prompt.value.trim() === '') {
         message.error(t('invalid_prompt'));
         return;
@@ -111,7 +111,7 @@ export default {
         prompt: prompt.value.trim(),
         user: 'anonymous',
         status: 'prompt-saved',
-        id: uuidv4(),
+        id: prompt_id,
       };
 
       responses.value.push(promptData)
@@ -141,7 +141,9 @@ export default {
 
       loading.value = true;
 
-      await createPromptServerside();
+      const prompt_id = uuidv4();
+
+       await createPromptServerside(prompt_id);
 
       const serviceResponse = await modelsStore.getServiceResponse();
 
@@ -157,6 +159,7 @@ export default {
       });
 
       const promptData = {
+        prompt_id: prompt_id,
         prompt: prompt.value.trim(),
         models: selectedModelInfo,
       };

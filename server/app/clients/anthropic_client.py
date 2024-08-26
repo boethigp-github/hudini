@@ -24,7 +24,7 @@ class AnthropicClient:
         logger.addHandler(handler)
         return logger
 
-    async def fetch_completion(self, model: AnthropicModel, prompt: str) -> str:
+    async def fetch_completion(self, model: AnthropicModel, prompt: str, prompt_id: str) -> str:
         try:
 
             response = await self.client.messages.create(
@@ -36,7 +36,7 @@ class AnthropicClient:
                 ]
             )
             self.logger.debug(f"AnthropicClient::fetch_completion: Fetching completion with response: \n ################\n {response.to_dict()}\n ################\n")
-            success_response = AnthropicResponseToSuccessGenerationResponseAdapter.map_to_success_response(response.to_dict(), model.id)
+            success_response = AnthropicResponseToSuccessGenerationResponseAdapter.map_to_success_response(response.to_dict(), model.id, prompt_id)
             return success_response.model_dump_json()
 
 

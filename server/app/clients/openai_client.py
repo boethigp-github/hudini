@@ -23,7 +23,7 @@ class OpenAIClient:
         logger.addHandler(handler)
         return logger
 
-    async def fetch_completion(self, model: OpenaiModel, prompt: str) -> str:
+    async def fetch_completion(self, model: OpenaiModel, prompt: str, prompt_id: str) -> str:
         try:
             self.logger.debug(f"Fetching completion for model: {model.id}")
             completion = await self.client.chat.completions.create(
@@ -36,6 +36,7 @@ class OpenAIClient:
             )
 
             return SuccessGenerationModel(
+                prompt_id=prompt_id,
                 model=model.id,
                 completion=completion.to_dict()
             ).model_dump_json()

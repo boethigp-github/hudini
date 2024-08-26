@@ -10,7 +10,6 @@
                 <user-outlined class="user-icon"/>
                 <span class="prompt-text">{{ item.prompt }}</span>
               </div>
-
               <div v-if="item.completion?.choices?.length" class="bot-response fade-in">
                 <robot-outlined class="bot-icon"/>
                 <div class="response-content">
@@ -18,9 +17,7 @@
                     <span class="model">{{ $t('model') }}: {{ item.model }}</span><br>
                     <span class="timestamp">{{ formatTimestamp(item.completion.created) }}</span>
                   </div>
-
-                  <VueMarkdownIT :breaks="true" :plugins="plugins"
-                                 :source="item.completion.choices[0].message.content"/>
+                  <VueMarkdownIT :breaks="true" :plugins="plugins" :source="item.completion.choices[0].message.content"/>
                 </div>
               </div>
               <div v-else-if="item.error" class="bot-response fade-in">

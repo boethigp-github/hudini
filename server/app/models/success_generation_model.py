@@ -27,5 +27,6 @@ class Completion(BaseModel):
     usage: Usage
 
 class SuccessGenerationModel(BaseModel):
+    prompt_id:str
     model: str
     completion: Completion

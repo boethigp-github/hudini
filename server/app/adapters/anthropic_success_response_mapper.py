@@ -3,14 +3,14 @@ from server.app.models.success_generation_model import SuccessGenerationModel, C
 
 class AnthropicResponseToSuccessGenerationResponseAdapter:
     @staticmethod
-    def map_to_success_response(anthropic_message: dict, model_id: str) -> SuccessGenerationModel:
+    def map_to_success_response(anthropic_message: dict, model_id: str, prompt_id: str) -> SuccessGenerationModel:
         """
         Maps the raw response from Anthropic API to the SuccessGenerationModel.
 
         Args:
             anthropic_message (dict): The raw response from the Anthropic API.
             model_id (str): The ID of the model used for this response.
-
+            prompt_id (str) UUID of prompt
         Returns:
             SuccessGenerationModel: The mapped success generation model.
         """
@@ -41,6 +41,7 @@ class AnthropicResponseToSuccessGenerationResponseAdapter:
 
         # Create and return the SuccessGenerationModel
         return SuccessGenerationModel(
+            prompt_id=prompt_id,
             model=anthropic_message.get('model', model_id),
             completion=Completion(
                 id=anthropic_message.get('id'),

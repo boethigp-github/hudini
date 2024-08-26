@@ -3,6 +3,7 @@ import requests
 import json
 import time
 from server.app.config.base_config import BaseConfig
+import uuid
 
 class TestGenerateAndStream(unittest.TestCase):
 
@@ -11,6 +12,7 @@ class TestGenerateAndStream(unittest.TestCase):
     def test_stream_success(self):
         """Test the /stream endpoint for a successful streaming response."""
         stream_payload = {
+            "prompt_id": str(uuid.uuid4()),
             "prompt": "Tell me a short joke",
             "models": [{
                 "category": "text_completion",
@@ -62,6 +64,7 @@ class TestGenerateAndStream(unittest.TestCase):
     def test_stream_invalid_model(self):
         """Test the /stream endpoint with an invalid model."""
         stream_payload = {
+            "prompt_id": str(uuid.uuid4()),
             "prompt": "This is a test",
             "models": [{
                 "category": "text_completion",
@@ -82,6 +85,7 @@ class TestGenerateAndStream(unittest.TestCase):
     def test_stream_unsupported_platform(self):
         """Test the /stream endpoint with an unsupported platform."""
         stream_payload = {
+            "prompt_id": str(uuid.uuid4()),
             "prompt": "This is a test",
             "models": [{
                 "category": "text_completion",
