@@ -1,6 +1,9 @@
 import logging
+from collections.abc import async_generator
+
 import anthropic
-from anthropic import AsyncAnthropic
+from anthropic import Anthropic
+from flask import jsonify
 from server.app.adapters.anthropic_success_response_mapper import AnthropicResponseToSuccessGenerationResponseAdapter
 from server.app.models.success_generation_model import SuccessGenerationModel
 from server.app.models.generation_error_details import ErrorGenerationModel
@@ -9,8 +12,7 @@ from server.app.models.anthropic_model import AnthropicModel
 class AnthropicClient:
     def __init__(self, api_key: str):
         self.api_key = api_key
-        self.client = AsyncAnthropic(api_key=api_key)  # For async operations
-        self.sync_client = anthropic.Anthropic(api_key=api_key)  # For synchronous operations
+        self.client = Anthropic(api_key=api_key)
         self.logger = self.setup_logger()
 
         self.logger.debug(f"AnthropicClient initialized with API key: {api_key[:5]}...")
@@ -24,51 +26,12 @@ class AnthropicClient:
         logger.addHandler(handler)
         return logger
 
-    async def fetch_completion_sync(self, model: AnthropicModel, prompt: str, prompt_id: str) -> str:
-        try:
+    async def fetch_completion(self, model: AnthropicModel, prompt: str, prompt_id: str):
+        async def async_generator():
 
-            response = await self.client.messages.create(
-                model=model.id,
-                max_tokens=1000,
-                temperature=0,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
-            )
-            self.logger.debug(f"AnthropicClient::fetch_completion: Fetching completion with response: \n ################\n {response.to_dict()}\n ################\n")
-            success_response = AnthropicResponseToSuccessGenerationResponseAdapter.map_to_success_response(response.to_dict(), model.id, prompt_id)
-            return success_response.model_dump_json()
+            yield {}
 
-
-        except Exception as e:
-            self.logger.error(f"Error with model {model.id}: {str(e)}")
-            return ErrorGenerationModel(
-                model=model.id,
-                error=str(e)
-            ).model_dump_json()
-
-    async def fetch_completion(self, model: AnthropicModel, prompt: str, prompt_id: str) -> str:
-        try:
-
-            response = await self.client.messages.create(
-                model=model.id,
-                max_tokens=1000,
-                temperature=0,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
-            )
-            self.logger.debug(f"AnthropicClient::fetch_completion: Fetching completion with response: \n ################\n {response.to_dict()}\n ################\n")
-            success_response = AnthropicResponseToSuccessGenerationResponseAdapter.map_to_success_response(response.to_dict(), model.id, prompt_id)
-            return success_response.model_dump_json()
-
-
-        except Exception as e:
-            self.logger.error(f"Error with model {model.id}: {str(e)}")
-            return ErrorGenerationModel(
-                model=model.id,
-                error=str(e)
-            ).model_dump_json()
+        return async_generator()
 
     def get_available_models(self) -> list:
         """

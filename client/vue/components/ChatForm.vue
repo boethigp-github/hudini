@@ -150,11 +150,11 @@ export default {
               ...responses.value[responseIndex],
               completion: responseModel.completion,
             };
-            console.log("Updating response for model:", responseModel.model);
+
 
           } else {
             // Add new response, ensuring no overwriting occurs
-            console.log("Adding new response:", responseModel);
+
             responses.value.push(responseModel);
           }
         } catch (error) {

@@ -1,43 +1,54 @@
 <template>
   <a-row>
     <a-col :span="23">
-          <div id="response" class="response" ref="responseElement">
-            <div v-for="(item, index) in responses"
-                 :key="item.prompt_id"
-                 :class="[item.status === 'complete' ? 'response-item' : 'incomplete-item', 'fade-in']">
-
-              <div v-if="item.prompt" class="user-prompt fade-in">
-                <user-outlined class="user-icon"/>
-                <span class="prompt-text">{{ item.prompt }}</span>
+      <div id="response" class="response" ref="responseElement">
+        <div
+            v-for="(item, index) in responses"
+            :key="item.prompt_id"
+            :data-prompt-id="item.prompt_id"
+            @mouseover="handleMouseOver(item.prompt_id)"
+            @mouseout="handleMouseOut(item.prompt_id)"
+            :class="[item.status === 'complete' ? 'response-item' : 'incomplete-item', 'fade-in']"
+        >
+          <div
+              v-if="item.prompt"
+              class="user-prompt fade-in"
+              :class="{ highlighted: isHighlighted(item.prompt_id) }"
+          >
+            <user-outlined class="user-icon" />
+            <span class="prompt-text">{{ item.prompt }}</span>
+          </div>
+          <div v-if="item.completion?.choices?.length" class="bot-response fade-in" :class="{ highlighted: isHighlighted(item.prompt_id) }">
+            <robot-outlined class="bot-icon" />
+            <div class="response-content">
+              <div class="response-metadata">
+                <span class="model">{{ $t('model') }}: {{ item.model }}</span><br>
+                <span class="timestamp">{{ formatTimestamp(item.completion.created) }}</span>
               </div>
-              <div v-if="item.completion?.choices?.length" class="bot-response fade-in">
-                <robot-outlined class="bot-icon"/>
-                <div class="response-content">
-                  <div class="response-metadata">
-                    <span class="model">{{ $t('model') }}: {{ item.model }}</span><br>
-                    <span class="timestamp">{{ formatTimestamp(item.completion.created) }}</span>
-                  </div>
-                  <VueMarkdownIT :breaks="true" :plugins="plugins" :source="item.completion.choices[0].message.content"/>
-                </div>
+              <VueMarkdownIT
+                  :breaks="true"
+                  :plugins="plugins"
+                  :source="item.completion.choices[0].message.content"
+              />
+            </div>
+          </div>
+          <div v-else-if="item.error" class="bot-response fade-in" :class="{ highlighted: isHighlighted(item.prompt_id) }">
+            <robot-outlined class="bot-icon" />
+            <div class="response-content">
+              <div class="response-metadata" v-if="item.model">
+                <span class="model">{{ $t('model') }}: {{ item.model }}</span>
               </div>
-              <div v-else-if="item.error" class="bot-response fade-in">
-                <robot-outlined class="bot-icon"/>
-                <div class="response-content">
-                  <div class="response-metadata" v-if="item.model">
-                    <span class="model">{{ $t('model') }}: {{ item.model }}</span>
-                  </div>
-                  <div>
-                    {{ item.error }}
-                  </div>
-                </div>
+              <div>
+                {{ item.error }}
               </div>
             </div>
-<!--            <a-skeleton :loading="loading" active :paragraph="{ rows: 2 }" style="margin-bottom: 10px"></a-skeleton>-->
-
-            <!-- Comparison Drawer Component -->
-            <ComparisonDrawer :plugins="plugins" :comparisonData="comparisonData" width="90%"/>
           </div>
+        </div>
+        <a-skeleton :loading="loading" active :paragraph="{ rows: 2 }" style="margin-bottom: 10px"></a-skeleton>
 
+        <!-- Comparison Drawer Component -->
+        <ComparisonDrawer :plugins="plugins" :comparisonData="comparisonData" width="90%" />
+      </div>
     </a-col>
 
     <a-col :span="1" class="nav-container">
@@ -51,7 +62,7 @@
       >
         <a-sub-menu size="small" key="sub1" @titleClick="titleClick">
           <template #icon>
-            <TableOutlined/>
+            <TableOutlined />
           </template>
         </a-sub-menu>
       </a-menu>
@@ -60,17 +71,17 @@
 </template>
 
 <script>
-import {nextTick, watch, ref, onMounted, computed} from 'vue';
-import {UserOutlined, RobotOutlined, TableOutlined} from '@ant-design/icons-vue';
-import {Button, Skeleton, Row, Col, Menu} from 'ant-design-vue';
+import { nextTick, watch, ref, onMounted, computed } from 'vue';
+import { UserOutlined, RobotOutlined, TableOutlined } from '@ant-design/icons-vue';
+import { Button, Skeleton, Row, Col, Menu } from 'ant-design-vue';
 import MarkdownIt from 'markdown-it';
 import MarkdownItHighlightJs from 'markdown-it-highlightjs';
 import MarkdownItStrikethroughAlt from 'markdown-it-strikethrough-alt';
 import MarkdownItAbbr from 'markdown-it-abbr';
-import MarkdownItAncor from 'markdown-it-anchor';
+import MarkdownItAnchor from 'markdown-it-anchor';
 import MarkdownItDefList from 'markdown-it-deflist';
 import MarkdownItFootnote from 'markdown-it-footnote';
-import MarkdownItIn from 'markdown-it-ins';
+import MarkdownItIns from 'markdown-it-ins';
 import MarkdownSub from 'markdown-it-sub';
 import MarkdownSup from 'markdown-it-sup';
 import MarkdownTaskList from 'markdown-it-task-lists';
@@ -111,6 +122,7 @@ export default {
     const responseElement = ref(null);
     const openKeys = ref(['sub1']);
     const selectedKeys = ref(['1']);
+    const highlightedPromptId = ref(null);
 
     const handleClick = e => {
       // Handle click event if needed
@@ -121,11 +133,29 @@ export default {
       window.dispatchEvent(event);
     };
 
+    const isHighlighted = (prompt_id) => {
+      return prompt_id === highlightedPromptId.value;
+    };
+
+    const handleMouseOver = (prompt_id) => {
+      highlightedPromptId.value = prompt_id;
+      document.querySelectorAll(`[data-prompt-id="${prompt_id}"]`).forEach(el => {
+        el.classList.add('highlighted');
+      });
+    };
+
+    const handleMouseOut = (prompt_id) => {
+      document.querySelectorAll(`[data-prompt-id="${prompt_id}"]`).forEach(el => {
+        el.classList.remove('highlighted');
+      });
+      highlightedPromptId.value = null;
+    };
+
     watch(
         () => openKeys,
         val => {
           console.log('openKeys', val);
-        },
+        }
     );
 
     const scrollToBottom = () => {
@@ -137,22 +167,22 @@ export default {
     };
 
     const plugins = [
-      {plugin: MarkdownItHighlightJs},
-      {plugin: MarkdownItStrikethroughAlt},
-      {plugin: MarkdownIt},
-      {plugin: MarkdownItAbbr},
-      {plugin: MarkdownItAncor},
-      {plugin: MarkdownItDefList},
-      {plugin: MarkdownItFootnote},
-      {plugin: MarkdownItIn},
-      {plugin: MarkdownSub},
-      {plugin: MarkdownSup},
-      {plugin: MarkdownTaskList},
-      {plugin: MarkdownTocDoneRight},
-      {plugin: MarkdownMark},
+      { plugin: MarkdownItHighlightJs },
+      { plugin: MarkdownItStrikethroughAlt },
+      { plugin: MarkdownIt },
+      { plugin: MarkdownItAbbr },
+      { plugin: MarkdownItAnchor },
+      { plugin: MarkdownItDefList },
+      { plugin: MarkdownItFootnote },
+      { plugin: MarkdownItIns },
+      { plugin: MarkdownSub },
+      { plugin: MarkdownSup },
+      { plugin: MarkdownTaskList },
+      { plugin: MarkdownTocDoneRight },
+      { plugin: MarkdownMark },
     ];
 
-    const formatTimestamp = (timestamp) => {
+    const formatTimestamp = timestamp => {
       const date = new Date(timestamp * 1000);
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -165,10 +195,10 @@ export default {
 
     // Prepare comparison data
     const comparisonData = computed(() => {
-      return props.responses.map((response) => ({
-        model: (response.model) ? response.model : "UserPrompt",
+      return props.responses.map(response => ({
+        model: response.model ? response.model : 'UserPrompt',
         content: response.completion?.choices[0].message.content || response.prompt,
-        timestamp: (response.completion?.created) ? (formatTimestamp(response.completion?.created)) : '',
+        timestamp: response.completion?.created ? formatTimestamp(response.completion.created) : '',
         error: response.error || 'No error',
       }));
     });
@@ -178,7 +208,7 @@ export default {
         () => {
           scrollToBottom();
         },
-        {deep: true}
+        { deep: true }
     );
 
     onMounted(() => {
@@ -194,7 +224,10 @@ export default {
       openKeys,
       handleClick,
       titleClick,
-      selectedKeys
+      selectedKeys,
+      handleMouseOver,
+      handleMouseOut,
+      isHighlighted,
     };
   },
 };
@@ -234,7 +267,9 @@ export default {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
-.response-item, .user-prompt, .bot-response {
+.response-item,
+.user-prompt,
+.bot-response {
   border: none;
   border-radius: 12px;
   padding: 5px;
@@ -258,11 +293,12 @@ export default {
 .bot-response {
   background: #f5f5f5;
   max-width: 100%;
-  padding :15px;
+  padding: 15px;
   min-width: 70%;
 }
 
-.user-icon, .bot-icon {
+.user-icon,
+.bot-icon {
   margin-right: 8px;
   font-size: 18px;
   flex-shrink: 0;
@@ -276,7 +312,8 @@ export default {
   color: #52c41a;
 }
 
-.prompt-text, .response-content {
+.prompt-text,
+.response-content {
   flex: 1;
 }
 
@@ -322,7 +359,7 @@ export default {
 /* Styles for syntax highlighting */
 :deep(pre[class*="language-"]) {
   padding: 1em;
-  margin: .5em 0;
+  margin: 0.5em 0;
   overflow: auto;
   border-radius: 0.3em;
 }
@@ -351,5 +388,10 @@ export default {
   line-height: 1.5;
   tab-size: 4;
   hyphens: none;
+}
+
+/* Highlight class for hover effect */
+.highlighted {
+  background-color: #f0f8ff !important; /* Light blue highlight */
 }
 </style>
