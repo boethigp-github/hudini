@@ -1,7 +1,8 @@
 import logging
+import json
 import openai
 from openai import AsyncOpenAI
-from server.app.models.success_generation_model import SuccessGenerationModel
+from server.app.models.success_generation_model import SuccessGenerationModel, Completion, Choice, Message, Usage
 from server.app.models.generation_error_details import ErrorGenerationModel
 from server.app.models.openai_model import OpenaiModel
 
@@ -23,30 +24,66 @@ class OpenAIClient:
         logger.addHandler(handler)
         return logger
 
-    async def fetch_completion(self, model: OpenaiModel, prompt: str, prompt_id: str) -> str:
+
+
+
+    async def fetch_completion(self, model: OpenaiModel, prompt: str, prompt_id: str):
         try:
-            self.logger.debug(f"Fetching completion for model: {model.id}")
-            completion = await self.client.chat.completions.create(
+            self.logger.debug(f"Fetching streaming completion for model: {model.id}")
+            stream = await self.client.chat.completions.create(
                 model=model.id,
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant."},
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.0
+                temperature=0.0,
+                stream=True
             )
 
-            return SuccessGenerationModel(
-                prompt_id=prompt_id,
-                model=model.id,
-                completion=completion.to_dict()
-            ).model_dump_json()
+            async def async_generator():
+                full_content = ""
+                async for chunk in stream:
+                    if chunk.choices[0].delta.content is not None:
+                        content = chunk.choices[0].delta.content
+                        full_content += content
+
+                        # Construct a Completion object for each chunk
+                        completion = Completion(
+                            id=chunk.id,
+                            choices=[Choice(
+                                finish_reason=chunk.choices[0].finish_reason or "null",
+                                index=chunk.choices[0].index,
+                                message=Message(
+                                    content=full_content,
+                                    role=chunk.choices[0].delta.role or "assistant"
+                                )
+                            )],
+                            created=chunk.created,
+                            model=chunk.model,
+                            object=chunk.object,
+                            # Assuming these are not available in streaming mode
+                            system_fingerprint=None,
+                            usage=Usage(completion_tokens=0, prompt_tokens=0, total_tokens=0)
+                        )
+
+                        yield (SuccessGenerationModel(
+                            prompt_id=prompt_id,
+                            model=model.id,
+                            completion=completion
+                        ).model_dump_json()).encode('utf-8')
+
+            return async_generator()
 
         except Exception as e:
-            self.logger.error(f"OpenAIClient::fetch_completion: Error with model {model.id}: {str(e)}")
-            return ErrorGenerationModel(
-                model=model.id,
-                error=str(e)
-            ).model_dump_json()
+            self.logger.error(f"OpenAIClient::fetch_completion_stream: Error with model {model.id}: {str(e)}")
+
+            async def error_generator():
+                yield (ErrorGenerationModel(
+                    model=model.id,
+                    error=str(e)
+                ).model_dump_json() + '\n').encode('utf-8')
+
+            return error_generator()
 
     def get_available_models(self) -> list:
         """
@@ -58,7 +95,7 @@ class OpenAIClient:
         try:
             response = openai.models.list()  # Synchronous call to fetch models
             models = [
-                OpenaiModel.from_dict(model.to_dict()).model_dump()  # Use the factory method to create each model
+                OpenaiModel.from_dict(model.model_dump()).model_dump()  # Use the factory method to create each model
                 for model in response.data
             ]
 

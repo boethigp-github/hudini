@@ -111,6 +111,7 @@ class GenerationController:
         Args:
             models (List[dict]): List of model data dictionaries.
             method_name (str): Name of the method to be called.
+            prompt_id (str): Id of the prompt
 
         Raises:
             ValueError: If the models list is empty or the method is not allowed.
@@ -120,7 +121,7 @@ class GenerationController:
             logger.error(error_msg)
             raise ValueError(error_msg)
 
-        if not models:
+        if not prompt_id:
             error_msg = "The 'prompt_id' cannot be empty."
             logger.error(error_msg)
             raise ValueError(error_msg)
@@ -174,18 +175,15 @@ class GenerationController:
 
                 for completed_task in asyncio.as_completed(tasks):
                     try:
-                        result = await completed_task
-                        yield result  # Yield the serialized JSON result
+                        async_gen = await completed_task
+                        async for result in async_gen:
+                            yield result  # Result is already in bytes
                     except Exception as e:
                         logger.error(f"Error during task execution: {str(e)}")
-                        yield json.dumps({"error": str(e)})
-
-            async def async_generator():
-                async for item in run_generation():
-                    yield item
+                        yield json.dumps({"error": str(e)}).encode('utf-8') + b'\n'
 
             def sync_generator():
-                async_gen = async_generator()
+                async_gen = run_generation()
                 while True:
                     try:
                         yield loop.run_until_complete(async_gen.__anext__())
@@ -193,13 +191,12 @@ class GenerationController:
                         break
                     except Exception as e:
                         logger.error(f"Error in sync_generator: {str(e)}")
-                        yield json.dumps({"error": str(e)})
+                        yield json.dumps({"error": str(e)}).encode('utf-8') + b'\n'
                 loop.close()
 
             yield from sync_generator()
 
         return Response(stream_with_context(generate()), content_type='application/json')
-
 
 # Instantiate the GenerationController
 generation_controller = GenerationController()

@@ -46,9 +46,8 @@
   </div>
 </template>
 
-
 <script>
-import { ref, watch , onMounted, onBeforeUnmount} from 'vue';
+import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useModelsStore } from './../stores/models';
 import PromptPanel from './PromptPanel.vue';
@@ -58,9 +57,10 @@ import ModelSelection from './ModelSelection.vue';
 import { message } from 'ant-design-vue';
 import { streamPrompt, createPrompt } from './../services/api';
 import { v4 as uuidv4 } from 'uuid';
-import ChatMenu from './MainMenu.vue';  // Import ChatMenu
-import { Tabs, TabPane } from 'ant-design-vue'; // Make sure Tabs and TabPane are imported
+import ChatMenu from './MainMenu.vue';
+import { Tabs, TabPane } from 'ant-design-vue';
 import { PlusOutlined, SettingOutlined } from '@ant-design/icons-vue';
+
 export default {
   name: 'ChatForm',
   components: {
@@ -81,15 +81,11 @@ export default {
     const loading = ref(false);
     const modelsStore = useModelsStore();
     const updateTrigger = ref(0);
-    const storedPrompt = ref({status:'initialized', prompt:null, prompt_id:null});
-    const drawerVisible = ref(false);
-
-
+    const buffer = ref(''); // Buffer to hold incomplete JSON strings
 
     const showDrawer = () => {
       drawerVisible.value = true;
     };
-
 
     const handleToolbarAction = ({ key }) => {
       if (key === 'new_chat') {
@@ -116,11 +112,9 @@ export default {
 
       responses.value.push(promptData)
 
-
       updateTrigger.value++;
       try {
         await createPrompt(promptData);
-
       } catch (error) {
         message.error(t('failed_to_save_prompt'));
       }
@@ -130,6 +124,39 @@ export default {
       if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
         handleSubmit();
+      }
+    };
+
+    const processChunk = (chunk) => {
+      buffer.value += chunk; // Add chunk to buffer
+
+      let boundary;
+      while ((boundary = buffer.value.indexOf('}{')) !== -1) {  // Find boundary between JSON objects
+        const jsonString = buffer.value.slice(0, boundary + 1);
+        buffer.value = buffer.value.slice(boundary + 1);
+
+        let responseModel;
+        try {
+          responseModel = JSON.parse(jsonString);
+
+          const responseIndex = responses.value.findIndex(
+              r => r.prompt_id === responseModel.prompt_id
+          );
+
+          if (responseIndex !== -1) {
+            // Update existing response
+            responses.value[responseIndex] = {
+              ...responses.value[responseIndex],
+              completion: responseModel.completion
+            };
+          } else {
+            // Add new response
+            console.log("Adding new response:", responseModel);
+            responses.value.push(responseModel);
+          }
+        } catch (error) {
+          console.log("Error parsing JSON chunk:", error, jsonString);
+        }
       }
     };
 
@@ -143,7 +170,7 @@ export default {
 
       const prompt_id = uuidv4();
 
-       await createPromptServerside(prompt_id);
+      await createPromptServerside(prompt_id);
 
       const serviceResponse = await modelsStore.getServiceResponse();
 
@@ -166,18 +193,7 @@ export default {
 
       await streamPrompt(
           promptData,
-          (completion) => {
-            let parsedCompletion;
-            try {
-              parsedCompletion = JSON.parse(completion);
-              console.log("parsedCompletion", parsedCompletion);
-            } catch (error) {
-              console.error("Error parsing JSON chunk:", error);
-              return;
-            }
-
-            responses.value.push({ ...parsedCompletion, status: 'complete' });
-          },
+          processChunk,
           (error) => {
             console.error('Stream error:', error);
             responses.value.push({
@@ -187,6 +203,7 @@ export default {
             loading.value = false;
           },
           () => {
+
             loading.value = false;
           }
       );
@@ -204,14 +221,11 @@ export default {
       responses,
       loading,
       modelsStore,
-      storedPrompt,
       handleKeydown,
       handleSubmit,
       updateTrigger,
       showDrawer,
-      drawerVisible,
       handleToolbarAction,
-
       t,
     };
   },
@@ -227,7 +241,6 @@ export default {
 .header .logo {
   margin-right: 10px;
 }
-
 
 .language-switch-container {
   width: 100%;

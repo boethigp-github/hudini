@@ -1,11 +1,11 @@
 <template>
   <a-row>
     <a-col :span="23">
-
           <div id="response" class="response" ref="responseElement">
             <div v-for="(item, index) in responses"
                  :key="index"
                  :class="[item.status === 'complete' ? 'response-item' : 'incomplete-item', 'fade-in']">
+
               <div v-if="item.prompt" class="user-prompt fade-in">
                 <user-outlined class="user-icon"/>
                 <span class="prompt-text">{{ item.prompt }}</span>
@@ -32,7 +32,7 @@
                 </div>
               </div>
             </div>
-            <a-skeleton :loading="loading" active :paragraph="{ rows: 2 }" style="margin-bottom: 10px"></a-skeleton>
+<!--            <a-skeleton :loading="loading" active :paragraph="{ rows: 2 }" style="margin-bottom: 10px"></a-skeleton>-->
 
             <!-- Comparison Drawer Component -->
             <ComparisonDrawer :plugins="plugins" :comparisonData="comparisonData" width="90%"/>
