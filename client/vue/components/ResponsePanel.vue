@@ -44,7 +44,7 @@
             </div>
           </div>
         </div>
-        <a-skeleton :loading="loading" active :paragraph="{ rows: 2 }" style="margin-bottom: 10px"></a-skeleton>
+<!--        <a-skeleton :loading="loading" active :paragraph="{ rows: 2 }" style="margin-bottom: 10px"></a-skeleton>-->
 
         <!-- Comparison Drawer Component -->
         <ComparisonDrawer :plugins="plugins" :comparisonData="comparisonData" width="90%" />

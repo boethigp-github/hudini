@@ -7,6 +7,7 @@ from server.app.models.generation_error_details import ErrorGenerationModel
 from server.app.models.openai_model import OpenaiModel
 
 class OpenAIClient:
+    async_methods = ['fetch_completion']
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.client = AsyncOpenAI(api_key=api_key)  # For async operations
