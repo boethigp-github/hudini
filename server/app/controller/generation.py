@@ -1,155 +1,87 @@
-from flask import Blueprint, request, Response, stream_with_context, jsonify
+from fastapi import APIRouter, HTTPException, Request, Depends
+from fastapi.responses import StreamingResponse
 import asyncio
 import json
-import logging
-from typing import List, Tuple, Any
+from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List, Dict, Any
 import importlib
-from server.app.config.base_config import BaseConfig
+from server.app.config.settings import Settings
 from server.app.clients.openai_client import OpenAIClient
 from server.app.clients.anthropic_client import AnthropicClient
+from sqlalchemy.orm import sessionmaker
 
-# Set up logging
-logging.basicConfig(level=logging.ERROR)
-logger = logging.getLogger(__name__)
 
 class GenerationController:
-    """
-    Controller to handle text generation requests and streaming responses
-    from multiple platforms like OpenAI and Anthropic.
+    def __init__(self, async_session: sessionmaker, app_logger):
+        self.router = APIRouter()
+        self.async_session = async_session
+        self.logger = app_logger  # Use the logger passed from FastAPIAppFactory
 
-    Attributes:
-        blueprint (Blueprint): Flask blueprint for registering routes.
-        openai_client (OpenAIClient): Client for interacting with OpenAI API.
-        anthropic_client (AnthropicClient): Client for interacting with Anthropic API.
-        registered_methods (List[str]): List of allowed method names for generation.
-        clients (Dict[str, Any]): Mapping of platform names to their respective clients.
-    """
+        # Initialize the Settings instance
+        self.settings = Settings()
 
-    def __init__(self):
-        """
-        Initialize the GenerationController, set up clients, and register routes.
-        """
-        self.blueprint = Blueprint('generation', __name__)
-        self.register_routes()
-        self.openai_client = OpenAIClient(api_key=BaseConfig.API_KEY_OPEN_AI)
-        self.anthropic_client = AnthropicClient(api_key=BaseConfig.API_KEY_ANTHROPIC)
+        # Use the API keys from Settings instead of BaseConfig
+        self.openai_client = OpenAIClient(api_key=self.settings.API_KEY_OPEN_AI)
+        self.anthropic_client = AnthropicClient(api_key=self.settings.api_key_anthropic)
+
         self.registered_methods = ['fetch_completion', 'chat_completion', 'generate_image']
         self.clients = {
             'openai': self.openai_client,
             'anthropic': self.anthropic_client,
         }
+        self.register_routes()
 
     def register_routes(self):
-        """
-        Register the routes for the generation controller.
-        """
-        self.blueprint.add_url_rule('/stream', 'generate_route', self.stream_route, methods=['POST'])
+        self.router.add_api_route("/stream", self.stream_route, methods=["POST"])
 
-    @staticmethod
-    def get_model_class(platform):
-        """
-        Dynamically import and return the model class for a given platform.
-
-        Args:
-            platform (str): The name of the platform (e.g., 'openai', 'anthropic').
-
-        Returns:
-            type: The model class for the specified platform, or None if not found.
-
-        Raises:
-            ImportError: If the module cannot be imported.
-            AttributeError: If the model class is not found in the module.
-        """
+    def get_model_class(self, platform):
         try:
             module = importlib.import_module(f"server.app.models.{platform}_model")
             return getattr(module, f"{platform.capitalize()}Model")
         except ImportError as e:
-            logger.error(f"Error importing model module for platform '{platform}': {str(e)}")
+            self.logger.error(f"Error importing model module for platform '{platform}': {str(e)}")
         except AttributeError as e:
-            logger.error(f"Error finding model class for platform '{platform}': {str(e)}")
+            self.logger.error(f"Error finding model class for platform '{platform}': {str(e)}")
         except Exception as e:
-            logger.error(f"Unexpected error when getting model class for platform '{platform}': {str(e)}")
+            self.logger.error(f"Unexpected error when getting model class for platform '{platform}': {str(e)}")
         return None
 
-    def validate_models_and_clients(self, models: List[dict], method_name: str) -> List[Tuple[Any, Any, Any]]:
-        """
-        Validate the models and clients for the specified method.
-
-        Args:
-            models (List[dict]): List of model data dictionaries.
-            method_name (str): Name of the method to validate against the clients.
-
-        Returns:
-            List[Tuple[Any, Any, Any]]: List of tuples containing validated model instances,
-                                        their corresponding clients, and method references.
-
-        Raises:
-            ValueError: If the model class, client, or method is not valid.
-        """
+    def validate_models_and_clients(self, models: List[dict], method_name: str) -> List[Any]:
         valid_models = []
         for model_data in models:
             platform = model_data.get('platform')
             model_class = self.get_model_class(platform)
             if not model_class:
-                raise ValueError(f"Model class for platform '{platform}' not found")
+                raise HTTPException(status_code=400, detail=f"Model class for platform '{platform}' not found")
 
             platform_client = self.clients.get(platform)
             if not platform_client:
-                raise ValueError(f"Client for platform '{platform}' not supported")
+                raise HTTPException(status_code=400, detail=f"Client for platform '{platform}' not supported")
 
             if not hasattr(platform_client, method_name):
-                raise ValueError(f"Method '{method_name}' not found for platform '{platform}'")
+                raise HTTPException(status_code=400,
+                                    detail=f"Method '{method_name}' not found for platform '{platform}'")
 
             valid_models.append((model_class(**model_data), platform_client, getattr(platform_client, method_name)))
 
         return valid_models
 
     def validate_request(self, models: List[dict], method_name: str, prompt_id: str):
-        """
-        Validate the incoming request data.
-
-        Args:
-            models (List[dict]): List of model data dictionaries.
-            method_name (str): Name of the method to be called.
-            prompt_id (str): Id of the prompt
-
-        Raises:
-            ValueError: If the models list is empty or the method is not allowed.
-        """
         if not models:
-            error_msg = "The 'models' list cannot be empty."
-            logger.error(error_msg)
-            raise ValueError(error_msg)
+            raise HTTPException(status_code=400, detail="The 'models' list cannot be empty.")
 
         if not prompt_id:
-            error_msg = "The 'prompt_id' cannot be empty."
-            logger.error(error_msg)
-            raise ValueError(error_msg)
+            raise HTTPException(status_code=400, detail="The 'prompt_id' cannot be empty.")
 
         if method_name not in self.registered_methods:
-            error_msg = f"The method '{method_name}' is not allowed."
-            logger.error(error_msg)
-            raise ValueError(error_msg)
+            raise HTTPException(status_code=400, detail=f"The method '{method_name}' is not allowed.")
 
-    def stream_route(self):
-        """
-        Handle POST requests to the /stream route, streaming the generated response.
+    async def stream_route(self, request: Request, db: AsyncSession = Depends()):
+        data = await request.json()
+        self.logger.info("Incoming request to /stream:")
+        self.logger.info(json.dumps(data, indent=2))
+        self.logger.info("=" * 50)
 
-        This method validates the incoming request, processes the generation tasks asynchronously,
-        and streams the generated content back to the client.
-
-        Returns:
-            Response: A Flask response object that streams JSON content.
-
-        Raises:
-            ValueError: If the request is invalid.
-        """
-        # Log the incoming request
-        logger.info("Incoming request to /stream:")
-        logger.info(json.dumps(request.json, indent=2))
-        logger.info("=" * 50)  # Separator for clarity in logs
-
-        data = request.json
         models = data.get('models', [])
         prompt = data.get('prompt', '')
         prompt_id = data.get('prompt_id', '')
@@ -158,45 +90,24 @@ class GenerationController:
         try:
             self.validate_request(models, method_name, prompt_id)
             valid_models = self.validate_models_and_clients(models, method_name)
-        except ValueError as e:
-            logger.error(str(e))
-            return jsonify({"error": str(e)}), 400
+        except HTTPException as e:
+            self.logger.error(str(e))
+            raise e
 
-        def generate():
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+        async def generate():
+            tasks = []
+            for model, client, method in valid_models:
+                async_task = method(model, prompt, prompt_id)
+                task = asyncio.create_task(async_task)
+                tasks.append(task)
 
-            async def run_generation():
-                tasks = []
-                for model, client, method in valid_models:
-                    async_task = method(model, prompt, prompt_id)
-                    task = asyncio.create_task(async_task)
-                    tasks.append(task)
+            for completed_task in asyncio.as_completed(tasks):
+                try:
+                    async_gen = await completed_task
+                    async for result in async_gen:
+                        yield result  # Result is already in bytes
+                except Exception as e:
+                    self.logger.error(f"Error during task execution: {str(e)}")
+                    yield json.dumps({"error": str(e)}).encode('utf-8') + b'\n'
 
-                for completed_task in asyncio.as_completed(tasks):
-                    try:
-                        async_gen = await completed_task
-                        async for result in async_gen:
-                            yield result  # Result is already in bytes
-                    except Exception as e:
-                        logger.error(f"Error during task execution: {str(e)}")
-                        yield json.dumps({"error": str(e)}).encode('utf-8') + b'\n'
-
-            def sync_generator():
-                async_gen = run_generation()
-                while True:
-                    try:
-                        yield loop.run_until_complete(async_gen.__anext__())
-                    except StopAsyncIteration:
-                        break
-                    except Exception as e:
-                        logger.error(f"Error in sync_generator: {str(e)}")
-                        yield json.dumps({"error": str(e)}).encode('utf-8') + b'\n'
-                loop.close()
-
-            yield from sync_generator()
-
-        return Response(stream_with_context(generate()), content_type='application/json')
-
-# Instantiate the GenerationController
-generation_controller = GenerationController()
+        return StreamingResponse(generate(), media_type='application/json')

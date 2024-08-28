@@ -55,6 +55,7 @@
       <a-menu
           title="comparison"
           size="small"
+
           id="response_panel_action"
           :inlineCollapsed="true"
           v-model:openKeys="openKeys"
@@ -288,6 +289,7 @@ export default {
   max-width: 80%;
   margin-left: auto;
   padding: 15px;
+  margin: 3px;
 }
 
 .bot-response {

@@ -2,12 +2,18 @@ import unittest
 import requests
 import json
 import time
-from server.app.config.base_config import BaseConfig
 import uuid
+from server.app.config.settings import Settings  # Adjust the import according to your project structure
 
 class TestGenerateAndStream(unittest.TestCase):
 
-    SERVER_URL = BaseConfig.SERVER_URL
+    @classmethod
+    def setUpClass(cls):
+        # Initialize the settings
+        cls.settings = Settings()
+
+        # Set the SERVER_URL from the loaded configuration
+        cls.SERVER_URL = cls.settings.SERVER_URL
 
     def test_stream_success(self):
         """Test the /stream endpoint for a successful streaming response."""

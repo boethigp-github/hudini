@@ -1,6 +1,6 @@
 import requests
-import os
 import unittest
+from server.app.config.settings import Settings  # Adjust the import according to your project structure
 
 class TestModels(unittest.TestCase):
     """
@@ -11,12 +11,17 @@ class TestModels(unittest.TestCase):
     data structure and response code.
 
     Attributes:
-        BASE_URL (str): The base URL for the API server, defaulting to
-                        'http://localhost:5000' if SERVER_URL environment
-                        variable is not set.
+        BASE_URL (str): The base URL for the API server, retrieved from
+                        the Settings object.
     """
 
-    BASE_URL = os.getenv('SERVER_URL', 'http://localhost:5000')
+    @classmethod
+    def setUpClass(cls):
+        # Initialize the settings
+        cls.settings = Settings()
+
+        # Set the BASE_URL from the loaded configuration
+        cls.BASE_URL = cls.settings.SERVER_URL
 
     def test_models(self):
         """
@@ -25,7 +30,7 @@ class TestModels(unittest.TestCase):
         This method sends a GET request to the '/models' endpoint
         and verifies that:
         1. The response status code is 200 (OK).
-        2. The response JSON contains  'models' keys.
+        2. The response JSON contains 'models' keys.
 
         5. The 'category' key in each model is not null and is a string.
 

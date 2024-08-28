@@ -1,23 +1,20 @@
 import unittest
 import requests
-import os
 import uuid
-from dotenv import load_dotenv
 from jsonschema import validate, ValidationError
-
 from server.app.utils.swagger_loader import SwaggerLoader
+from server.app.config.settings import Settings  # Adjust the import path according to your project structure
 
 class TestPrompts(unittest.TestCase):
-    BASE_URL = None
-
     @classmethod
     def setUpClass(cls):
-        # Load environment variables
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        env_path = os.path.join(current_dir, '..', '..', '..','infrastructure','environment', '.env.local')
-        load_dotenv(env_path)
+        # Initialize the settings
+        cls.settings = Settings()
 
-        cls.BASE_URL = os.getenv('SERVER_URL', 'http://localhost:5000')
+        # Set the BASE_URL from the loaded configuration
+        cls.BASE_URL = cls.settings.SERVER_URL
+
+        # Load the prompt schema using SwaggerLoader
         cls.prompt_schema = SwaggerLoader("swagger.yaml").get_component_schema("Prompt")
 
     def validate_response(self, data):
@@ -83,8 +80,6 @@ class TestPrompts(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         data = response.json()
         self.assertEqual(data['status'], "validation-error")
-
-        print("Invalid status test passed")
 
 if __name__ == '__main__':
     unittest.main()

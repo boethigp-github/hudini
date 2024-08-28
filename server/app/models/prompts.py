@@ -1,18 +1,20 @@
-from server.app.extensions import db
+# models/prompt.py
+
+from sqlalchemy import Column, String, DateTime, Text
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime
-
+from server.app.db.base import Base  # Import Base from the shared module
 
 # SQLAlchemy model
-class Prompt(db.Model):
+class Prompt(Base):  # Use the Base directly
     __tablename__ = 'prompts'
 
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    prompt = db.Column(db.Text, nullable=False)
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-    user = db.Column(db.String(30), nullable=False)
-    status = db.Column(db.String(30), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    prompt = Column(Text, nullable=False)
+    timestamp = Column(DateTime, default=datetime.utcnow)
+    user = Column(String(30), nullable=False)
+    status = Column(String(30), nullable=False)
 
     def to_dict(self):
         return {

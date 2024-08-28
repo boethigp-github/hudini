@@ -1,59 +1,56 @@
+from fastapi import APIRouter, HTTPException, Response
+from fastapi.responses import FileResponse, RedirectResponse
 import logging
-from flask import Blueprint, send_file, redirect
-from flask_swagger_ui import get_swaggerui_blueprint
 from server.app.utils.swagger_loader import SwaggerLoader
 
-logger = logging.getLogger(__name__)
 
 class SwaggerUiController:
     """
     A controller class responsible for handling routes related to the Swagger UI and YAML file.
     """
 
-    def __init__(self):
+    def __init__(self, app_logger):
         """
         Initializes the SwaggerUiController instance.
 
-        This method creates Flask Blueprints for serving the swagger.yaml file and the Swagger UI.
+        This method creates a FastAPI APIRouter for serving the swagger.yaml file and the Swagger UI.
         """
-        # Create the blueprint for serving the swagger.yaml file and handling redirects
-        self.blueprint = Blueprint('swagger_ui_endpoint', __name__)
-
-        # Create Swagger UI blueprint, which will be served at /api/docs
-        self.swagger_ui_blueprint = get_swaggerui_blueprint(
-            '/api/docs',
-            '/swagger.yaml',
-            config={
-                'app_name': "Hudini API"
-            }
-        )
-
-        # Register the routes for serving the swagger.yaml file and root redirect
+        self.router = APIRouter()
+        self.logger = app_logger  # Use the logger passed from FastAPIAppFactory
         self.register_routes()
 
     def register_routes(self):
         """
-        Registers routes to the Flask blueprint.
+        Registers routes to the FastAPI router.
         """
         # Serve swagger.yaml file at /swagger.yaml
-        self.blueprint.add_url_rule('/swagger.yaml', 'swagger_yaml', self.serve_swagger_yaml, methods=['GET'])
+        self.router.add_api_route("/swagger.yaml", self.serve_swagger_yaml, methods=["GET"])
 
         # Redirect from / to /api/docs
-        self.blueprint.add_url_rule('/', 'redirect_to_docs', self.redirect_to_docs, methods=['GET'])
+        self.router.add_api_route("/", self.redirect_to_docs, methods=["GET"])
 
-    def serve_swagger_yaml(self):
+    async def serve_swagger_yaml(self):
         """
         Handler method for serving the swagger.yaml file.
-        """
-        swagger_loader = SwaggerLoader("swagger.yaml")
-        logger.debug(f"Serving swagger.yaml from path: {swagger_loader.file_path()}")
-        return send_file(swagger_loader.file_path(), mimetype='application/x-yaml')
 
-    def redirect_to_docs(self):
+        Returns:
+            FileResponse: The swagger.yaml file served as a YAML file.
+        """
+        try:
+            swagger_loader = SwaggerLoader("swagger.yaml")
+            self.logger.debug(f"Serving swagger.yaml from path: {swagger_loader.file_path()}")
+            return FileResponse(swagger_loader.file_path(), media_type='application/x-yaml')
+        except Exception as e:
+            self.logger.error(f"Error serving swagger.yaml: {str(e)}")
+            raise HTTPException(status_code=500, detail="An error occurred while serving the swagger.yaml file")
+
+    async def redirect_to_docs(self):
         """
         Redirects requests from the root URL (/) to /api/docs.
-        """
-        return redirect('/api/docs')  # Directly redirect to the Swagger UI path
 
-# Create an instance of the controller
-swagger_ui_controller = SwaggerUiController()
+        Returns:
+            RedirectResponse: A redirection to the Swagger UI at /api/docs.
+        """
+        return RedirectResponse(url='/api/docs')
+
+

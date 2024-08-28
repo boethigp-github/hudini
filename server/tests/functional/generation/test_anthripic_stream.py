@@ -1,14 +1,19 @@
 import unittest
 import requests
 import json
-import time
 import uuid
-
-from server.app.config.base_config import BaseConfig
+import time
+from server.app.config.settings import Settings
 
 class TestAnthropicStream(unittest.TestCase):
 
-    SERVER_URL = BaseConfig.SERVER_URL
+    @classmethod
+    def setUpClass(cls):
+        # Initialize the settings
+        cls.settings = Settings()
+
+        # Set the SERVER_URL from the loaded configuration
+        cls.SERVER_URL = cls.settings.app_name
 
     def test_stream_success(self):
         """Test the /stream endpoint for a successful streaming response using an Anthropic model."""
@@ -81,8 +86,6 @@ class TestAnthropicStream(unittest.TestCase):
             }]
         }
         response = requests.post(f"{self.SERVER_URL}/stream", json=stream_payload)
-
-        #@todo: test for schema throw 404 serverside
         self.assertEqual(response.status_code, 200)  # Expecting a 400 Bad Request for invalid model
 
     def test_stream_unsupported_platform(self):

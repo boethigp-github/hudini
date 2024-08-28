@@ -1,0 +1,61 @@
+app_name: "MyApp"
+app_env: "production"
+debug: false
+
+default:
+  SERVER_URL: "http://localhost:5000"
+  DEBUG: false
+  ENV: "development"
+  APP_LOG_LEVEL: "DEBUG"
+  APP_PROJECT_NAME: "HUDINI"
+  TESTING: true
+
+  # Swagger settings
+  SWAGGER_URL: "/api/docs"
+  API_URL: "/swagger.yaml"
+
+  # OpenAI API configuration
+  API_KEY_OPEN_AI: ""
+
+  # ANTHROPIC
+  API_KEY_ANTHROPIC: ""
+
+  # Model configuration
+  PROJECT_MODEL_PATH: "C:\\projects\\llama.cpp\\models\\custom\\"
+
+  # SQLAlchemy settings
+  DATABASE_URL: "postgresql+asyncpg://postgres:postgres@localhost/hudini"
+  SQLALCHEMY_TRACK_MODIFICATIONS: false
+
+  # CORS
+  CORS_ORIGINS: "http://localhost:5173,https://editor.swagger.io"
+
+  # Logging configuration
+  LOGGING_CONFIG:
+    version: 1
+    disable_existing_loggers: false
+
+    formatters:
+      default:
+        format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+    handlers:
+      console:
+        class: "logging.StreamHandler"
+        formatter: "default"
+
+    root:
+      handlers: ["console"]
+      level: "DEBUG"  # This would be set to INFO if DEBUG is false
+
+    loggers:
+      uvicorn:
+        level: "INFO"
+
+      myapp:
+        level: "DEBUG"
+        handlers: ["console"]
+        propagate: false
+
+# Application settings
+APP_PORT: 8000

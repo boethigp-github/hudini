@@ -1,10 +1,18 @@
 import unittest
 import requests
 import yaml
-import os
+from server.app.config.settings import Settings  # Adjust the import path according to your project structure
 
 class TestSwagger(unittest.TestCase):
-    BASE_URL = os.getenv('SERVER_URL', 'http://localhost:5000')
+    BASE_URL = None
+
+    @classmethod
+    def setUpClass(cls):
+        # Initialize the settings
+        cls.settings = Settings()
+
+        # Set the BASE_URL from the loaded configuration
+        cls.BASE_URL = cls.settings.SERVER_URL
 
     def test_swagger_yaml(self):
         response = requests.get(f"{self.BASE_URL}/swagger.yaml")

@@ -1,7 +1,11 @@
+from fastapi import APIRouter, HTTPException, Depends
+from fastapi.responses import JSONResponse
 import logging
-from flask import Blueprint, jsonify, Response
+from server.app.config.settings import Settings
+from server.app.clients.llama_cpp_client import LLamaCppClient
+from server.app.clients.openai_client import OpenAIClient
+from server.app.clients.anthropic_client import AnthropicClient
 
-logger = logging.getLogger(__name__)
 
 class ModelsController:
     """
@@ -11,28 +15,30 @@ class ModelsController:
     and handles requests for the favicon.
     """
 
-    def __init__(self):
+    def __init__(self, app_logger):
         """
         Initializes the ModelsController instance.
 
-        This method creates a Flask Blueprint for the models routes and registers the necessary routes.
+        This method creates a FastAPI APIRouter for the models routes and registers the necessary routes.
         """
-        # Create the blueprint for this controller
-        self.blueprint = Blueprint('models', __name__)
-        # Register the routes
+        self.router = APIRouter()
+        self.logger = app_logger  # Use the logger passed from FastAPIAppFactory
+
+        # Initialize the Settings instance
+        self.settings = Settings()
+
         self.register_routes()
 
     def register_routes(self):
         """
-        Registers routes to the Flask blueprint.
+        Registers routes to the FastAPI router.
 
         This method maps the /models and /favicon.ico routes to their respective handler methods.
         """
-        self.blueprint.add_url_rule('/models', 'models', self.models, methods=['GET'])
-        self.blueprint.add_url_rule('/favicon.ico', 'favicon', self.favicon)
+        self.router.add_api_route("/models", self.models, methods=["GET"])
+        self.router.add_api_route("/favicon.ico", self.favicon)
 
-    @staticmethod
-    def models():
+    async def models(self):
         """
         Handles the /models route.
 
@@ -40,43 +46,37 @@ class ModelsController:
         merges them into a single list, and returns them as a JSON response.
 
         Returns:
-            flask.Response: A JSON response containing a list of all available models.
+            JSONResponse: A JSON response containing a list of all available models.
         """
-        from server.app.config.base_config import BaseConfig
-        from server.app.clients.llama_cpp_client import LLamaCppClient
-        from server.app.clients.openai_client import OpenAIClient
-        from server.app.clients.anthropic_client import AnthropicClient
+        try:
+            # Retrieve models from local storage (LLama.cpp), OpenAI, and Anthropic
+            models_path = self.settings.project_model_path
+            # llama_cpp_models = LLamaCppClient(models_path).get_available_models()
+            openai_models = OpenAIClient(api_key=self.settings.API_KEY_OPEN_AI).get_available_models()
+            anthropic_models = AnthropicClient(api_key=self.settings.api_key_anthropic).get_available_models()
 
-        # Retrieve models from local storage (LLama.cpp), OpenAI, and Anthropic
-        models_path = BaseConfig.MODEL_PATH
-       # llama_cpp_models = LLamaCppClient(models_path).get_available_models()
-        openai_models = OpenAIClient(BaseConfig.API_KEY_OPEN_AI).get_available_models()
-        anthropic_models = AnthropicClient(BaseConfig.API_KEY_ANTHROPIC).get_available_models()
+            # Merge all models into a single list
+            all_models = openai_models + anthropic_models
 
-        # Merge all models into a single list
-        all_models = openai_models + anthropic_models
+            # Log the retrieved models for debugging purposes
+            # self.logger.debug(f"Retrieved LLama.cpp models: {llama_cpp_models}")
+            self.logger.debug(f"Retrieved OpenAI models: {openai_models}")
+            self.logger.debug(f"Retrieved Anthropic models: {anthropic_models}")
+            self.logger.debug(f"Total models retrieved: {len(all_models)}")
 
-        # Log the retrieved models for debugging purposes
-       # logger.debug(f"Retrieved LLama.cpp models: {llama_cpp_models}")
-        logger.debug(f"Retrieved OpenAI models: {openai_models}")
-        logger.debug(f"Retrieved Anthropic models: {anthropic_models}")
-        logger.debug(f"Total models retrieved: {len(all_models)}")
+            # Return the complete list of models as a JSON response
+            return JSONResponse(content=all_models)
+        except Exception as e:
+            self.logger.error(f"Error retrieving models: {str(e)}")
+            raise HTTPException(status_code=500, detail="An error occurred while retrieving models")
 
-        # Return the complete list of models as a JSON response
-        return jsonify(all_models)
-
-    @staticmethod
-    def favicon():
+    async def favicon(self):
         """
         Handles the /favicon.ico route.
 
         This method returns a 204 No Content response for the favicon.ico request.
 
         Returns:
-            flask.Response: An empty response with a 204 status code.
+            Response: An empty response with a 204 status code.
         """
-        return Response(status=204)
-
-
-# Create an instance of the controller
-models_controller = ModelsController()
+        return JSONResponse(status_code=204)
