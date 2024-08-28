@@ -2,7 +2,7 @@ import logging
 import json
 from anthropic import AsyncAnthropic
 
-from server.app.models.anthropic_model import AnthropicModel
+from ..models.anthropic_model import AnthropicModel
 
 class AnthropicClient:
     async_methods = ['fetch_completion']

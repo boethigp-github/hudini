@@ -2,9 +2,9 @@ import logging
 import json
 import openai
 from openai import AsyncOpenAI
-from server.app.models.success_generation_model import SuccessGenerationModel, Completion, Choice, Message, Usage
-from server.app.models.generation_error_details import ErrorGenerationModel
-from server.app.models.openai_model import OpenaiModel
+from ..models.success_generation_model import SuccessGenerationModel, Completion, Choice, Message, Usage
+from ..models.generation_error_details import ErrorGenerationModel
+from ..models.openai_model import OpenaiModel
 
 class OpenAIClient:
     async_methods = ['fetch_completion']

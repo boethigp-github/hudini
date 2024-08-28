@@ -4,8 +4,8 @@ from sqlalchemy.future import select
 from sqlalchemy.orm import sessionmaker
 import uuid
 from jsonschema import validate, ValidationError
-from server.app.models.prompts import Prompt
-from server.app.utils.swagger_loader import SwaggerLoader
+from ..models.prompts import Prompt
+from ..utils.swagger_loader import SwaggerLoader
 
 
 class PromptsController:

@@ -1,39 +1,53 @@
 import os
-import yaml
+import json
 import logging.config
 
+
 class Settings:
-    config: dict = None  # Define config as an instance variable
+    def __init__(self, config_file=None):
+        if config_file is None:
+            config_file = os.path.join(os.path.dirname(__file__), 'settings.json')
 
-    def __init__(self, **kwargs):
-        self.load_yaml_settings()  # Load YAML settings
+        with open(config_file, 'r') as f:
+            self.config = json.load(f)
 
-    def load_yaml_settings(self):
-        # Load the configuration from the settings.yaml file
-        config_file_path = os.path.join(os.path.dirname(__file__), 'settings.yaml')
-        with open(config_file_path, 'r') as file:
-            self.config = yaml.safe_load(file)
+        self.resolved_config = self.resolve_placeholders(self.config)
+
+    def resolve_placeholders(self, config):
+        resolved = {}
+        for key, value in config.items():
+            if isinstance(value, str):
+                resolved[key] = self.resolve_env_variable(value)
+            elif isinstance(value, dict):
+                resolved[key] = self.resolve_placeholders(value)
+            else:
+                resolved[key] = value
+        return resolved
+
+    def resolve_env_variable(self, value):
+        if isinstance(value, str) and value.startswith('${') and value.endswith('}'):
+            env_var, _, default = value[2:-1].partition(':')
+            return os.getenv(env_var, default)
+        return value
 
     def __getattr__(self, item):
-        """
-        Intercept attribute access to dynamically return configuration values.
-        If the attribute doesn't exist in the loaded configuration, raise an AttributeError.
-        """
-        value = self.get(item)
-        if value is not None:
-            return value
+        if item in self.resolved_config:
+            return self.resolved_config[item]
         raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{item}'")
 
     def get(self, item, default=None):
-        """
-        Retrieves the configuration value from the loaded YAML file.
-        Supports nested keys separated by '__' (double underscores).
-        """
-        keys = item.split('__')
-        value = self.config
-        try:
-            for key in keys:
-                value = value[key]
-            return value
-        except KeyError:
-            return default
+        keys = item.split('.')
+        value = self.resolved_config
+        for key in keys:
+            if isinstance(value, dict):
+                value = value.get(key, default)
+            else:
+                return default
+        return value
+
+    def items(self):
+        return self.resolved_config.items()
+
+
+# Initialize settings
+settings = Settings()

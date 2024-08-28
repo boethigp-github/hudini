@@ -1,38 +1,31 @@
-import sys
 import os
-import uvicorn
-import logging.config  # Make sure to import logging.config
+import asyncio
+from fastapi import FastAPI
 from app.factory.fast_api_app_factory import FastAPIAppFactory
-from app.config.settings import Settings  # Adjust import according to your project structure
+from app.utils.hudini_logger import hudini_logger  # Import the global hudini_logger
+from app.config.settings import Settings
 
-# Ensure the Python path is set correctly
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-# Initialize the settings object
+# Initialize settings
 settings = Settings()
 
-# Set up logging using the loaded configuration
-logging_config = settings.get('default__LOGGING_CONFIG')
-if logging_config:
-    logging.config.dictConfig(logging_config)
+# Initialize FastAPIAppFactory with the global logger
+app_factory = FastAPIAppFactory(settings)
 
-# Create the FastAPI app
-app_factory = FastAPIAppFactory()
-app = app_factory.create_app(settings)
+# Initialize the app asynchronously
+async def get_application() -> FastAPI:
+    return await app_factory.create_app()
 
-# Use the logger from the FastAPIAppFactory instance
-logger = app_factory.logger
+# Use asyncio.create_task() to initialize the app if an event loop is already running
+if __name__ != "__main__":
+    app = asyncio.create_task(get_application())
+else:
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    app = loop.run_until_complete(get_application())
 
 if __name__ == "__main__":
-    debug = settings.get('default__DEBUG')
-    logger.debug(f'DEBUG: {debug}')
-    logger.debug(f'ENV: {settings.get("default__ENV")}')
+    import uvicorn
 
-    # Start the FastAPI app with Uvicorn using the APP_PORT from the settings
-    uvicorn.run(
-        "server.run:app",  # Reference to the app variable
-        host="0.0.0.0",
-        port=settings.get('default__APP_PORT'),  # Use the APP_PORT from the settings
-        reload=debug,
-        log_level="debug" if debug else "info"
-    )
+    port = int(settings.get('APP_PORT', 5000))
+    hudini_logger.info(f"Starting Uvicorn server on port {port}")
+    uvicorn.run("run:app", host="0.0.0.0", port=port, reload=True)

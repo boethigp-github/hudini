@@ -4,7 +4,7 @@ from sqlalchemy import Column, String, DateTime, Text
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
 from datetime import datetime
-from server.app.db.base import Base  # Import Base from the shared module
+from ..db.base import Base  # Import Base from the shared module
 
 # SQLAlchemy model
 class Prompt(Base):  # Use the Base directly

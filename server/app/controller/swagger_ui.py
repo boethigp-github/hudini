@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import FileResponse, RedirectResponse
 import logging
-from server.app.utils.swagger_loader import SwaggerLoader
+from ..utils.swagger_loader import SwaggerLoader
 
 
 class SwaggerUiController:

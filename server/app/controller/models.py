@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
 import logging
-from server.app.config.settings import Settings
-from server.app.clients.llama_cpp_client import LLamaCppClient
-from server.app.clients.openai_client import OpenAIClient
-from server.app.clients.anthropic_client import AnthropicClient
+from ..config.settings import Settings
+from ..clients.llama_cpp_client import LLamaCppClient
+from ..clients.openai_client import OpenAIClient
+from ..clients.anthropic_client import AnthropicClient
 
 
 class ModelsController:

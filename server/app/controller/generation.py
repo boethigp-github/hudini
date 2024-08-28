@@ -5,9 +5,9 @@ import json
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Dict, Any
 import importlib
-from server.app.config.settings import Settings
-from server.app.clients.openai_client import OpenAIClient
-from server.app.clients.anthropic_client import AnthropicClient
+from ..config.settings import Settings
+from ..clients.openai_client import OpenAIClient
+from ..clients.anthropic_client import AnthropicClient
 from sqlalchemy.orm import sessionmaker
 
 
@@ -36,7 +36,7 @@ class GenerationController:
 
     def get_model_class(self, platform):
         try:
-            module = importlib.import_module(f"server.app.models.{platform}_model")
+            module = importlib.import_module(f"..models.{platform}_model")
             return getattr(module, f"{platform.capitalize()}Model")
         except ImportError as e:
             self.logger.error(f"Error importing model module for platform '{platform}': {str(e)}")
