@@ -60,40 +60,11 @@ class FastAPIAppFactory:
         cache = Cache(Cache.MEMORY, serializer=JsonSerializer())
         self.app.state.cache = cache
 
-     # def init_database(self, database_url):
-     #    self.logger.debug("Initializing database connection")
-        # engine: AsyncEngine = create_async_engine(database_url, echo=True)
-        # async_session: sessionmaker = sessionmaker(
-        #     engine,
-        #     class_=AsyncSession,
-        #     expire_on_commit=False
-        # )
-        # self.app.state.db = async_session
-
-    #     async def create_tables():
-    #         self.logger.debug("Starting to create tables")
-    #         async with engine.begin() as conn:
-    #             await conn.run_sync(self.Base.metadata.create_all)
-    #         self.logger.debug("Tables created successfully")
-    #
-    #     await create_tables()
-    #     self.logger.debug("Database table creation completed")
-    #
-    #     loop = asyncio.get_event_loop()
-    #     await loop.run_in_executor(None, self.run_migrations)
-    #     self.logger.debug("Database migrations completed")
-    #
-    # def run_migrations(self):
-    #     self.logger.debug("Starting Alembic migrations")
-    #     alembic_path = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'infrastructure', 'database', 'alembic.ini')
-    #     alembic_cfg = Config(alembic_path)
-    #     self.logger.debug(f"Using Alembic configuration file at: {alembic_path}")
-    #     command.upgrade(alembic_cfg, "head")
-    #     self.logger.debug("Alembic migrations applied successfully")
 
     def register_routes(self):
         self.logger.debug("Registering routes")
         self.app.include_router(swagger_ui_router)
         self.app.include_router(models_router)
+        self.logger.debug("Finished: Registering routes")
 
 

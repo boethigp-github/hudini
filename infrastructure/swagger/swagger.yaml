@@ -5,7 +5,7 @@ info:
   description: API for a Flask application with prompt management and text generation capabilities
 
 servers:
-  - url: http://localhost:5000
+  - url: http://localhost:8000
 
 tags:
 

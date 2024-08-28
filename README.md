@@ -72,7 +72,7 @@ You need to create an Anaconda environment with the name specified in the `.env.
 
 ```plaintext
 ANACONDA_ENV_NAME=hudini
-SERVER_URL=http://localhost:5000
+SERVER_URL=http://localhost:8000
 PROJECT_MODEL_PATH=C:\\projects\\llama.cpp\\models\\custom\
 PROJEKT_ROOT=C:\projects\llama.cpp\projects\src\llama-cpp-chat\src
 API_KEY_OPEN_AI=your-openai-api-key-here

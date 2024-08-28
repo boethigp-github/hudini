@@ -33,10 +33,10 @@ async def get_models():
         # Merge all models into a single list
         all_models = openai_models + anthropic_models
 
-        # Log the retrieved models for debugging purposes
-        logger.debug(f"Retrieved OpenAI models: {openai_models}")
-        logger.debug(f"Retrieved Anthropic models: {anthropic_models}")
-        logger.debug(f"Total models retrieved: {len(all_models)}")
+        # # Log the retrieved models for debugging purposes
+        # logger.debug(f"Retrieved OpenAI models: {openai_models}")
+        # logger.debug(f"Retrieved Anthropic models: {anthropic_models}")
+        # logger.debug(f"Total models retrieved: {len(all_models)}")
 
         # Return the complete list of models as a JSON response
         return JSONResponse(content=all_models)

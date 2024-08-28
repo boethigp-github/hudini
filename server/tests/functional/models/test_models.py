@@ -21,7 +21,7 @@ class TestModels(unittest.TestCase):
         cls.settings = Settings()
 
         # Set the BASE_URL from the loaded configuration
-        cls.BASE_URL = cls.settings.SERVER_URL
+        cls.BASE_URL = cls.settings.get("default").get("SERVER_URL");
 
     def test_models(self):
         """

@@ -20,6 +20,6 @@ app = app_factory.create_app()
 if __name__ == "__main__":
     import uvicorn
 
-    port = int(settings.get('APP_PORT', 5000))
+    port = int(settings.get('APP_PORT', 8000))
     hudini_logger.info(f"Starting Uvicorn server on port {port}")
-    uvicorn.run(app, host="0.0.0.0", port=port, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=port, reload=False)
