@@ -1,16 +1,23 @@
 import os
 import json
-import logging.config
+import logging
+from dotenv import load_dotenv
 
 
 class Settings:
     def __init__(self, config_file=None):
+        # Load environment variables from .env.local
+        env_path = os.path.join(os.path.dirname(__file__), '../../../infrastructure/environment/.env.local')
+        load_dotenv(env_path)  # Load the variables from the .env.local file
+
+        self.log_all_env_variables()
         if config_file is None:
             config_file = os.path.join(os.path.dirname(__file__), 'settings.json')
 
         with open(config_file, 'r') as f:
             self.config = json.load(f)
 
+        # Resolve placeholders in the config
         self.resolved_config = self.resolve_placeholders(self.config)
 
     def resolve_placeholders(self, config):
@@ -25,10 +32,23 @@ class Settings:
         return resolved
 
     def resolve_env_variable(self, value):
-        if isinstance(value, str) and value.startswith('${') and value.endswith('}'):
-            env_var, _, default = value[2:-1].partition(':')
-            return os.getenv(env_var, default)
+        logging.debug(f"Attempting to resolve value: {value}")
+
+        if value.startswith('env:'):
+            env_var = value[4:]
+            resolved_value = os.getenv(env_var)
+            logging.debug(f"Mapping 'env:{env_var}' to environment variable '{env_var}' with value '{resolved_value}'")
+
+            if resolved_value is None:
+                raise EnvironmentError(f"Environment variable {env_var} is not set.")
+            return resolved_value
+
         return value
+
+    def log_all_env_variables(self):
+        logging.debug("Logging all environment variables:")
+        for key, value in os.environ.items():
+            logging.debug(f"ENV {key}: {value}")
 
     def __getattr__(self, item):
         if item in self.resolved_config:
@@ -49,5 +69,13 @@ class Settings:
         return self.resolved_config.items()
 
 
-# Initialize settings
-settings = Settings()
+# Initialize logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Example usage
+if __name__ == "__main__":
+    # Initialize settings
+    settings = Settings()
+
+    # Logging the final resolved configuration for debugging purposes
+    logging.debug(f"Final resolved configuration: {settings.resolved_config}")

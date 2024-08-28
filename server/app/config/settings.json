@@ -3,20 +3,17 @@
   "app_env": "production",
   "debug": false,
   "default": {
-    "SERVER_URL": "${SERVER_URL:http://localhost:5000}",
-    "DEBUG": "${DEBUG:false}",
-    "ENV": "${ENV:development}",
-    "APP_LOG_LEVEL": "${APP_LOG_LEVEL:DEBUG}",
-    "APP_PROJECT_NAME": "${APP_PROJECT_NAME:HUDINI}",
-    "TESTING": "${TESTING:true}",
-    "SWAGGER_URL": "${SWAGGER_URL:/api/docs}",
-    "API_URL": "${API_URL:/swagger.yaml}",
-    "API_KEY_OPEN_AI": "${API_KEY_OPEN_AI:''}",
-    "API_KEY_ANTHROPIC": "${API_KEY_ANTHROPIC:''}",
-    "PROJECT_MODEL_PATH": "${PROJECT_MODEL_PATH:C:\\projects\\llama.cpp\\models\\custom\\}",
-    "DATABASE_URL": "${DATABASE_URL:postgresql+asyncpg://postgres:postgres@localhost/hudini}",
-    "SQLALCHEMY_TRACK_MODIFICATIONS": "${SQLALCHEMY_TRACK_MODIFICATIONS:false}",
-    "CORS_ORIGINS": "${CORS_ORIGINS:http://localhost:5173,https://editor.swagger.io}",
+    "SERVER_URL": "env:SERVER_URL",
+    "APP_DEBUG": "env:APP_DEBUG",
+    "APP_ENV": "env:APP_ENV",
+    "APP_LOG_LEVEL": "env:APP_LOG_LEVEL",
+    "APP_PROJECT_NAME": "env:APP_PROJECT_NAME",
+    "APP_TESTING": "env:APP_TESTING",
+    "APP_CORS_ORIGIN": "env:APP_CORS_ORIGIN",
+    "API_KEY_OPEN_AI": "env:API_KEY_OPEN_AI",
+    "API_KEY_ANTHROPIC": "env:API_KEY_ANTHROPIC",
+    "PROJECT_MODEL_PATH": "env:PROJECT_MODEL_PATH",
+    "DATABASE_URL": "env:DATABASE_URL",
     "LOGGING_CONFIG": {
       "version": 1,
       "disable_existing_loggers": false,
@@ -33,7 +30,7 @@
       },
       "root": {
         "handlers": ["console"],
-        "level": "${LOG_LEVEL:DEBUG}"
+        "level": "DEBUG"
       },
       "loggers": {
         "uvicorn": {
