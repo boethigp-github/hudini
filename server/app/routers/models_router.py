@@ -43,15 +43,3 @@ async def get_models():
     except Exception as e:
         logger.error(f"Error retrieving models: {str(e)}")
         raise HTTPException(status_code=500, detail=f"An error occurred while retrieving models {str(e)}")
-
-@router.get("/favicon.ico",  tags=["models"])
-async def get_favicon():
-    """
-    Handles the /favicon.ico route.
-
-    This method returns a 204 No Content response for the favicon.ico request.
-
-    Returns:
-        Response: An empty response with a 204 status code.
-    """
-    return Response(status_code=204)

@@ -1,6 +1,5 @@
 import sys
 import os
-from fastapi import FastAPI
 from server.app.factory.fast_api_app_factory import FastAPIAppFactory
 from server.app.utils.hudini_logger import hudini_logger  # Import the global hudini_logger
 from server.app.config.settings import Settings
@@ -19,7 +18,6 @@ app = app_factory.create_app()
 
 if __name__ == "__main__":
     import uvicorn
-
     port = int(settings.get('APP_PORT', 8000))
     hudini_logger.info(f"Starting Uvicorn server on port {port}")
     uvicorn.run(app, host="0.0.0.0", port=port, reload=False)
