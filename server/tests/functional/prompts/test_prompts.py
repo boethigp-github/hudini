@@ -12,7 +12,7 @@ class TestPrompts(unittest.TestCase):
         cls.settings = Settings()
 
         # Set the BASE_URL from the loaded configuration
-        cls.BASE_URL = cls.settings.SERVER_URL
+        cls.BASE_URL = cls.settings.get("default").get("SERVER_URL")
 
         # Load the prompt schema using SwaggerLoader
         cls.prompt_schema = SwaggerLoader("swagger.yaml").get_component_schema("Prompt")
@@ -65,11 +65,10 @@ class TestPrompts(unittest.TestCase):
         update_response = requests.patch(f"{self.BASE_URL}/prompt/{prompt_id}", json=invalid_payload)
         self.assertEqual(update_response.status_code, 400)
         update_data = update_response.json()
-        self.assertEqual(update_data['status'], "validation-error")
-
+        self.assertEqual(update_data['detail'], "'id' is a required property")
         self.prompt(prompt_id)
 
-    def test_invalid_status_in_prompt(self):
+    def test_invalid_status_in_creatprompt(self):
         invalid_payload = {
             "id": str(uuid.uuid4()),
             "user": "testuser",
@@ -79,7 +78,7 @@ class TestPrompts(unittest.TestCase):
         response = requests.post(f"{self.BASE_URL}/prompt", json=invalid_payload)
         self.assertEqual(response.status_code, 400)
         data = response.json()
-        self.assertEqual(data['status'], "validation-error")
+        self.assertEqual(data['detail'], "'invalid-status' is not one of ['initialized', 'prompt-saved', 'prompt-updated', 'prompt-deleted']")
 
 if __name__ == '__main__':
     unittest.main()
