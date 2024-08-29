@@ -1,7 +1,7 @@
 // src/services/api.js
 // noinspection ExceptionCaughtLocallyJS
 
-const API_BASE_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.SERVER_URL || 'http://localhost:8000';
 
 /**
  * Sends a prompt to the server and streams the response.

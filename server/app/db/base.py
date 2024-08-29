@@ -16,3 +16,7 @@ SQLALCHEMY_DATABASE_URL = settings.get("default").get("DATABASE_URL")
 engine = create_async_engine(SQLALCHEMY_DATABASE_URL, echo=True)
 async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
+import logging
+
+# Set the logging level for SQLAlchemy to WARNING
+logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)

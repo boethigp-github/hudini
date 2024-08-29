@@ -43,7 +43,11 @@ export default defineComponent({
     setup() {
         const { t } = useI18n();
         const previousPrompts = ref([]);
-        const serverUrl = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
+        const serverUrl = import.meta.env.SERVER_URL;
+
+      if (!serverUrl) {
+        console.error("SERVER_URL not set. Check Env. All envs", import.meta.env);
+      }
         const activeKey = ref([]);
 
         const copyToClipboard = (text) => {

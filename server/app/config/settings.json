@@ -5,6 +5,7 @@
   "default": {
     "SERVER_URL": "env:SERVER_URL",
     "APP_DEBUG": "env:APP_DEBUG",
+    "APP_CACHE": "env:APP_CACHE",
     "APP_ENV": "env:APP_ENV",
     "APP_LOG_LEVEL": "env:APP_LOG_LEVEL",
     "APP_PROJECT_NAME": "env:APP_PROJECT_NAME",

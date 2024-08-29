@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue';
 import path from 'path';
 
 export default defineConfig(({ mode }) => {
-    const env = loadEnv(mode, process.cwd(), '');
+    const env = loadEnv(mode, path.resolve(__dirname, '../../infrastructure/environment'), '');
 
     return {
         plugins: [vue()],
@@ -18,10 +18,12 @@ export default defineConfig(({ mode }) => {
             },
         },
         resolve: {
-            '@': path.resolve(__dirname, './../'),
+            alias: {
+                '@': path.resolve(__dirname, '../'),
+            },
         },
         define: {
-            'import.meta.env.VITE_SERVER_URL': JSON.stringify(env.SERVER_URL),
+            'import.meta.env.SERVER_URL': JSON.stringify(env.SERVER_URL),
         },
     };
 });
