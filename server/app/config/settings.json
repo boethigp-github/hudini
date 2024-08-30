@@ -15,6 +15,12 @@
     "API_KEY_ANTHROPIC": "env:API_KEY_ANTHROPIC",
     "PROJECT_MODEL_PATH": "env:PROJECT_MODEL_PATH",
     "DATABASE_URL": "env:DATABASE_URL",
+    "DB_SQL_ECHO": "env:DB_SQL_ECHO",
+    "DB_POOL_SIZE": "env:DB_POOL_SIZE",
+    "DB_MAX_OVERFLOW": "env:DB_MAX_OVERFLOW",
+    "DB_POOL_TIMEOUT": "env:DB_POOL_TIMEOUT",
+    "DB_POOL_RECYCLE": "env:DB_POOL_RECYCLE",
+    "DB_USE_NULL_POOL": "env:DB_USE_NULL_POOL",
     "LOGGING_CONFIG": {
       "version": 1,
       "disable_existing_loggers": false,
