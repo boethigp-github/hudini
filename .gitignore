@@ -1,21 +1,10 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
-node_modules
-dist
-dist-ssr
-*.local
+# Python bytecode
+*.py[cod]
+__pycache__/
 
 # Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+.vscode/
+.idea/
 .DS_Store
 *.suo
 *.ntvs*
@@ -23,3 +12,23 @@ dist-ssr
 *.sln
 *.sw?
 
+# Node.js modules and logs
+node_modules/
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Build output
+dist/
+dist-ssr/
+*.local
+
+# Cache directories
+server/var/cache/
+server/__pycache__/
+server/app/**/__pycache__/
+server/tests/**/__pycache__/
+server/var/cache/
