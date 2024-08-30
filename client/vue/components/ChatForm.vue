@@ -20,6 +20,7 @@
               <a-form-item class="textarea-container">
                 <div class="prompt-input-wrapper">
                   <a-textarea
+                      spellcheck="false"
                       v-model:value="prompt"
                       :rows="2"
                       :placeholder="t('enter_prompt')"
@@ -256,15 +257,31 @@ export default {
 .prompt_input {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #444444;
-  margin-top: 10px;
+  margin-top: 0px;
   padding-right: 100px; /* Make space for the button */
   width: 100%;
+  padding-bottom:5px;
+  overflow: hidden;
+  font-size: 14px;
+  font-family: 'Georgia', Tahoma, Geneva, Verdana, sans-serif;
+  border:none;
+
+  color: #292929;
+  font-weight: bold;
+
+
+
 }
 
-.send-button {
+.send-button, .send-button:hover {
   position: absolute;
   right: 10px;
-  top: 21px; /* Adjust this value to vertically align the button as desired */
+  top: 12px; /* Adjust this value to vertically align the button as desired */
+  background: darkgrey;
+}
+
+.send-button:hover {
+  background: #1f2611;
 }
 
 .textarea-container {

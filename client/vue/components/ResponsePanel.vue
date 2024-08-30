@@ -251,7 +251,7 @@ export default {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Georgia', Tahoma, Geneva, Verdana, sans-serif;
   overflow-x: hidden;
 }
 
@@ -368,7 +368,7 @@ export default {
 
 :deep(code[class*="language-"]) {
   background: none;
-  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  font-family: 'Georgia', Tahoma, Geneva, Verdana, sans-serif;
   text-align: left;
   white-space: pre;
   word-spacing: normal;
@@ -381,7 +381,7 @@ export default {
 
 .hljs {
   background: yellow;
-  font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  font-family: 'Georgia', Tahoma, Geneva, Verdana, sans-serif;
   text-align: left;
   white-space: pre;
   word-spacing: normal;

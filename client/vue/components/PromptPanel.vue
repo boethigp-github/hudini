@@ -1,26 +1,22 @@
 <!--suppress CssUnusedSymbol -->
 <template>
     <div class="prompt-panel">
+
         <a-collapse v-model:activeKey="activeKey" accordion>
             <a-collapse-panel v-for="prompt in previousPrompts" :key="prompt.id">
                 <template #header>
                     <div class="panel-header">
                         <span class="timestamp">{{ formatTimestamp(prompt.timestamp) }}</span>
                         <div class="header-actions">
-                            <icon-copy @click.stop="copyToClipboard(prompt.prompt)" class="copy-icon" />
-                            <a-button type="link" @click.stop="deletePrompt(prompt.id)" class="delete-button">
-                                {{ $t('delete') }}
-                            </a-button>
+                            <icon-copy @click.stop="copyToClipboard(prompt.prompt)" class="copy-icon" :title=" $t('copy_clipboard', 'Copy to clipboard')" />
+                            <icon-delete @click.stop="deletePrompt(prompt.id)" class="copy-icon" :title=" $t('delete')" />
                         </div>
                     </div>
                     <span class="title">{{ getTitle(prompt) }}</span>
                 </template>
                 <div class="prompt-content">
                     {{ prompt.prompt }}
-                    <icon-copy @click.stop="copyToClipboard(prompt.prompt)" class="copy-icon" />
-                    <a-button type="link" @click="deletePrompt(prompt.id)" class="delete-button">
-                        {{ $t('delete') }}
-                    </a-button>
+
                 </div>
             </a-collapse-panel>
         </a-collapse>
@@ -31,11 +27,12 @@
 import { ref, defineComponent, onMounted } from "vue";
 import { useI18n } from 'vue-i18n';
 import { message, Collapse, Button } from "ant-design-vue";
-import { CopyOutlined } from "@ant-design/icons-vue";
+import { CopyOutlined, DeleteFilled } from "@ant-design/icons-vue";
 
 export default defineComponent({
     components: {
         IconCopy: CopyOutlined,
+        IconDelete: DeleteFilled,
         ACollapse: Collapse,
         ACollapsePanel: Collapse.Panel,
         AButton: Button,
@@ -167,15 +164,23 @@ export default defineComponent({
     gap: 10px;
 }
 
-.copy-icon {
+.copy-icon, .copy-icon {
     cursor: pointer;
     font-size: 16px;
     color: #999;
+    margin-right: -5px;
+    margin-top: -13px;
+}
+
+.copy-icon:hover{
+  color: #999;
 }
 
 .delete-button {
     color: red;
     font-size: 12px;
+    margin-top: -20px;
+  margin-right: -20px;
 }
 
 .prompt-content {

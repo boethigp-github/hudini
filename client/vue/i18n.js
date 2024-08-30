@@ -30,8 +30,7 @@ const messages = {
         model_responses: 'Model Responses',
         prompts: 'Prompts',
         models: 'Models',
-        compare: 'Compare', // Added this line
-        // existing keys...
+        compare: 'Compare',
         model_selection: 'Model Selection',
         prompt_submission: 'Prompt Submission',
         content: 'Content',
@@ -118,7 +117,6 @@ const messages = {
         model_comparison: 'Comparaison de modèles',
         user_prompt: 'Invite de l\'utilisateur',
         no_error: 'Pas d\'erreur'
-
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
