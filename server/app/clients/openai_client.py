@@ -5,7 +5,7 @@ from openai import AsyncOpenAI
 from ..models.success_generation_model import SuccessGenerationModel, Completion, Choice, Message, Usage
 from ..models.generation_error_details import ErrorGenerationModel
 from ..models.openai_model import OpenaiModel
-
+from typing import Optional
 class OpenAIClient:
     async_methods = ['fetch_completion']
     def __init__(self, api_key: str):
@@ -28,9 +28,9 @@ class OpenAIClient:
 
 
 
-    async def fetch_completion(self, model: OpenaiModel, prompt: str, prompt_id: str):
+    async def fetch_completion(self, model: OpenaiModel, prompt: str, prompt_id: str, presence_penalty: Optional[float] = 0.0):
         try:
-            self.logger.debug(f"Fetching streaming completion for model: {model.id}")
+            self.logger.debug(f"Fetching streaming completion for model: {model.id} with presence_penalty: {presence_penalty}")
             stream = await self.client.chat.completions.create(
                 model=model.id,
                 messages=[
@@ -38,7 +38,8 @@ class OpenAIClient:
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.0,
-                stream=True
+                stream=True,
+                presence_penalty=presence_penalty  # Setze den presence_penalty hier
             )
 
             async def async_generator():
