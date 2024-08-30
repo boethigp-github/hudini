@@ -18,21 +18,23 @@
             <ModelSelection />
             <a-form layout="vertical" class="form">
               <a-form-item class="textarea-container">
-                <a-textarea
-                    v-model:value="prompt"
-                    :rows="2"
-                    :placeholder="t('enter_prompt')"
-                    @keydown="handleKeydown"
-                    class="prompt_input"
-                    :disabled="loading"
-                />
-                <a-button
-                    type="primary"
-                    @click="handleSubmit"
-                    :loading="loading"
-                    class="send-button">
-                  {{ t('send_button') }}
-                </a-button>
+                <div class="prompt-input-wrapper">
+                  <a-textarea
+                      v-model:value="prompt"
+                      :rows="2"
+                      :placeholder="t('enter_prompt')"
+                      @keydown="handleKeydown"
+                      class="prompt_input"
+                      :disabled="loading"
+                  />
+                  <a-button
+                      type="primary"
+                      @click="handleSubmit"
+                      :loading="loading"
+                      class="send-button">
+                    {{ t('send_button') }}
+                  </a-button>
+                </div>
               </a-form-item>
             </a-form>
           </a-tab-pane>
@@ -150,11 +152,8 @@ export default {
               ...responses.value[responseIndex],
               completion: responseModel.completion,
             };
-
-
           } else {
             // Add new response, ensuring no overwriting occurs
-
             responses.value.push(responseModel);
           }
         } catch (error) {
@@ -162,7 +161,6 @@ export default {
         }
       }
     };
-
 
     const handleSubmit = async () => {
       if (!prompt.value.trim() || modelsStore.selectedModels.length === 0) {
@@ -207,7 +205,6 @@ export default {
             loading.value = false;
           },
           () => {
-
             loading.value = false;
           }
       );
@@ -250,10 +247,24 @@ export default {
   width: 100%;
 }
 
+.prompt-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+}
+
 .prompt_input {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #444444;
   margin-top: 10px;
+  padding-right: 100px; /* Make space for the button */
+  width: 100%;
+}
+
+.send-button {
+  position: absolute;
+  right: 10px;
+  top: 21px; /* Adjust this value to vertically align the button as desired */
 }
 
 .textarea-container {

@@ -240,8 +240,8 @@ export default {
 }
 
 .response {
-  max-height: 64vh;
-  height: 64vh;
+  max-height: 100%;
+  height: 72.5vh;
   overflow-y: auto;
   padding: 10px;
   margin: 0 10px 0 0;
@@ -257,7 +257,7 @@ export default {
 
 .nav-container {
   background: white;
-  height: 64vh;
+  height: 72.5vh;
   display: flex;
   justify-content: center;
   align-items: flex-start;
