@@ -1,4 +1,11 @@
-Sure! Here's the complete README with the updated **Directory Structure** section reflecting your new directory structure:
+It seems like the last update request you provided was also included in your message. Let's focus on fixing the specific sections you mentioned:
+
+- **How Caching Works**
+- **Clearing the Cache**
+- **Running Specific Tests**
+- **Access Points**
+
+Here is the updated README with the correct internal links for these sections:
 
 ---
 
@@ -10,32 +17,31 @@ Sure! Here's the complete README with the updated **Directory Structure** sectio
 
 Hudini is an interactive chat interface that works with CPU magic on SLM, allowing real-time prompt input and response generation.
 
-## Inhaltsverzeichnis
+## Table of Contents
 
 - [Features](#features)
 - [Prerequisites](#prerequisites)
 - [Setup](#setup)
-    - [1. Clone the Repository and Install Dependencies](#1-clone-the-repository-and-install-dependencies)
-    - [2. Create the Anaconda Environment](#2-create-the-anaconda-environment)
-    - [3. Install Required Python Packages](#3-install-required-python-packages)
-    - [4. Set Up PostgreSQL Database](#4-set-up-postgresql-database)
-    - [5. Configure `.env.local`](#5-configure-envlocal)
-    - [6. Install the Llama Model](#6-install-the-llama-model)
+  - [1. Clone the Repository and Install Dependencies](#1-clone-the-repository-and-install-dependencies)
+  - [2. Create the Anaconda Environment](#2-create-the-anaconda-environment)
+  - [3. Install Required Python Packages](#3-install-required-python-packages)
+  - [4. Set Up PostgreSQL Database](#4-set-up-postgresql-database)
+  - [5. Configure Environment Variables](#5-configure-environment-variables)
+  - [6. Install the Llama Model](#6-install-the-llama-model)
 - [Running the Application](#running-the-application)
-    - [Automated Start (All Services)](#automated-start-all-services)
-    - [Manual Start with `flask run`](#manual-start-with-flask-run)
+  - [Manual Start with `fastapi run`](#manual-start-with-fastapi-run)
 - [Access Points](#access-points)
 - [Caching](#caching)
-    - [How Caching Works](#how-caching-works)
-    - [Clearing the Cache](#clearing-the-cache)
+  - [How Caching Works](#how-caching-works)
+  - [Clearing the Cache](#clearing-the-cache)
 - [Directory Structure](#directory-structure)
 - [Running Backend Tests](#running-backend-tests)
-    - [Running Specific Tests](#running-specific-tests)
-    - [Understanding Test Results](#understanding-test-results)
+  - [Running Specific Tests](#running-specific-tests)
+  - [Understanding Test Results](#understanding-test-results)
 - [Frontend Tests](#frontend-tests)
-    - [Installing Necessary Packages](#installing-necessary-packages)
-    - [Running the Tests](#running-the-tests)
-    - [Example Test Code](#example-test-code)
+  - [Installing Necessary Packages](#installing-necessary-packages)
+  - [Running the Tests](#running-the-tests)
+  - [Example Test Code](#example-test-code)
 
 ## Features
 
@@ -49,7 +55,7 @@ Hudini is an interactive chat interface that works with CPU magic on SLM, allowi
 
 - [Node.js](https://nodejs.org/) (v12+)
 - [Git](https://git-scm.com/)
-- [Python](https://www.python.org/) (3.7+)
+- [Python](https://www.python.org/) (3.9+)
 - [Anaconda](https://www.anaconda.com/) (for managing Python environments)
 - [PostgreSQL](https://www.postgresql.org/) (for database management)
 - [Hugging Face CLI](https://huggingface.co/docs/huggingface_hub/quick-start) (for downloading models)
@@ -66,24 +72,43 @@ npm install
 
 ### 2. Create the Anaconda Environment
 
-You need to create an Anaconda environment with the name specified in the `.env.local` file. First, ensure that the `.env.local` file contains the environment name:
+You need to create an Anaconda environment with the name specified in the environment variables. First, ensure that the environment variables file contains the environment name:
 
-**Example `.env.local` content:**
+**Example environment variables content:**
 
 ```plaintext
 ANACONDA_ENV_NAME=hudini
-SERVER_URL=http://localhost:8000
+SERVER_URL=http://localhost:80
 PROJECT_MODEL_PATH=C:\\projects\\llama.cpp\\models\\custom\
-PROJEKT_ROOT=C:\projects\llama.cpp\projects\src\llama-cpp-chat\src
+PROJECT_ROOT=C:\projects\llama.cpp\projects\src\llama-cpp-chat\src
+
+# Replace these with your actual API keys
 API_KEY_OPEN_AI=your-openai-api-key-here
+API_KEY_ANTHROPIC=your-anthropic-api-key-here
+
 PROJECT_FRONTEND_DIRECTORY=C:\\projects\\llama.cpp\\projects\\src\\llama-cpp-chat\\src\\frontend\
-DATABASE_URL=postgresql://username:password@localhost:5432/hudini
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost/hudini
+
+APP_DEBUG=False
+APP_ENV=development
+APP_TESTING=False
+APP_LOG_LEVEL=DEBUG
+APP_PROJECT_NAME=HUDINI
+APP_CORS_ORIGIN=http://localhost:5173,https://editor.swagger.io
+APP_CACHE=C:\projects\hudini\server\var\cache
+
+DB_SQL_ECHO=False
+DB_POOL_SIZE=20
+DB_MAX_OVERFLOW=5
+DB_POOL_TIMEOUT=30
+DB_POOL_RECYCLE=1800
+DB_USE_NULL_POOL=False
 ```
 
 Then, create the Anaconda environment using the name from the `ANACONDA_ENV_NAME` variable:
 
 ```bash
-conda create --name hudini python=3.8
+conda create --name hudini python=3.9
 ```
 
 Activate the environment:
@@ -94,7 +119,7 @@ conda activate hudini
 
 ### 3. Install Required Python Packages
 
-The `requirements.txt` file is located at `src/backend/requirements.txt`. To install the required Python packages, navigate to this directory and run:
+The `requirements.txt` file is located at `src/server/requirements.txt`. To install the required Python packages, navigate to this directory and run:
 
 ```bash
 cd src/server
@@ -121,8 +146,8 @@ CREATE DATABASE hudini
     WITH
     OWNER = postgres
     ENCODING = 'UTF8'
-    LC_COLLATE = 'German_Germany.1252'
-    LC_CTYPE = 'German_Germany.1252'
+    LC_COLLATE = 'en_US.UTF-8'
+    LC_CTYPE = 'en_US.UTF-8'
     LOCALE_PROVIDER = 'libc'
     TABLESPACE = pg_default
     CONNECTION LIMIT = -1
@@ -136,60 +161,84 @@ CREATE DATABASE hudini
   GRANT ALL PRIVILEGES ON DATABASE hudini TO your_username;
   ```
 
-**Step 4.3: Create the `prompts` Table**
+**Step 4.3: Create the `prompts`, `user_context`, and `users` Tables**
 
-- After setting up the database, you can create the `prompts` table using the following SQL commands:
+- After setting up the database, you can create the necessary tables using the following SQL commands:
 
 ```sql
--- Drop the prompts table if it exists
-DROP TABLE IF EXISTS public.prompts;
+-- Table: public.prompts
 
--- Create the prompts table
 CREATE TABLE IF NOT EXISTS public.prompts
 (
     id uuid NOT NULL,
-    prompt text COLLATE pg_catalog."default" NOT NULL,
+    prompt text COLLATE "en_US.UTF-8" NOT NULL,
     "timestamp" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "user" character varying(30) COLLATE pg_catalog."default",
-    status character varying(30) COLLATE pg_catalog."default",
+    "user" character varying(30) COLLATE "en_US.UTF-8",
+    status character varying(30) COLLATE "en_US.UTF-8",
     CONSTRAINT prompts_pkey PRIMARY KEY (id)
 )
 TABLESPACE pg_default;
 
--- Set the owner of the prompts table
 ALTER TABLE IF EXISTS public.prompts
     OWNER to postgres;
-    
-CREATE TABLE user_context (
-    id SERIAL PRIMARY KEY,
-    user_id UUID DEFAULT gen_random_uuid(),
-    created TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    updated TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-    context_data JSONB
-);    
+
+-- Index: idx_prompts_status
+
+CREATE INDEX IF NOT EXISTS idx_prompts_status
+    ON public.prompts USING btree
+    (status COLLATE "en_US.UTF-8" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+-- Index: idx_prompts_user
+
+CREATE INDEX IF NOT EXISTS idx_prompts_user
+    ON public.prompts USING btree
+    ("user" COLLATE "en_US.UTF-8" ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+-- Table: public.user_context
+
+CREATE TABLE IF NOT EXISTS public.user_context
+(
+    id integer NOT NULL DEFAULT nextval('user_context_id_seq'::regclass),
+    user_id uuid DEFAULT gen_random_uuid(),
+    created timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    updated timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
+    context_data jsonb,
+    CONSTRAINT user_context_pkey PRIMARY KEY (id)
+)
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.user_context
+    OWNER to postgres;
+
+-- Table: public.users
+
+CREATE TABLE IF NOT EXISTS public.users
+(
+    id integer NOT NULL DEFAULT nextval('users_id_seq'::regclass),
+    username character varying(50) COLLATE "en_US.UTF-8" NOT NULL,
+    email character varying(100) COLLATE "en_US.UTF-8" NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    last_login timestamp without time zone,
+    CONSTRAINT users_pkey PRIMARY KEY (id)
+)
+TABLESPACE pg_default;
+
+ALTER TABLE IF EXISTS public.users
+    OWNER to postgres;
+
+-- Index: idx_username
+
+CREATE INDEX IF NOT EXISTS idx_username
+    ON public.users USING btree
+    (username COLLATE "en_US.UTF-8" ASC NULLS LAST)
+    TABLESPACE pg_default;
 ```
 
-This command creates the `prompts` table in the `public` schema of the `hudini` database with the following columns:
+### 5. Configure Environment Variables
 
-- `id`: A UUID that serves as the primary key.
-- `prompt`: A text field to store the prompt.
-- `timestamp`: A timestamp that records when the prompt was created, defaulting to the current timestamp.
-- `user`: A character varying field for storing the user associated with the prompt.
-- `status`: A character varying field for storing the status of the prompt.
-
-### 5. Configure `.env.local`
-
-Ensure that your `.env.local` file is properly configured with all the necessary environment variables. Here is an example:
-
-```plaintext
-ANACONDA_ENV_NAME=hudini
-SERVER_URL=http://localhost:5000
-PROJECT_MODEL_PATH=C:\\projects\\llama.cpp\\models\\custom\
-PROJEKT_ROOT=C:\projects\llama.cpp\projects\src\llama-cpp-chat\src
-API_KEY_OPEN_AI=your-openai-api-key-here
-PROJECT_FRONTEND_DIRECTORY=C:\\projects\\llama.cpp\\projects\\src\\llama-cpp-chat\\src\\frontend\
-DATABASE_URL=postgresql://username:password@localhost:5432/hudini
-```
+Ensure that your environment variables are properly configured as shown in the earlier example. Replace the placeholder API keys with your actual API keys.
 
 ### 6. Install the Llama Model
 
@@ -202,55 +251,126 @@ huggingface-cli download TheBloke/LLaMA-7b-GGUF llama-7b.Q4_K_M.gguf --local-dir
 
 ## Running the Application
 
-### Automated Start (All Services)
+### Manual Start with `fastapi run`
 
-To start all services (backend, frontend, and Ollama server) together, run the following PowerShell script:
+If you prefer to start each service manually, follow these steps:
 
-```powershell
-cd <project_root>/bin
-.\StartAllServices.ps1
-```
+1. **Activate the Conda Environment:**
 
-### Manual Start with `flask run`
+   ```bash
+   conda activate hudini
+   ```
 
-If you prefer to start each service manually, you can now start the backend server using `flask run`. Follow these steps:
-
-1. **Backend Server:**
+2. **Backend Server:**
 
    Navigate to the server directory and start the server:
 
    ```bash
-   cd src/server
-   flask run
+   cd <project_root>\server
+   fastapi run run.py --port=
+
+80
    ```
 
-2. **Frontend Development Server:**
+   This starts the FastAPI application on port 80.
+
+3. **Frontend Development Server:**
 
    Navigate to the frontend directory and start the development server:
 
    ```bash
-   cd client
+   cd <project_root>\client
    npm run dev
    ```
 
-3. **Ollama Server:**
-
-   Start the Ollama server using the following command:
-
-   ```bash
-   <your userdir>\AppData\Local\Programs\Ollama\ollama.exe serve
-   ```
+   This starts the frontend on the default development port (likely 5173).
 
 ## Access Points
 
 - **Frontend:** [http://localhost:5173](http://localhost:5173)
-- **Backend API:** [http://localhost:5000](http://localhost:5000)
+- **Backend API:** [http://localhost:80](http://localhost:80)
 - **Ollama server:** [http://localhost:11434](http://localhost:11434)
-- **Swagger YAML:** [http://localhost:5000/swagger.yaml](http://localhost:5000/swagger.yaml)
-- **Swagger UI:** [http://localhost:5000/api/docs](http://localhost:5000/api/docs)
+- **Swagger YAML:** [http://localhost:80/swagger.yaml](http://localhost:80/swagger.yaml)
+- **Swagger UI:** [http://localhost:80/api/docs](http://localhost:80/api/docs)
 
 ## Caching
 
 ### How Caching Works
 
-Hudini uses a caching mechanism to store and retrieve data quickly, improving the performance of the application
+Hudini uses a caching mechanism to store and retrieve data quickly, improving the performance of the application. The cache is typically stored in the directory specified by the `APP_CACHE` environment variable.
+
+### Clearing the Cache
+
+To clear the cache, you can manually delete the contents of the cache directory specified by `APP_CACHE`.
+
+## Directory Structure
+
+Here's a typical directory structure for the Hudini project:
+
+```
+hudini/
+├── client/                         # Frontend source files
+│   ├── src/
+│   └── public/
+├── server/                         # Backend source files
+│   ├── run.py                      # FastAPI entry point
+│   └── requirements.txt            # Python dependencies
+├── models/                         # Model files (e.g., LLaMA)
+├── bin/                            # Scripts for starting/stopping services
+└── .env                            # Environment variables configuration
+```
+
+## Running Backend Tests
+
+### Running Specific Tests
+
+To run specific backend tests, you can use `pytest` with test file or function names. Navigate to the `server` directory and run:
+
+```bash
+cd <project_root>\server
+pytest -k "test_function_name"
+```
+
+Replace `"test_function_name"` with the name of the test function or file you want to run.
+
+### Understanding Test Results
+
+After running the tests, `pytest` will display the results, showing which tests passed, failed, or were skipped. Review the output to identify and resolve any issues.
+
+## Frontend Tests
+
+### Installing Necessary Packages
+
+Before running frontend tests, ensure that all dependencies are installed:
+
+```bash
+cd <project_root>\client
+npm install
+```
+
+### Running the Tests
+
+To run the frontend tests, use the following command:
+
+```bash
+npm run test
+```
+
+### Example Test Code
+
+Here’s an example of how you might write a test for a component in your frontend:
+
+```javascript
+import { render, screen } from '@testing-library/vue';
+import MyComponent from '@/components/MyComponent.vue';
+
+test('renders the component correctly', () => {
+  render(MyComponent);
+  const element = screen.getByText('Expected Text');
+  expect(element).toBeInTheDocument();
+});
+```
+
+---
+
+This README should now guide you through setting up and running your Hudini project correctly, with all the links and instructions properly updated. If you encounter any issues or need further assistance, feel free to reach out!
