@@ -38,6 +38,7 @@ Hudini is an interactive chat interface that works with CPU magic on SLM, allowi
 - [Running Backend Tests](#running-backend-tests)
   - [Running Specific Tests](#running-specific-tests)
   - [Understanding Test Results](#understanding-test-results)
+  - [Load Tests](#loadtests) 
 - [Frontend Tests](#frontend-tests)
   - [Installing Necessary Packages](#installing-necessary-packages)
   - [Running the Tests](#running-the-tests)
@@ -309,15 +310,52 @@ Here's a typical directory structure for the Hudini project:
 
 ```
 hudini/
-├── client/                         # Frontend source files
-│   ├── src/
-│   └── public/
-├── server/                         # Backend source files
-│   ├── run.py                      # FastAPI entry point
-│   └── requirements.txt            # Python dependencies
-├── models/                         # Model files (e.g., LLaMA)
-├── bin/                            # Scripts for starting/stopping services
-└── .env                            # Environment variables configuration
+├── client/                         
+├── docs/                           
+├── infrastructure/                 
+│   ├── database/                   
+│   │   ├── migrations/             
+│   │   │   ├── __init__.py         
+│   │   │   └── alembic.ini         
+│   ├── environment/                
+│   │   ├── .env.local              
+│   │   ├── .env.local.dist         
+│   │   └── __init__.py             
+│   ├── scripts/                    
+│   │   └── python/                 
+│   │       └── __init__.py         
+│   └── swagger/                    
+│       ├── __init__.py             
+│       └── swagger.yaml            
+├── server/                         
+│   ├── app/                        
+│   │   ├── adapters/               
+│   │   ├── cli/                    
+│   │   ├── clients/                
+│   │   ├── config/                 
+│   │   ├── core/                   
+│   │   ├── db/                     
+│   │   ├── factory/                
+│   │   ├── models/                 
+│   │   ├── routers/                
+│   │   ├── services/               
+│   │   └── utils/                  
+│   │       ├── __init__.py         
+│   │       └── extensions.py       
+│   ├── server/                     
+│   │   └── var/                    
+│   │       └── cache/              
+│   │           ├── cache.db        
+│   │           ├── cache.db-shm    
+│   │           └── cache.db-wal    
+│   └── storage/                    
+└── tests/                          
+    └── functional/                 
+        ├── generation/             
+        ├── models/                 
+        ├── prompts/                
+        └── swagger/                
+
 ```
 
 ## Running Backend Tests
@@ -369,6 +407,125 @@ test('renders the component correctly', () => {
   const element = screen.getByText('Expected Text');
   expect(element).toBeInTheDocument();
 });
+```
+
+### Loadtests
+
+#### Example
+
+Certainly! Here's the section of the README.md file that details how to set up and run Locust tests, based on your directory structure:
+
+---
+
+## Running Backend Tests
+
+### Running Specific Tests
+
+To run specific backend tests, you can use `pytest` with test file or function names. Navigate to the `server` directory and run:
+
+```bash
+cd <project_root>\server
+pytest -k "test_function_name"
+```
+
+Replace `"test_function_name"` with the name of the test function or file you want to run.
+
+### Running Locust Tests
+
+Locust is used to perform load testing on your backend APIs. Here’s how you can run Locust tests:
+
+1. **Navigate to the Locust Test Directory**
+
+   Navigate to the directory where your `locustfile.py` is located. In your project structure, this is under `tests/functional/models`.
+
+   ```bash
+   cd <project_root>\tests\functional\models
+   ```
+
+2. **Run Locust**
+
+   To execute the Locust tests, run the following command:
+
+   ```bash
+   locust -f locustfile.py
+   ```
+
+   This command will start the Locust load testing process, and you can monitor the results through the browser-based interface usually available at `http://localhost:8089`.
+
+### Example Locust Test Script
+
+Here is an example of a Locust test script that performs load testing on your FastAPI backend:
+
+```python
+from locust import HttpUser, task, events
+from locust.runners import MasterRunner, WorkerRunner, LocalRunner
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def setup_test_users(environment, msg):
+    # Example setup logic
+    logger.info("Setting up test users")
+    # You can initialize test users here, e.g., by making requests to your FastAPI application
+
+class ModelsUser(HttpUser):
+    host = "http://localhost:8000"  # Replace with your FastAPI server's address
+
+    @task
+    def get_models(self):
+        with self.client.get("/models", catch_response=True) as response:
+            if response.status_code == 200:
+                response.success()
+                logger.info("Request succeeded with status 200")
+            else:
+                response.failure(f"Got unexpected status code: {response.status_code}")
+                logger.error(f"Request failed with status code: {response.status_code}")
+
+    def on_start(self):
+        # Optional: Perform any setup actions (e.g., authentication) here
+        pass
+
+# Event listener to set up the custom message handler
+@events.test_start.add_listener
+def on_test_start(environment, **kwargs):
+    if isinstance(environment.runner, MasterRunner) or isinstance(environment.runner, WorkerRunner):
+        # Register the custom message handler on the runner
+        environment.runner.register_message('test_users', setup_test_users, concurrent=True)
+        logger.info("Custom message handler registered")
+
+# Main block to run the test script
+if __name__ == "__main__":
+    # Create a local runner (single machine)
+    runner = LocalRunner(env=None)
+
+    # Optionally: Start the web UI for monitoring
+    web_ui = runner.start_web_ui("127.0.0.1", 8089)
+
+    # Register the custom message handler (if not done in `on_test_start`)
+    if isinstance(runner, MasterRunner) or isinstance(runner, WorkerRunner):
+        runner.register_message('test_users', setup_test_users, concurrent=True)
+        logger.info("Custom message handler registered in main block")
+
+    # Start the test
+    logger.info("Starting the test")
+    runner.start(1, spawn_rate=1)
+    runner.greenlet.join()
+
+    # Stop the web UI after the test
+    if web_ui:
+        web_ui.stop()
+        logger.info("Web UI stopped")
+```
+
+### Understanding Test Results
+
+After running the Locust tests, you can view the results in the Locust web interface. It will show statistics like the number of requests per second, the response time distribution, and any failures that occurred during the test.
+
+---
+
+This README section now provides clear instructions on how to run Locust tests, including where to find the `locustfile.py`, how to execute it, and how to interpret the results.
 ```
 
 ---
