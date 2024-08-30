@@ -137,7 +137,7 @@ export default defineComponent({
 
 <style >
 .prompt-panel {
-    max-height: 70vh; /* Adjust this value to control the panel height */
+    max-height: 82vh; /* Adjust this value to control the panel height */
     overflow-y: auto; /* Ensure the content is scrollable */
     padding-right: 8px; /* Add some padding to avoid cutting off content */
 }
@@ -191,7 +191,7 @@ export default defineComponent({
     width:40%;
     max-width:100%!important;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    height: 90vh;
+    height: 89vh;
     align-items: center; /* Optional: Center vertically */
 }
 

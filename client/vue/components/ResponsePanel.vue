@@ -241,7 +241,7 @@ export default {
 
 .response {
   max-height: 100%;
-  height: 72.5vh;
+  height: 71.5vh;
   overflow-y: auto;
   padding: 10px;
   margin: 0 10px 0 0;
@@ -257,7 +257,7 @@ export default {
 
 .nav-container {
   background: white;
-  height: 72.5vh;
+  height: 71.5vh;
   display: flex;
   justify-content: center;
   align-items: flex-start;
