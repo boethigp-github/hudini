@@ -13,10 +13,10 @@ class ModelCategory(str, Enum):
 class Platform(str, Enum):
     OPENAI = "openai"
 
-
 class OpenaiModel(BaseModel):
     id: str
     object: str
+    model: str  # Dieses Feld ist erforderlich und muss in den Daten vorhanden sein
     created: Optional[int] = None
     owned_by: Optional[str] = None
     permission: Optional[List[str]] = None
@@ -34,6 +34,11 @@ class OpenaiModel(BaseModel):
         model_id = model_dict.get("id", "")
         category = cls.classify_model(model_id)
         platform = cls.determine_platform(model_id)
+
+        # Prüfen, ob das model-Feld vorhanden ist, wenn nicht, setze es auf model_id oder ein anderes Feld
+        if "model" not in model_dict:
+            model_dict["model"] = model_id  # Setze 'model' auf die ID, wenn kein 'model' Feld vorhanden ist
+
         return cls(
             **model_dict,
             category=category,

@@ -11,7 +11,6 @@ class ModelCategory(str, Enum):
 class Platform(str, Enum):
     ANTHROPIC = "anthropic"
 
-
 class AnthropicModel(BaseModel):
     id: str
     object: str = "model"  # Anthropic models are always of type "model"

@@ -399,6 +399,11 @@ components:
             - prompt-saved
             - prompt-updated
             - prompt-deleted
+            - completed
+            - in_progress
+            - failed
+
+
           description: The current status of the prompt
           example: "initialized"
         prompt:

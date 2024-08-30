@@ -1,60 +1,117 @@
-from locust import HttpUser, task, events
-from locust.runners import MasterRunner, WorkerRunner, LocalRunner
-import logging
+import unittest
+import requests
+import json
+import uuid
+from server.app.config.settings import Settings  # Passe den Import entsprechend deiner Projektstruktur an
 
-# Set up logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+class TestGenerateAndStream(unittest.TestCase):
 
-def setup_test_users(environment, msg):
-    # Example setup logic
-    logger.info("Setting up test users")
-    # You can initialize test users here, e.g., by making requests to your FastAPI application
+    @classmethod
+    def setUpClass(cls):
+        # Initialisiere die Einstellungen
+        cls.settings = Settings()
 
-class ModelsUser(HttpUser):
-    host = "http://localhost:8000"  # Replace with your FastAPI server's address
+        # Setze die SERVER_URL aus der geladenen Konfiguration
+        cls.SERVER_URL = cls.settings.get("default").get("SERVER_URL")
 
-    @task
-    def get_models(self):
-        with self.client.get("/models", catch_response=True) as response:
-            if response.status_code == 200:
-                response.success()
-                logger.info("Request succeeded with status 200")
-            else:
-                response.failure(f"Got unexpected status code: {response.status_code}")
-                logger.error(f"Request failed with status code: {response.status_code}")
+    def log_server_url(self):
+        # Logge die verwendete SERVER_URL
+        print(f"Using SERVER_URL: {self.SERVER_URL}")
 
-    def on_start(self):
-        # Optional: Perform any setup actions (e.g., authentication) here
-        pass
+    def test_stream_success(self):
+        """Teste den /stream-Endpunkt für eine erfolgreiche Streaming-Antwort."""
+        self.log_server_url()  # Logge die URL vor der Anfrage
+        stream_payload = {
+            "models": [
+                {
+                    "category": "text_completion",
+                    "description": "A language model for text completions",
+                    "id": "gpt-3.5-turbo",
+                    "max_tokens": 100,
+                    "model": "gpt-3.5-turbo",
+                    "object": "chat.completion",
+                    "platform": "openai",
+                    "temperature": 0.7
+                }
+            ],
+            "prompt": "Write a rant in the style of Linus Torvalds about using spaces instead of tabs for indentation in code.",
+            "prompt_id": str(uuid.uuid4()),
+            "method_name": "fetch_completion"
+        }
+        response = requests.post(f"{self.SERVER_URL}/stream", json=stream_payload, stream=True, timeout=10)
+        self.assertEqual(response.status_code, 200)  # Erwarte 200 OK
+        self.assertEqual(response.headers['Content-Type'], 'application/json')
 
-# Event listener to set up the custom message handler
-@events.test_start.add_listener
-def on_test_start(environment, **kwargs):
-    if isinstance(environment.runner, MasterRunner) or isinstance(environment.runner, WorkerRunner):
-        # Register the custom message handler on the runner
-        environment.runner.register_message('test_users', setup_test_users, concurrent=True)
-        logger.info("Custom message handler registered")
+        buffer = ""
+        for i, line in enumerate(response.iter_lines()):
+            if line:
+                buffer += line.decode('utf-8')
+                try:
+                    event_data = json.loads(buffer)
+                    self.assertIn("model", event_data)
+                    self.assertIn("completion", event_data)
+                    buffer = ""
+                except json.JSONDecodeError:
+                    continue
 
-# Main block to run the test script
-if __name__ == "__main__":
-    # Create a local runner (single machine)
-    runner = LocalRunner(env=None)
+            if i >= 50:  # Begrenze die Anzahl der empfangenen Zeilen
+                break
 
-    # Optionally: Start the web UI for monitoring
-    web_ui = runner.start_web_ui("127.0.0.1", 8089)
+    def test_stream_bad_request(self):
+        """Teste den /stream-Endpunkt für eine fehlerhafte Anfrage."""
+        self.log_server_url()  # Logge die URL vor der Anfrage
+        stream_payload = {
+            "prompt": "Tell me a short joke"
+            # Absichtlich das "models"-Feld weggelassen
+        }
+        response = requests.post(f"{self.SERVER_URL}/stream", json=stream_payload)
+        self.assertEqual(response.status_code, 422)  # Erwarte 400 Bad Request
 
-    # Register the custom message handler (if not done in `on_test_start`)
-    if isinstance(runner, MasterRunner) or isinstance(runner, WorkerRunner):
-        runner.register_message('test_users', setup_test_users, concurrent=True)
-        logger.info("Custom message handler registered in main block")
+    def test_stream_invalid_model(self):
+        """Teste den /stream-Endpunkt mit einem ungültigen Modell."""
+        self.log_server_url()  # Logge die URL vor der Anfrage
+        stream_payload = {
+            "models": [
+                {
+                    "category": "text_completion",
+                    "description": "Invalid model for testing",
+                    "id": "invalid-model",
+                    "max_tokens": 100,
+                    "model": "invalid-model",
+                    "object": "model",
+                    "platform": "unknown",  # Ungültige Plattform
+                    "temperature": 0.7
+                }
+            ],
+            "prompt": "This is a test",
+            "prompt_id": str(uuid.uuid4()),
+            "method_name": "fetch_completion"
+        }
+        response = requests.post(f"{self.SERVER_URL}/stream", json=stream_payload)
+        self.assertEqual(response.status_code, 422)  # Erwarte 422 Unprocessable Entity
 
-    # Start the test
-    logger.info("Starting the test")
-    runner.start(1, spawn_rate=1)
-    runner.greenlet.join()
+    def test_stream_unsupported_platform(self):
+        """Teste den /stream-Endpunkt mit einer nicht unterstützten Plattform."""
+        self.log_server_url()  # Logge die URL vor der Anfrage
+        stream_payload = {
+            "models": [
+                {
+                    "category": "text_completion",
+                    "description": "Model on unsupported platform",
+                    "id": "some-model",
+                    "max_tokens": 100,
+                    "model": "some-model",
+                    "object": "model",
+                    "platform": "unsupported_platform",  # Nicht unterstützte Plattform
+                    "temperature": 0.7
+                }
+            ],
+            "prompt": "This is a test",
+            "prompt_id": str(uuid.uuid4()),
+            "method_name": "fetch_completion"
+        }
+        response = requests.post(f"{self.SERVER_URL}/stream", json=stream_payload)
+        self.assertEqual(response.status_code, 422)  # Erwarte 422 Unprocessable Entity
 
-    # Stop the web UI after the test
-    if web_ui:
-        web_ui.stop()
-        logger.info("Web UI stopped")
+if __name__ == '__main__':
+    unittest.main()

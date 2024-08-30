@@ -40,8 +40,9 @@ async def get_models(cache=Depends(get_cache)):
 
         # Retrieve models from OpenAI and Anthropic
         openai_models = OpenAIClient(api_key=settings.get("default").get("API_KEY_OPEN_AI")).get_available_models()
-        anthropic_models = AnthropicClient(
-            api_key=settings.get("default").get("API_KEY_ANTHROPIC")).get_available_models()
+        #anthropic_models = AnthropicClient(
+        #    api_key=settings.get("default").get("API_KEY_ANTHROPIC")).get_available_models()
+        anthropic_models=[]
 
         # Merge all models into a single list
         all_models = openai_models + anthropic_models

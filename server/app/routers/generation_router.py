@@ -1,22 +1,3 @@
-# File: models/openai_model.py
-from pydantic import BaseModel, Field
-from typing import Optional
-
-
-class OpenaiModel(BaseModel):
-    platform: str
-    model: str
-    temperature: float
-    max_tokens: int
-    id: Optional[str] = None
-    model_id: Optional[str] = None
-    object: Optional[str] = None
-
-    class Config:
-        extra = "ignore"  # Allows additional fields without raising validation errors
-
-
-# File: routers/generation_router.py
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 import asyncio
@@ -32,7 +13,7 @@ from ..models.openai_model import OpenaiModel
 from ..models.anthropic_model import AnthropicModel
 import logging
 import uuid
-
+from ..models.generation_request import GenerationRequest
 router = APIRouter()
 settings = Settings()
 
@@ -71,41 +52,6 @@ class ModelConfig(BaseModel):
     object: Optional[str] = Field(None, description="Object type (if applicable)")
 
 
-class GenerationRequest(BaseModel):
-    models: List[ModelConfig] = Field(
-        ...,
-        min_items=1,
-        description="List of models to use for generation",
-        example=[
-            {
-                "platform": "openai",
-                "model": "gpt-3.5-turbo",
-                "temperature": 0.7,
-                "max_tokens": 100,
-                "model_id": None,
-                "object": "chat.completion"
-            }
-        ]
-    )
-    prompt: str = Field(
-        ...,
-        min_length=1,
-        description="The prompt for generation",
-        example="Write a rant in the style of Linus Torvalds about using spaces instead of tabs for indentation in code."
-    )
-    prompt_id: str = Field(
-        ...,
-        min_length=1,
-        description="Unique identifier for the prompt",
-        example="550e8400-e29b-41d4-a716-446655440000"
-    )
-    method_name: str = Field(
-        "fetch_completion",
-        description="Method to use for generation",
-        example="chat_completion"
-    )
-
-
 async def get_db():
     async with async_session_maker() as session:
         yield session
@@ -136,8 +82,26 @@ def validate_models_and_clients(models: List[ModelConfig], method_name: str) -> 
             raise HTTPException(status_code=400, detail=f"Method '{method_name}' not found for platform '{platform}'")
 
         model_dict = model_data.dict(exclude_none=True)
+
+        # Ensure 'id' is correctly set for OpenAI models
         if platform == "openai":
-            model_dict["id"] = model_dict.get("model_id")  # Map model_id to id for OpenAI
+            if not model_dict.get("id"):
+                if model_dict.get("model_id"):
+                    model_dict["id"] = model_dict["model_id"]
+                elif model_dict.get("model"):
+                    model_dict["id"] = model_dict["model"]
+                else:
+                    raise HTTPException(status_code=400, detail="Either 'model_id' or 'model' must be provided to set 'id' for OpenAI models.")
+
+        # Ensure 'id' is correctly set for Anthropic models
+        if platform == "anthropic":
+            if not model_dict.get("id"):
+                if model_dict.get("model_id"):
+                    model_dict["id"] = model_dict["model_id"]
+                elif model_dict.get("model"):
+                    model_dict["id"] = model_dict["model"]
+                else:
+                    raise HTTPException(status_code=400, detail="Either 'model_id' or 'model' must be provided to set 'id' for Anthropic models.")
 
         try:
             model_instance = model_class(**model_dict)

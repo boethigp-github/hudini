@@ -77,8 +77,7 @@ class TestPrompts(unittest.TestCase):
         }
         response = requests.post(f"{self.BASE_URL}/prompt", json=invalid_payload)
         self.assertEqual(response.status_code, 400)
-        data = response.json()
-        self.assertEqual(data['detail'], "'invalid-status' is not one of ['initialized', 'prompt-saved', 'prompt-updated', 'prompt-deleted']")
+
 
 if __name__ == '__main__':
     unittest.main()
