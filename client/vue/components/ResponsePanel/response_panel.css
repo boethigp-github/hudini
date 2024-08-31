@@ -67,6 +67,7 @@
   margin-left: auto;
   display: flex;
   justify-content: flex-end;
+
 }
 
 .response-metadata {
@@ -175,4 +176,9 @@
 /* Highlighted state */
 .highlighted :deep(.ant-list-item-meta-content) {
   box-shadow: 0 0 5px rgba(24, 144, 255, 0.5);
+}
+
+.bot-answer-md{
+  color: #444444;
+  font-size: 16px
 }

@@ -11,6 +11,7 @@
             >
               <template #renderItem="{ item }">
                 <a-list-item
+
                   :rowKey="item.id"
                   :data-prompt-id="dialog.promptId"
                   @mouseover="handleMouseOver(dialog.promptId)"
@@ -42,6 +43,7 @@
                       <template v-if="item.type === 'bot'">
                         <VueMarkdownIT
                           v-if="!item.error"
+                          class="bot-answer-md"
                           :breaks="true"
                           :plugins="plugins"
                           :source="item.content"
@@ -304,6 +306,7 @@ const comparisonData = computed(() => {
   background-color: #f0f0f0;  /* Lighter grey for bot responses */
   border-radius: 12px;
   padding: 10px;
+
 }
 
 /* Adjustments for list items */
@@ -312,6 +315,7 @@ const comparisonData = computed(() => {
   flex-direction: column;
   align-items: flex-start;
   font-family: 'Georgia', Tahoma, Geneva, Verdana, sans-serif;
+
 }
 
 :deep(.ant-card-body){

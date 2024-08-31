@@ -1,6 +1,6 @@
 <template>
   <div class="chat-container">
-    <div style="display: block;min-height: 10px;cursor: pointer" class="chat-header" >
+    <div style="display: block;min-height: 10px;cursor: pointer" class="chat-header">
       <div class="header">
         <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="60"/>
         <ChatMenu/>
@@ -9,33 +9,29 @@
         </div>
       </div>
     </div>
-    <div class="content">
-      <div class="chat-area">
-        <ResponsePanel
-            :responses="responses"
-            :loading="loading"/>
-        <!-- Ant Design Vue Tabs -->
-        <a-tabs default-active-key="1" class="chat-tabs" style="clear: both">
+    <a-flex direction="horizontal" gap="large" class="content">
+      <a-flex :style="{width:'90%'}" gap="middle" vertical>
+        <ResponsePanel :responses="responses" :loading="loading"/>
+        <a-tabs default-active-key="1" class="chat-tabs">
           <a-tab-pane key="1" :tab="t('model_selection')">
             <ModelSelection/>
             <a-form layout="vertical" class="form">
               <a-form-item class="textarea-container">
                 <div class="prompt-input-wrapper">
                   <a-textarea
-                      spellcheck="false"
-                      v-model:value="prompt"
-                      :rows="2"
-                      :placeholder="t('enter_prompt')"
-                      @keydown="handleKeydown"
-                      class="prompt_input"
-                      :disabled="loading"
-
+                    spellcheck="false"
+                    v-model:value="prompt"
+                    :rows="2"
+                    :placeholder="t('enter_prompt')"
+                    @keydown="handleKeydown"
+                    class="prompt_input"
+                    :disabled="loading"
                   />
                   <a-button
-                      type="primary"
-                      @click="handleSubmit"
-                      :loading="loading"
-                      class="send-button">
+                    type="primary"
+                    @click="handleSubmit"
+                    :loading="loading"
+                    class="send-button">
                     {{ t('send_button') }}
                   </a-button>
                 </div>
@@ -43,29 +39,29 @@
             </a-form>
           </a-tab-pane>
         </a-tabs>
-      </div>
-      <div class="previous-prompts">
-        <h2>{{ t('previous_prompts') }}</h2>
+      </a-flex>
+        <a-flex class="previous-prompts">
         <PromptPanel :key="updateTrigger"/>
-      </div>
-    </div>
+      </a-flex>
+
+    </a-flex>
   </div>
 </template>
 
 <script>
-import {ref, watch} from 'vue';
-import {useI18n} from 'vue-i18n';
-import {useModelsStore} from './../stores/models';
+import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useModelsStore } from './../stores/models';
 import PromptPanel from './PromptPanel.vue';
 import ResponsePanel from './ResponsePanel.vue';
 import LanguageSwitch from './LanguageSwitch.vue';
 import ModelSelection from './ModelSelection.vue';
-import {message} from 'ant-design-vue';
-import {streamPrompt, createPrompt} from './../services/api';
-import {v4 as uuidv4} from 'uuid';
+import { message } from 'ant-design-vue';
+import { streamPrompt, createPrompt } from './../services/api';
+import { v4 as uuidv4 } from 'uuid';
 import ChatMenu from './MainMenu.vue';
-import {Tabs, TabPane} from 'ant-design-vue';
-import {PlusOutlined, SettingOutlined} from '@ant-design/icons-vue';
+import { Tabs, TabPane, Button, Form, Input, Layout, Row, Col } from 'ant-design-vue';
+import { PlusOutlined, SettingOutlined } from '@ant-design/icons-vue';
 
 export default {
   name: 'ChatForm',
@@ -77,8 +73,14 @@ export default {
     ChatMenu,
     Tabs,
     TabPane,
+    Button,
+    Form,
+    Input,
+    Layout,
+    Row,
+    Col,
     PlusOutlined,
-    SettingOutlined
+    SettingOutlined,
   },
   setup() {
     const {t} = useI18n();
@@ -89,20 +91,6 @@ export default {
     const modelsStore = useModelsStore();
     const updateTrigger = ref(0);
     const buffer = ref(''); // Buffer to hold incomplete JSON strings
-
-    const showDrawer = () => {
-      drawerVisible.value = true;
-    };
-
-    const handleToolbarAction = ({key}) => {
-      if (key === 'new_chat') {
-        console.log("New Chat Started");
-        // Implement new chat initiation logic
-      } else if (key === 'settings') {
-        console.log("Settings Opened");
-        // Implement settings adjustment logic
-      }
-    };
 
     const createPromptServerside = async (prompt_id) => {
       if (!prompt.value || typeof prompt.value !== 'string' || prompt.value.trim() === '') {
@@ -117,9 +105,9 @@ export default {
         id: prompt_id,
       };
 
-      responses.value.push(promptData)
-
+      responses.value.push(promptData);
       updateTrigger.value++;
+
       try {
         await createPrompt(promptData);
       } catch (error) {
@@ -146,19 +134,16 @@ export default {
         try {
           responseModel = JSON.parse(jsonString);
 
-          // Check if the response with the same prompt_id and model exists
           const responseIndex = responses.value.findIndex(
               r => r.prompt_id === responseModel.prompt_id && r.model === responseModel.model
           );
 
           if (responseIndex !== -1) {
-            // Update existing response by replacing the entire object
             responses.value[responseIndex] = {
               ...responses.value[responseIndex],
               completion: responseModel.completion,
             };
           } else {
-            // Add new response, ensuring no overwriting occurs
             responses.value.push(responseModel);
           }
         } catch (error) {
@@ -174,7 +159,6 @@ export default {
       }
 
       loading.value = true;
-
       const prompt_id = uuidv4();
 
       await createPromptServerside(prompt_id);
@@ -215,7 +199,6 @@ export default {
       );
     };
 
-    // Watch for changes in loading, and clear the prompt when loading is set to false
     watch(loading, (newValue) => {
       if (!newValue) {
         prompt.value = '';
@@ -230,9 +213,6 @@ export default {
       handleKeydown,
       handleSubmit,
       updateTrigger,
-      showDrawer,
-      handleToolbarAction,
-      isHeaderVisible,
       t,
     };
   },
@@ -260,10 +240,8 @@ export default {
 }
 
 .prompt_input {
-
-
   margin-top: 2px;
-  padding-right: 100px; /* Make space for the button */
+  padding-right: 100px;
   width: 100%;
   padding-bottom: 5px;
   overflow: hidden;
@@ -272,14 +250,12 @@ export default {
   border: none;
   color: #292929;
   font-weight: bold;
-
-
 }
 
 .send-button, .send-button:hover {
   position: absolute;
   right: 10px;
-  top: 12px; /* Adjust this value to vertically align the button as desired */
+  top: 12px;
   background: darkgrey;
 }
 
@@ -291,8 +267,14 @@ export default {
   clear: both;
 }
 
-.chat-area {
+.content {
   width: 100%;
-  max-width: 100%;
+  display: flex;
 }
+
+.chat-area {
+  flex: 1;
+  max-width: 70%;
+}
+
 </style>

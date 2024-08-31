@@ -1,7 +1,7 @@
 <!--suppress CssUnusedSymbol -->
 <template>
-    <div class="prompt-panel">
-
+       <a-card size="small" class="previous-prompt-card" title="Default size card" >
+  <div class="prompt-panel">
         <a-collapse v-model:activeKey="activeKey" accordion>
             <a-collapse-panel v-for="prompt in previousPrompts" :key="prompt.id">
                 <template #header>
@@ -16,11 +16,11 @@
                 </template>
                 <div class="prompt-content">
                     {{ prompt.prompt }}
-
                 </div>
             </a-collapse-panel>
         </a-collapse>
     </div>
+       </a-card>
 </template>
 
 <script>
@@ -28,7 +28,7 @@ import { ref, defineComponent, onMounted } from "vue";
 import { useI18n } from 'vue-i18n';
 import { message, Collapse, Button } from "ant-design-vue";
 import { CopyOutlined, DeleteFilled } from "@ant-design/icons-vue";
-
+import { Card } from 'ant-design-vue';
 export default defineComponent({
     components: {
         IconCopy: CopyOutlined,
@@ -36,6 +36,7 @@ export default defineComponent({
         ACollapse: Collapse,
         ACollapsePanel: Collapse.Panel,
         AButton: Button,
+      'a-card': Card,
     },
     setup() {
         const { t } = useI18n();
@@ -134,11 +135,18 @@ export default defineComponent({
 
 <style >
 .prompt-panel {
-    max-height: 82vh; /* Adjust this value to control the panel height */
-    overflow-y: auto; /* Ensure the content is scrollable */
-    padding-right: 8px; /* Add some padding to avoid cutting off content */
+    max-height: 85vh;
+    overflow-y: auto;
+    width: 100%;
+
 }
 
+
+.previous-prompt-card{
+  width: 100%;
+  margin-top: 26px;
+
+}
 .acollapse {
     max-height: 100%; /* Make sure the collapse container fills the parent height */
     overflow-y: auto; /* Ensure content inside the collapse panel is scrollable */
@@ -190,12 +198,11 @@ export default defineComponent({
 
 /* Previous Prompts */
 .previous-prompts {
-    background-color: #fff;
-    padding: 10px;
+    background:none;
+    padding: 0;
     border-radius: 10px;
     width:40%;
     max-width:100%!important;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     height: 89vh;
     align-items: center; /* Optional: Center vertically */
 }
