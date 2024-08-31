@@ -390,8 +390,7 @@ components:
         user:
           type: string
           description: The user who created the prompt
-          minLength: 5
-          maxLength: 30
+          format: uuid
         status:
           type: string
           enum:

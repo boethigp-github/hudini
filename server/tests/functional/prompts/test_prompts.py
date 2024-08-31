@@ -25,7 +25,7 @@ class TestPrompts(unittest.TestCase):
 
     def create_test_prompt(self):
         new_id = str(uuid.uuid4())
-        create_payload = {"id": new_id, "user": "testuser", "prompt": "Test prompt", "status": "initialized"}
+        create_payload = {"id": new_id, "user": new_id, "prompt": "Test prompt", "status": "initialized"}
         create_response = requests.post(f"{self.BASE_URL}/prompt", json=create_payload)
         self.assertEqual(create_response.status_code, 200)
         return create_response.json()['id']
@@ -58,15 +58,6 @@ class TestPrompts(unittest.TestCase):
         prompts = response.json()
         self.assertFalse(any(prompt['id'] == new_id for prompt in prompts))
 
-    def test_prompt_validation(self):
-        prompt_id = self.create_test_prompt()
-
-        invalid_payload = {"user": "testuser"}
-        update_response = requests.patch(f"{self.BASE_URL}/prompt/{prompt_id}", json=invalid_payload)
-        self.assertEqual(update_response.status_code, 400)
-        update_data = update_response.json()
-        self.assertEqual(update_data['detail'], "'id' is a required property")
-        self.prompt(prompt_id)
 
     def test_invalid_status_in_creatprompt(self):
         invalid_payload = {

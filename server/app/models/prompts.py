@@ -1,5 +1,3 @@
-# models/prompt.py
-
 from sqlalchemy import Column, String, DateTime, Text
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
@@ -13,7 +11,7 @@ class Prompt(Base):  # Use the Base directly
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     prompt = Column(Text, nullable=False)
     timestamp = Column(DateTime, default=datetime.utcnow)
-    user = Column(String(30), nullable=False)
+    user = Column(UUID(as_uuid=True), nullable=False)  # Change to UUID type
     status = Column(String(30), nullable=False)
 
     def to_dict(self):
@@ -21,6 +19,6 @@ class Prompt(Base):  # Use the Base directly
             "id": str(self.id),  # Convert UUID to string for serialization
             "prompt": self.prompt,
             "timestamp": self.timestamp.isoformat(),  # Convert datetime to ISO format string
-            "user": self.user,
+            "user": str(self.user),  # Ensure user is serialized as string
             "status": self.status
         }

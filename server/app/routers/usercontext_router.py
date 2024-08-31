@@ -19,13 +19,19 @@ async def get_db():
     async with async_session_maker() as session:
         yield session
 
+
 def serialize_uuid_in_context_data(context_data):
+    logger.debug(f"Original context_data: {context_data}")
+
     if isinstance(context_data, list):
         for item in context_data:
             if isinstance(item, dict):
                 for key, value in item.items():
                     if isinstance(value, uuid.UUID):
-                        item[key] = str(value)
+                        item[key] = value.hex  # Use .hex to avoid the quotes in logs
+                        logger.debug(f"Converted UUID value to string in value {value.hex}  ")
+
+    logger.debug(f"Serialized context_data: {context_data}")
     return context_data
 
 @router.get("/usercontext", tags=["usercontext"], response_model=List[UserContextResponseModel])
