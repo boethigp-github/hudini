@@ -1,17 +1,25 @@
 <template>
-  <div class="chat-container">
-    <div style="display: block;min-height: 10px;cursor: pointer" class="chat-header">
-      <div class="header">
-        <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="60"/>
-        <ChatMenu/>
-        <div class="language-switch-container">
-          <LanguageSwitch/>
+    <a-layout>
+      <a-layout-header :style="{background:'#e9edf2', padding:'0 5px 0 5px'}">
+        <div style="display: block;min-height: 10px;cursor: pointer" class="chat-header">
+          <div class="header">
+            <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="60"/>
+            <ChatMenu/>
+            <div class="language-switch-container">
+              <LanguageSwitch/>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-    <a-flex direction="horizontal" gap="large" class="content">
-      <a-flex :style="{width:'90%'}" gap="middle" vertical>
-        <ResponsePanel :responses="responses" :loading="loading"/>
+      </a-layout-header>
+      <a-layout :style="{background:'#e9edf2',padding:'5px'}">
+        <a-layout-content  :style="{background:'#e9edf2', marginRight:'8px'}" >
+          <ResponsePanel :responses="responses" :loading="loading"/>
+        </a-layout-content>
+        <a-layout-sider theme="light" :style="{background:'#e9edf2'}" :collapsed="false">
+          <PromptPanel :key="updateTrigger"/>
+        </a-layout-sider>
+      </a-layout>
+      <a-layout-footer  :style="{background:'#e9edf2',marginTop:'-5px', padding:'5px'}"   >
         <a-tabs default-active-key="1" class="chat-tabs">
           <a-tab-pane key="1" :tab="t('model_selection')">
             <ModelSelection/>
@@ -19,19 +27,19 @@
               <a-form-item class="textarea-container">
                 <div class="prompt-input-wrapper">
                   <a-textarea
-                    spellcheck="false"
-                    v-model:value="prompt"
-                    :rows="2"
-                    :placeholder="t('enter_prompt')"
-                    @keydown="handleKeydown"
-                    class="prompt_input"
-                    :disabled="loading"
+                      spellcheck="false"
+                      v-model:value="prompt"
+                      :rows="2"
+                      :placeholder="t('enter_prompt')"
+                      @keydown="handleKeydown"
+                      class="prompt_input"
+                      :disabled="loading"
                   />
                   <a-button
-                    type="primary"
-                    @click="handleSubmit"
-                    :loading="loading"
-                    class="send-button">
+                      type="primary"
+                      @click="handleSubmit"
+                      :loading="loading"
+                      class="send-button">
                     {{ t('send_button') }}
                   </a-button>
                 </div>
@@ -39,29 +47,29 @@
             </a-form>
           </a-tab-pane>
         </a-tabs>
-      </a-flex>
-        <a-flex class="previous-prompts">
-        <PromptPanel :key="updateTrigger"/>
-      </a-flex>
+      </a-layout-footer>
+    </a-layout>
 
-    </a-flex>
+  <div class="chat-container">
+
   </div>
 </template>
 
 <script>
-import { ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useModelsStore } from './../stores/models';
+import {ref, watch} from 'vue';
+import {useI18n} from 'vue-i18n';
+import {useModelsStore} from './../stores/models';
 import PromptPanel from './PromptPanel.vue';
+import ArtifactsPanel from './ResponsePanel/ArtifactsPanels.vue';
 import ResponsePanel from './ResponsePanel.vue';
 import LanguageSwitch from './LanguageSwitch.vue';
 import ModelSelection from './ModelSelection.vue';
-import { message } from 'ant-design-vue';
-import { streamPrompt, createPrompt } from './../services/api';
-import { v4 as uuidv4 } from 'uuid';
+import {message} from 'ant-design-vue';
+import {streamPrompt, createPrompt} from './../services/api';
+import {v4 as uuidv4} from 'uuid';
 import ChatMenu from './MainMenu.vue';
-import { Tabs, TabPane, Button, Form, Input, Layout, Row, Col } from 'ant-design-vue';
-import { PlusOutlined, SettingOutlined } from '@ant-design/icons-vue';
+import {Tabs, TabPane, Button, Form, Input, Layout, Row, Col} from 'ant-design-vue';
+import {PlusOutlined, SettingOutlined} from '@ant-design/icons-vue';
 
 export default {
   name: 'ChatForm',
@@ -79,6 +87,7 @@ export default {
     Layout,
     Row,
     Col,
+    ArtifactsPanel,
     PlusOutlined,
     SettingOutlined,
   },
@@ -87,7 +96,7 @@ export default {
     const prompt = ref('');
     const responses = ref([]);
     const loading = ref(false);
-    const isHeaderVisible = ref(false);
+
     const modelsStore = useModelsStore();
     const updateTrigger = ref(0);
     const buffer = ref(''); // Buffer to hold incomplete JSON strings

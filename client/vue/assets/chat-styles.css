@@ -3,34 +3,14 @@ body {
     font-family: 'Open Sans', sans-serif;
     background-color: #f0f0f0;
     color: #333;
-}
-
-.chat-container {
-
-    gap: 10px;
-    padding: 10px;
-    background: #e9edf2;
-}
-
-/* Form Area */
-.form-area {
-    background-color: #fff;
-    padding: 20px;
-    width: 50%!important;
-    max-width: 40%!important;
-    border-radius: 10px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin:0;
+    padding: 0;
 }
 
 
 .prompt_input {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    margin-bottom: 10px;
-}
-
-.prompt-input {
-    /* Style the textarea */
-    width: 100%;
+        width: 100%;
     border: 1px solid #ddd; /* Subtle border */
     border-radius: 5px;
     padding: 10px;
@@ -79,14 +59,6 @@ body {
     margin-bottom: 10px;
 }
 
-/* Additional Styles */
-.header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
-
 .logo {
     border-radius: 10px; /* Rounded corners for a softer look */
     height: 45px;
@@ -98,33 +70,12 @@ body {
     font-weight: bold;
 }
 
-.content {
-    flex-grow: 1;
-    display: flex;
-    gap: 10px; /* Space between chat-area and previous-prompts */
-}
 
 
-.response {
-    height: 300px; /* Höhe anpassen, wie benötigt */
-    overflow-y: auto; /* Ermöglicht vertikales Scrollen */
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    padding: 10px;
-    background-color: #f9f9f9;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    display: flex;
-    flex-direction: column-reverse; /* Damit neuer Text unten erscheint */
-}
 .placeholder {
     font-style: italic;
     color: #999;
 }
-
-.form {
-    padding-top: 20px;
-}
-
 
 
 .panel-header {
@@ -155,12 +106,7 @@ body {
     cursor: pointer;
 }
 
-.prompt-content {
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    margin-bottom: 10px;
-}
+
 
 /* Ant Design Vue Customization (Example) */
 .ant-select {

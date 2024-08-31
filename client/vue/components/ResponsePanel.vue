@@ -3,7 +3,7 @@
     <a-col :span="23">
       <div id="response" class="response" ref="responseElement">
         <template v-for="(dialog, dialogIndex) in groupedResponses" :key="dialogIndex">
-          <a-card :id="`dialog_${dialog.promptId}`" class="dialog-card">
+          <a-card dense  size="small" :id="`dialog_${dialog.promptId}`" class="dialog-card">
             <a-list
               :data-source="dialog.items"
               :bordered="false"
@@ -11,7 +11,7 @@
             >
               <template #renderItem="{ item }">
                 <a-list-item
-
+                  size="small"
                   :rowKey="item.id"
                   :data-prompt-id="dialog.promptId"
                   @mouseover="handleMouseOver(dialog.promptId)"
@@ -27,7 +27,7 @@
 
                   <a-list-item-meta :class="[item.type, { highlighted: isHighlighted(dialog.promptId) }]">
                     <template #avatar>
-                      <user-outlined v-if="item.type === 'user'" class="user-icon" />
+                      <user-outlined  v-if="item.type === 'user'" class="user-icon" />
                       <robot-outlined v-else class="bot-icon" />
                     </template>
                     <template #title>
