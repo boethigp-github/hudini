@@ -6,6 +6,7 @@
       @close="closeDrawer"
       :width="width"
   >
+
     <div v-if="comparisonData.length > 0">
       <!-- Search inputs -->
 <!--      <div class="search-fields">-->
