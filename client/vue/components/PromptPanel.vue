@@ -135,7 +135,8 @@ export default defineComponent({
 
 <style >
 .prompt-panel {
-    max-height: 66.5vh;
+    height: auto;
+  max-height: 66.5vh;
     overflow-y: auto;
     width: 100%;
 }
