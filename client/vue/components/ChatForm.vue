@@ -108,7 +108,7 @@ export default {
 
       const promptData = {
         prompt: prompt.value.trim(),
-        user: 'anonymous',
+        user: '029c3baa-7a84-46cf-98f4-e10addda974a',
         status: 'prompt-saved',
         id: prompt_id,
       };

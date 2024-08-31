@@ -192,14 +192,19 @@ CREATE INDEX IF NOT EXISTS idx_prompts_user
 
 
 
+-- Table: public.user_context
+
+-- DROP TABLE IF EXISTS public.user_context;
+
 CREATE TABLE IF NOT EXISTS public.user_context
 (
     id integer NOT NULL DEFAULT nextval('user_context_id_seq'::regclass),
-    user_id uuid DEFAULT gen_random_uuid(),
     created timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     context_data jsonb,
-    threat_id uuid,
+    thread_id bigint,
+    "user" uuid,
+    prompt_id uuid,
     CONSTRAINT user_context_pkey PRIMARY KEY (id)
 )
 
@@ -207,6 +212,8 @@ TABLESPACE pg_default;
 
 ALTER TABLE IF EXISTS public.user_context
     OWNER to postgres;
+    
+
 
 -- Table: public.users
 

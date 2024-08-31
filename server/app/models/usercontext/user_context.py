@@ -8,7 +8,8 @@ class UserContextModel(Base):
     __tablename__ = 'user_context'  # Tabellenname in der Datenbank
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(PG_UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
+    user = Column(PG_UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
+    prompt_id = Column(PG_UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
     thread_id = Column(Integer, nullable=False)
     created = Column(DateTime, default=datetime.utcnow)
     updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -17,9 +18,14 @@ class UserContextModel(Base):
     def to_dict(self):
         return {
             "id": self.id,
-            "user_id": str(self.user_id),  # UUID als String
+            "user": str(self.user),  # Convert UUID to string
             "thread_id": self.thread_id,
-            "created": self.created.isoformat(),
-            "updated": self.updated.isoformat(),
-            "context_data": self.context_data,
+            "prompt_id": str(self.prompt_id),  # Convert UUID to string
+            "created": self.created.isoformat(),  # Format datetime as ISO string
+            "updated": self.updated.isoformat(),  # Format datetime as ISO string
+            "context_data": self.context_data,  # Leave JSON as-is
         }
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
