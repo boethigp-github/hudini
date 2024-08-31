@@ -1,6 +1,6 @@
 <template>
     <a-layout>
-      <a-layout-header :style="{background:'#e9edf2', padding:'0 5px 0 5px'}">
+     <a-layout-header :style="{background:'#e9edf2', padding:'0 5px 0 5px'}">
         <div style="display: block;min-height: 10px;cursor: pointer" class="chat-header">
           <div class="header">
             <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="60"/>
@@ -11,11 +11,11 @@
           </div>
         </div>
       </a-layout-header>
-      <a-layout :style="{background:'#e9edf2',padding:'5px'}">
-        <a-layout-content  :style="{background:'#e9edf2', marginRight:'8px'}" >
+      <a-layout>
+        <a-layout-content :style="{background:'#e9edf2', marginRight:'8px', width:'500px'}" >
           <ResponsePanel :responses="responses" :loading="loading"/>
         </a-layout-content>
-        <a-layout-sider theme="light" :style="{background:'#e9edf2'}" :collapsed="false">
+           <a-layout-sider width="25%" theme="light" :style="{background:'#e9edf2', width:'90%'}" :collapsed="false">
           <PromptPanel :key="updateTrigger"/>
         </a-layout-sider>
       </a-layout>
@@ -50,9 +50,8 @@
       </a-layout-footer>
     </a-layout>
 
-  <div class="chat-container">
 
-  </div>
+
 </template>
 
 <script>
@@ -276,14 +275,5 @@ export default {
   clear: both;
 }
 
-.content {
-  width: 100%;
-  display: flex;
-}
-
-.chat-area {
-  flex: 1;
-  max-width: 70%;
-}
 
 </style>

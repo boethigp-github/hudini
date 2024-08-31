@@ -138,13 +138,13 @@ export default defineComponent({
     max-height: 66.5vh;
     overflow-y: auto;
     width: 100%;
-
 }
 
 
 .previous-prompt-card{
-  width: 100%;
-  margin-top: 0px;
+  width: 100%!important;
+
+  margin-top: 0;
 
 }
 .acollapse {
