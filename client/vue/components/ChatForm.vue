@@ -1,10 +1,12 @@
 <template>
   <div class="chat-container">
-    <div class="header">
-      <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="60" />
-      <ChatMenu />
-      <div class="language-switch-container">
-        <LanguageSwitch />
+    <div style="display: block;min-height: 10px;cursor: pointer" class="chat-header" >
+      <div class="header">
+        <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="60"/>
+        <ChatMenu/>
+        <div class="language-switch-container">
+          <LanguageSwitch/>
+        </div>
       </div>
     </div>
     <div class="content">
@@ -15,7 +17,7 @@
         <!-- Ant Design Vue Tabs -->
         <a-tabs default-active-key="1" class="chat-tabs" style="clear: both">
           <a-tab-pane key="1" :tab="t('model_selection')">
-            <ModelSelection />
+            <ModelSelection/>
             <a-form layout="vertical" class="form">
               <a-form-item class="textarea-container">
                 <div class="prompt-input-wrapper">
@@ -27,6 +29,7 @@
                       @keydown="handleKeydown"
                       class="prompt_input"
                       :disabled="loading"
+
                   />
                   <a-button
                       type="primary"
@@ -43,26 +46,26 @@
       </div>
       <div class="previous-prompts">
         <h2>{{ t('previous_prompts') }}</h2>
-        <PromptPanel :key="updateTrigger" />
+        <PromptPanel :key="updateTrigger"/>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useModelsStore } from './../stores/models';
+import {ref, watch} from 'vue';
+import {useI18n} from 'vue-i18n';
+import {useModelsStore} from './../stores/models';
 import PromptPanel from './PromptPanel.vue';
 import ResponsePanel from './ResponsePanel.vue';
 import LanguageSwitch from './LanguageSwitch.vue';
 import ModelSelection from './ModelSelection.vue';
-import { message } from 'ant-design-vue';
-import { streamPrompt, createPrompt } from './../services/api';
-import { v4 as uuidv4 } from 'uuid';
+import {message} from 'ant-design-vue';
+import {streamPrompt, createPrompt} from './../services/api';
+import {v4 as uuidv4} from 'uuid';
 import ChatMenu from './MainMenu.vue';
-import { Tabs, TabPane } from 'ant-design-vue';
-import { PlusOutlined, SettingOutlined } from '@ant-design/icons-vue';
+import {Tabs, TabPane} from 'ant-design-vue';
+import {PlusOutlined, SettingOutlined} from '@ant-design/icons-vue';
 
 export default {
   name: 'ChatForm',
@@ -78,10 +81,11 @@ export default {
     SettingOutlined
   },
   setup() {
-    const { t } = useI18n();
+    const {t} = useI18n();
     const prompt = ref('');
     const responses = ref([]);
     const loading = ref(false);
+    const isHeaderVisible = ref(false);
     const modelsStore = useModelsStore();
     const updateTrigger = ref(0);
     const buffer = ref(''); // Buffer to hold incomplete JSON strings
@@ -90,7 +94,7 @@ export default {
       drawerVisible.value = true;
     };
 
-    const handleToolbarAction = ({ key }) => {
+    const handleToolbarAction = ({key}) => {
       if (key === 'new_chat') {
         console.log("New Chat Started");
         // Implement new chat initiation logic
@@ -185,7 +189,7 @@ export default {
 
       const selectedModelInfo = modelsStore.selectedModels.map(modelId => {
         const fullModelInfo = serviceResponse.find(model => model.id === modelId);
-        return fullModelInfo || { id: modelId, platform: 'unknown' };
+        return fullModelInfo || {id: modelId, platform: 'unknown'};
       });
 
       const promptData = {
@@ -228,6 +232,7 @@ export default {
       updateTrigger,
       showDrawer,
       handleToolbarAction,
+      isHeaderVisible,
       t,
     };
   },
@@ -255,20 +260,18 @@ export default {
 }
 
 .prompt_input {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  color: #444444;
-  margin-top: 0px;
+
+
+  margin-top: 2px;
   padding-right: 100px; /* Make space for the button */
   width: 100%;
-  padding-bottom:5px;
+  padding-bottom: 5px;
   overflow: hidden;
   font-size: 14px;
   font-family: 'Georgia', Tahoma, Geneva, Verdana, sans-serif;
-  border:none;
-
+  border: none;
   color: #292929;
   font-weight: bold;
-
 
 
 }
