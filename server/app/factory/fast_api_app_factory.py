@@ -7,6 +7,7 @@ from ..utils.hudini_logger import hudini_logger
 from ..routers.models_router import router as models_router
 from ..routers.prompts_router import router as prompts_router
 from ..routers.generation_router import router as generation_router
+from ..routers.usercontext_router import router as usercontext_router
 
 class FastAPIAppFactory:
     def __init__(self, settings):
@@ -56,4 +57,5 @@ class FastAPIAppFactory:
         self.app.include_router(models_router)
         self.app.include_router(prompts_router)
         self.app.include_router(generation_router)
+        self.app.include_router(usercontext_router)
         self.logger.debug("Finished: Registering routes")

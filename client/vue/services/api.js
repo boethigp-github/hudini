@@ -1,6 +1,3 @@
-// src/services/api.js
-// noinspection ExceptionCaughtLocallyJS
-
 const API_BASE_URL = import.meta.env.SERVER_URL || 'http://localhost:8000';
 
 /**
@@ -64,12 +61,6 @@ export const getModels = async () => {
  * @param {Object} promptData - The prompt data to save.
  * @returns {Promise<Object>} A promise that resolves to the server's response.
  */
-
-/**
- * Saves a prompt to the server.
- * @param {Object} promptData - The prompt data to save.
- * @returns {Promise<Object>} A promise that resolves to the server's response.
- */
 export const createPrompt = async (promptData) => {
     try {
         const response = await fetch(`${API_BASE_URL}/prompt`, {
@@ -92,3 +83,26 @@ export const createPrompt = async (promptData) => {
     }
 };
 
+/**
+ * Sends the collected responses to the /usercontext endpoint.
+ * @param {object} structuredResponse - Array of response objects to send.
+ * @returns {Promise<void>} A promise that resolves when the request is complete.
+ */
+export const sendResponsesToUserContext = async (structuredResponse) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/usercontext`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(structuredResponse), // Directly send the structured response
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+    } catch (error) {
+        console.error('Error sending responses to /usercontext:', error);
+        throw error;
+    }
+};

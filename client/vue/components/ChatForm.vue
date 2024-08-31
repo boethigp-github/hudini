@@ -64,7 +64,7 @@ import ResponsePanel from './ResponsePanel.vue';
 import LanguageSwitch from './LanguageSwitch.vue';
 import ModelSelection from './ModelSelection.vue';
 import {message} from 'ant-design-vue';
-import {streamPrompt, createPrompt} from './../services/api';
+import {streamPrompt, createPrompt, sendResponsesToUserContext} from './../services/api';
 import {v4 as uuidv4} from 'uuid';
 import ChatMenu from './MainMenu.vue';
 import {Tabs, TabPane, Button, Form, Input, Layout, Row, Col} from 'ant-design-vue';
@@ -203,6 +203,21 @@ export default {
           },
           () => {
             loading.value = false;
+
+            // Wrap responses in the required format before sending
+            const structuredResponse = {
+                prompt_id: responses.value[0]['id'], // Directly access the prompt_id from the first response
+                user: responses.value[0]['user'], // Directly access the prompt_id from the first response
+                thread_id: 1, // Directly access the prompt_id from the first response
+                context_data: responses.value, // Include all responses
+            };
+
+
+            // Send the structured response to /usercontext
+            sendResponsesToUserContext(structuredResponse)
+                .catch(error => {
+                    console.error('Error sending responses to /usercontext:', error);
+                });
           }
       );
     };

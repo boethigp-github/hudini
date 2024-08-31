@@ -18,9 +18,9 @@ class Prompt(Base):  # Use the Base directly
 
     def to_dict(self):
         return {
-            "id": str(self.id),
+            "id": str(self.id),  # Convert UUID to string for serialization
             "prompt": self.prompt,
-            "timestamp": self.timestamp.isoformat(),
+            "timestamp": self.timestamp.isoformat(),  # Convert datetime to ISO format string
             "user": self.user,
             "status": self.status
         }

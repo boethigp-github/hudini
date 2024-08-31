@@ -68,6 +68,8 @@ class OpenAIClient:
                             usage=Usage(completion_tokens=0, prompt_tokens=0, total_tokens=0)
                         )
 
+
+
                         yield (SuccessGenerationModel(
                             prompt_id=prompt_id,
                             model=model.id,

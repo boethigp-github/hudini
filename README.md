@@ -1,11 +1,4 @@
-It seems like the last update request you provided was also included in your message. Let's focus on fixing the specific sections you mentioned:
-
-- **How Caching Works**
-- **Clearing the Cache**
-- **Running Specific Tests**
-- **Access Points**
-
-Here is the updated README with the correct internal links for these sections:
+Certainly! Here’s a complete README documentation for your Hudini project, including all the sections discussed:
 
 ---
 
@@ -166,7 +159,7 @@ CREATE DATABASE hudini
 
 - After setting up the database, you can create the necessary tables using the following SQL commands:
 
-```sql
+```postgressql
 -- Table: public.prompts
 
 CREATE TABLE IF NOT EXISTS public.prompts
@@ -197,7 +190,7 @@ CREATE INDEX IF NOT EXISTS idx_prompts_user
     ("user" COLLATE "en_US.UTF-8" ASC NULLS LAST)
     TABLESPACE pg_default;
 
--- Table: public.user_context
+
 
 CREATE TABLE IF NOT EXISTS public.user_context
 (
@@ -206,8 +199,10 @@ CREATE TABLE IF NOT EXISTS public.user_context
     created timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     context_data jsonb,
+    threat_id uuid,
     CONSTRAINT user_context_pkey PRIMARY KEY (id)
 )
+
 TABLESPACE pg_default;
 
 ALTER TABLE IF EXISTS public.user_context
@@ -268,16 +263,16 @@ If you prefer to start each service manually, follow these steps:
 
    ```bash
    cd <project_root>\server
-   fastapi run run.py --port=
-
-80
+   fastapi run run.py --port=80
    ```
 
    This starts the FastAPI application on port 80.
 
 3. **Frontend Development Server:**
 
-   Navigate to the frontend directory and start the development server:
+   Navigate to the
+
+ frontend directory and start the development server:
 
    ```bash
    cd <project_root>\client
@@ -355,7 +350,6 @@ hudini/
         ├── models/                 
         ├── prompts/                
         └── swagger/                
-
 ```
 
 ## Running Backend Tests
@@ -374,61 +368,6 @@ Replace `"test_function_name"` with the name of the test function or file you wa
 ### Understanding Test Results
 
 After running the tests, `pytest` will display the results, showing which tests passed, failed, or were skipped. Review the output to identify and resolve any issues.
-
-## Frontend Tests
-
-### Installing Necessary Packages
-
-Before running frontend tests, ensure that all dependencies are installed:
-
-```bash
-cd <project_root>\client
-npm install
-```
-
-### Running the Tests
-
-To run the frontend tests, use the following command:
-
-```bash
-npm run test
-```
-
-### Example Test Code
-
-Here’s an example of how you might write a test for a component in your frontend:
-
-```javascript
-import { render, screen } from '@testing-library/vue';
-import MyComponent from '@/components/MyComponent.vue';
-
-test('renders the component correctly', () => {
-  render(MyComponent);
-  const element = screen.getByText('Expected Text');
-  expect(element).toBeInTheDocument();
-});
-```
-
-### Loadtests
-
-#### Example
-
-Certainly! Here's the section of the README.md file that details how to set up and run Locust tests, based on your directory structure:
-
----
-
-## Running Backend Tests
-
-### Running Specific Tests
-
-To run specific backend tests, you can use `pytest` with test file or function names. Navigate to the `server` directory and run:
-
-```bash
-cd <project_root>\server
-pytest -k "test_function_name"
-```
-
-Replace `"test_function_name"` with the name of the test function or file you want to run.
 
 ### Running Locust Tests
 
@@ -519,15 +458,50 @@ if __name__ == "__main__":
         logger.info("Web UI stopped")
 ```
 
-### Understanding Test Results
+## Frontend Tests
 
-After running the Locust tests, you can view the results in the Locust web interface. It will show statistics like the number of requests per second, the response time distribution, and any failures that occurred during the test.
+### Installing Necessary Packages
 
----
+Before running frontend tests, ensure that all dependencies are installed:
 
-This README section now provides clear instructions on how to run Locust tests, including where to find the `locustfile.py`, how to execute it, and how to interpret the results.
+```bash
+cd <project_root>\client
+npm install
 ```
 
+### Running the Tests
+
+To run the frontend tests, use the following command:
+
+```bash
+npm run test
+```
+
+### Example Test Code
+
+Here’s an example of how you might write a test for a component in your frontend:
+
+```javascript
+import { render, screen } from '@testing-library/vue';
+import MyComponent from '@/components/MyComponent.vue';
+
+test('renders the component correctly', () => {
+  render(MyComponent);
+  const element = screen.getByText('Expected Text');
+  expect(element).toBeInTheDocument();
+});
+```
+
+## Caching
+
+### How Caching Works
+
+Hudini uses a caching mechanism to store and retrieve data quickly, improving the performance of the application. The cache is typically stored in the directory specified by the `APP_CACHE` environment variable.
+
+### Clearing the Cache
+
+To clear the cache, you can manually delete the contents of the cache directory specified by `APP_CACHE`.
+
 ---
 
-This README should now guide you through setting up and running your Hudini project correctly, with all the links and instructions properly updated. If you encounter any issues or need further assistance, feel free to reach out!
+This README documentation now provides a comprehensive guide on how to set up, run, and test the Hudini project, along with detailed instructions on caching, directory structure, and more.

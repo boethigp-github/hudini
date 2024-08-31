@@ -161,9 +161,9 @@ async def stream_route(request: GenerationRequest, db: AsyncSession = Depends(ge
             try:
                 async_gen = await completed_task
                 async for result in async_gen:
-                    yield result  # Result is already in bytes
-            except Exception as e:
-                logger.error(f"Error during task execution: {str(e)}")
-                yield json.dumps({"error": str(e)}).encode('utf-8') + b'\n'
+                    yield result
+            except Exception as exception:
+                logger.error(f"Error during task execution: {str(exception)}")
+                yield json.dumps({"error": str(exception)}).encode('utf-8') + b'\n'
 
     return StreamingResponse(generate(), media_type='application/json')
