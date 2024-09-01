@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from jsonschema import ValidationError
@@ -32,7 +32,7 @@ async def get_prompts(db: AsyncSession = Depends(get_db)):
         logger.error(f"Error retrieving prompts: {str(e)}")
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
-@router.post("/prompts", response_model=PromptGetResponseModel, tags=["prompts"])
+@router.post("/prompts", response_model=PromptGetResponseModel, status_code=status.HTTP_201_CREATED, tags=["prompts"])
 async def create_prompt(prompt: PromptPostRequestModel, db: AsyncSession = Depends(get_db)):
     try:
         # Log the incoming data

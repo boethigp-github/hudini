@@ -46,4 +46,5 @@ class UserContextResponseModel(BaseModel):
 
     class Config:
         orm_mode = True
-        from_attributes = True  # Enable `model_validate` to work with SQLAlchemy models
+        from_attributes = True
+        protected_namespaces=() #conflict with model_

@@ -7,7 +7,7 @@ from server.app.models.usercontext.usercontext_post_request import UserContextPo
 from server.app.models.usercontext.usercontext_response import UserContextResponseModel
 from ..db.base import async_session_maker
 from typing import List
-import uuid
+
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -20,25 +20,15 @@ async def get_db():
         yield session
 
 
-def serialize_uuid_in_context_data(context_data):
+def serialize(context_data):
     logger.debug(f"Original context_data: {context_data}")
-
-    if isinstance(context_data, list):
-        for item in context_data:
-            if isinstance(item, dict):
-                for key, value in item.items():
-                    if isinstance(value, uuid.UUID):
-                        item[key] = value.hex  # Use .hex to avoid the quotes in logs
-                        logger.debug(f"Converted UUID value to string in value {value.hex}  ")
-
-    logger.debug(f"Serialized context_data: {context_data}")
     return context_data
 
 @router.get("/usercontext", tags=["usercontext"], response_model=List[UserContextResponseModel])
-async def get_user_contexts(user: str, thread_id: int, db: AsyncSession = Depends(get_db)):
+async def get_user_contexts(user: int, thread_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(UserContextModel).where(
-            UserContextModel.user == uuid.UUID(user),
+            UserContextModel.user == user,
             UserContextModel.thread_id == thread_id
         )
     )
@@ -56,12 +46,12 @@ async def save_user_context(user_context: UserContextPostRequestModel, db: Async
     try:
         # Convert UUIDs in context_data to strings
         user_context_dict = user_context.model_dump()
-        user_context_dict['context_data'] = serialize_uuid_in_context_data(user_context_dict['context_data'])
+        user_context_dict['context_data'] = serialize(user_context_dict['context_data'])
 
         # Check if a UserContext with the same user and thread_id already exists
         result = await db.execute(
             select(UserContextModel).where(
-                UserContextModel.user == uuid.UUID(user_context.user),
+                UserContextModel.user == user_context.user,
                 UserContextModel.thread_id == user_context.thread_id
             )
         )

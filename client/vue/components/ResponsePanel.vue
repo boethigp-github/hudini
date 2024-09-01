@@ -158,10 +158,10 @@ export default {
           if (currentGroup) {
             groups.push(currentGroup);
           }
-          currentGroup = id
-            id: response.id,
+          currentGroup = {
+            promptId: response.prompt_id,
             items: [{
-              id: response.id,
+              id: response.prompt_id,
               type: 'user',
               content: response.prompt,
               status: response.status
@@ -169,7 +169,7 @@ export default {
           };
         } else if (currentGroup) {
           currentGroup.items.push({
-            id: response.id + '-response',
+            id: response.prompt_id + '-response',
             type: 'bot',
             content: response.completion?.choices[0].message.content,
             model: response.model,
@@ -197,15 +197,15 @@ export default {
       window.dispatchEvent(event);
     };
 
-    const isHighlighted = (id) => {
-      return id === highlightedPromptId.value;
+    const isHighlighted = (prompt_id) => {
+      return prompt_id === highlightedPromptId.value;
     };
 
-    const handleMouseOver = (id) => {
-      highlightedPromptId.value = id;
+    const handleMouseOver = (prompt_id) => {
+      highlightedPromptId.value = prompt_id;
     };
 
-    const handleMouseOut = () => {
+    const handleMouseOut = (prompt_id) => {
       highlightedPromptId.value = null;
     };
 
@@ -318,7 +318,7 @@ const comparisonData = computed(() => {
 
 }
 
-:deep(.ant-card-body){
+:deep(.ant-card-body) {
   padding: 5px;
 }
 

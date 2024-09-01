@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
-from datetime import datetime
 from typing import Optional
+from datetime import datetime, timezone
 
 class PromptGetResponseModel(BaseModel):
     id: int
@@ -17,6 +17,6 @@ class PromptGetResponseModel(BaseModel):
                 "prompt": "Test prompt",
                 "user": 123,
                 "status": "initialized",
-                "created_at": datetime.utcnow().isoformat(),  # Dynamic example using current time
+                "created_at": datetime.now(timezone.utc).isoformat(),  # Current timestamp in ISO format
             }
         }

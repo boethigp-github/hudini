@@ -5,8 +5,10 @@ from server.app.models.generation.success_generation_model import SuccessGenerat
 from ..models.generation_error_details import ErrorGenerationModel
 from ..models.openai_model import OpenaiModel
 from typing import Optional
+
 class OpenAIClient:
     async_methods = ['fetch_completion']
+
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.client = AsyncOpenAI(api_key=api_key)  # For async operations
@@ -23,9 +25,6 @@ class OpenAIClient:
         handler.setFormatter(formatter)
         logger.addHandler(handler)
         return logger
-
-
-
 
     async def fetch_completion(self, model: OpenaiModel, prompt: str, prompt_id: int, id:str, presence_penalty: Optional[float] = 0.0):
         try:
@@ -67,8 +66,6 @@ class OpenAIClient:
                             usage=Usage(completion_tokens=0, prompt_tokens=0, total_tokens=0)
                         )
 
-
-
                         yield (SuccessGenerationModel(
                             id=id,
                             prompt_id=prompt_id,
@@ -81,13 +78,13 @@ class OpenAIClient:
         except Exception as e:
             self.logger.error(f"OpenAIClient::fetch_completion_stream: Error with model {model.id}: {str(e)}")
 
-            async def error_generator():
+            async def error_generator(error: str):
                 yield (ErrorGenerationModel(
                     model=model.id,
-                    error=str(e)
+                    error=error
                 ).model_dump_json() + '\n').encode('utf-8')
 
-            return error_generator()
+            return error_generator(str(e))
 
     def get_available_models(self) -> list:
         """
