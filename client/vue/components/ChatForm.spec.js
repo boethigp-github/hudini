@@ -71,7 +71,7 @@ global.fetch = vi.fn((url) => {
             }),
         });
 
-    } else if (url.includes('/prompt')) {
+    } else if (url.includes('/prompts')) {
         return Promise.resolve({
             ok: true,
             json: () => Promise.resolve({ status: 'success' }),
@@ -99,7 +99,7 @@ global.fetch = vi.fn((url) => {
                 }),
             },
         });
-    } else if (url.includes('/prompt')) {
+    } else if (url.includes('/prompts')) {
         return Promise.resolve({
             ok: true,
             json: () => Promise.resolve([]),

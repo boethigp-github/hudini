@@ -35,7 +35,7 @@ async def get_user_contexts(user: int, thread_id: int, db: AsyncSession = Depend
     user_contexts = result.scalars().all()
 
     if not user_contexts:
-        raise HTTPException(status_code=404, detail=f"No user contexts found for user {user} and thread_id {thread_id}")
+        return []
 
     return [user_context.to_dict() for user_context in user_contexts]
 

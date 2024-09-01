@@ -61,7 +61,7 @@ export default defineComponent({
         };
 
         const loadPrompts = () => {
-            fetch(`${serverUrl}/prompt`)
+            fetch(`${serverUrl}/prompts`)
                 .then(res => {
                     if (!res.ok) {
                         throw new Error("Failed to load prompts");
@@ -78,7 +78,7 @@ export default defineComponent({
         };
 
         const deletePrompt = (id) => {
-            fetch(`${serverUrl}/prompt/${id}`, {
+            fetch(`${serverUrl}/prompts/${id}`, {
                 method: "DELETE",
             })
                 .then(res => {

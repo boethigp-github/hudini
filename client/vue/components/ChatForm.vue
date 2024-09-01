@@ -100,7 +100,7 @@ export default {
     const buffer = ref(''); // Buffer to hold incomplete JSON strings
 
 
-    const user = '029c3baa-7a84-46cf-98f4-e10addda974a'; // for now
+    const user = 1; // for now
     const thread_id = 1;
 
     /**
@@ -112,7 +112,7 @@ export default {
             // Initialize responses.value with the user context
             responses.value = userContext.map(contextItem => {
               return {
-                id: contextItem.id,
+                prompt_id: contextItem.prompt_id,
                 user: contextItem.user,
                 status: contextItem.status,
                 id: contextItem.id,
@@ -123,7 +123,7 @@ export default {
             });
 
 
-            console.log("responses.value",    userContext);
+            console.log("responses.value", userContext);
           } else {
             message.error(t('failed_to_retrieve_user_context'));
           }
@@ -138,9 +138,6 @@ export default {
         });
 
 
-
-
-
     const createPromptServerside = async (id) => {
       if (!prompt.value || typeof prompt.value !== 'string' || prompt.value.trim() === '') {
         message.error(t('invalid_prompt'));
@@ -149,7 +146,7 @@ export default {
 
       const promptData = {
         prompt: prompt.value.trim(),
-        user: 9999,
+        user: 1,
         status: 'prompt-saved',
         id: id,
       };
@@ -208,7 +205,17 @@ export default {
       }
 
       loading.value = true;
-      const id = uuidv4();
+
+      function generateRandomNumberString(length) {
+        let result = '';
+        for (let i = 0; i < length; i++) {
+          const randomDigit = Math.floor(Math.random() * 10); // Generates a random digit between 0 and 9
+          result += randomDigit.toString();
+        }
+        return result;
+      }
+
+      const id = generateRandomNumberString(16);
 
       await createPromptServerside(id);
 

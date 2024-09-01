@@ -6,7 +6,7 @@
             <a-collapse-panel v-for="prompt in previousPrompts" :key="prompt.id">
                 <template #header>
                     <div class="panel-header">
-                        <span class="timestamp">{{ formatTimestamp(prompt.timestamp) }}</span>
+                        <span class="timestamp">{{ formatTimestamp(prompt.created_at) }}</span>
                         <div class="header-actions">
                             <icon-copy @click.stop="copyToClipboard(prompt.prompt)" class="copy-icon" :title=" $t('copy_clipboard', 'Copy to clipboard')" />
                             <icon-delete @click.stop="deletePrompt(prompt.id)" class="copy-icon" :title=" $t('delete')" />
@@ -61,7 +61,7 @@ export default defineComponent({
         };
 
         const loadPrompts = () => {
-            fetch(`${serverUrl}/prompt`)
+            fetch(`${serverUrl}/prompts`)
                 .then(res => {
                     if (!res.ok) {
                         throw new Error("Failed to load prompts");
@@ -78,7 +78,7 @@ export default defineComponent({
         };
 
         const deletePrompt = (id) => {
-            fetch(`${serverUrl}/prompt/${id}`, {
+            fetch(`${serverUrl}/prompts/${id}`, {
                 method: "DELETE",
             })
                 .then(res => {

@@ -63,7 +63,7 @@ export const getModels = async () => {
  */
 export const createPrompt = async (promptData) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/prompt`, {
+        const response = await fetch(`${API_BASE_URL}/prompts`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

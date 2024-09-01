@@ -2,6 +2,7 @@ import unittest
 import requests
 import random
 import string
+import uuid
 from server.app.config.settings import Settings
 from server.app.models.prompts.prompt_get_response import PromptGetResponseModel
 from server.app.models.prompts.prompts_post_request import PromptPostRequestModel
@@ -51,7 +52,8 @@ class TestPrompts(unittest.TestCase):
         create_payload = PromptPostRequestModel(
             prompt="Test prompt",
             user=self.TEST_USER_ID,
-            status="initialized"
+            status="initialized",
+            uuid=str(uuid.uuid4())  # Generate a UUID for the prompt
         )
         create_response = requests.post(f"{self.BASE_URL}/prompts", json=create_payload.dict())
         if create_response.status_code != 201:
@@ -102,7 +104,8 @@ class TestPrompts(unittest.TestCase):
         invalid_payload = PromptPostRequestModel(
             prompt="Test prompt",
             user=self.TEST_USER_ID,
-            status="invalid-status"
+            status="invalid-status",
+            uuid=str(uuid.uuid4())  # Generate a UUID for the invalid prompt
         )
         response = requests.post(f"{self.BASE_URL}/prompts", json=invalid_payload.dict())
         self.assertEqual(response.status_code, 400)
@@ -112,7 +115,8 @@ class TestPrompts(unittest.TestCase):
         create_payload = PromptPostRequestModel(
             prompt="Duplicate test prompt",
             user=self.TEST_USER_ID,
-            status="initialized"
+            status="initialized",
+            uuid=str(uuid.uuid4())  # Generate a UUID for the duplicate test
         )
         response1 = requests.post(f"{self.BASE_URL}/prompts", json=create_payload.dict())
         if response1.status_code != 201:
