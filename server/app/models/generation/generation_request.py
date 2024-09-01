@@ -15,7 +15,7 @@ class Platform(str, Enum):
     OPENAI = "openai"
 
 class ModelConfig(BaseModel):
-    id: UUID = Field(..., description="A unique identifier for the prompt")
+    id: str = Field(..., description="uuid")
     platform: Platform = Platform.OPENAI
     model: str = Field(..., description="The name of the model to be used.")
     temperature: float = Field(default=0.7, ge=0.0, le=1.0)

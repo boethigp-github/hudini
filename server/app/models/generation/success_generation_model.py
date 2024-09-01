@@ -28,6 +28,5 @@ class Completion(BaseModel):
 
 class SuccessGenerationModel(BaseModel):
     id: str = Field(..., example="gen-xyz-456")
-    prompt_id: int = Field(..., example=0)
     model: str = Field(..., example="gpt-3.5-turbo")
     completion: Completion

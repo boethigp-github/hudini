@@ -115,13 +115,6 @@ def validate_models_and_clients(models: List[ModelConfig], method_name: str) -> 
     return valid_models
 
 
-def validate_request(models: List[ModelConfig], method_name: str, prompt_id: int):
-    if not models:
-        raise HTTPException(status_code=400, detail="The 'models' list cannot be empty.")
-    if not prompt_id:
-        raise HTTPException(status_code=400, detail="The 'prompt_id' cannot be empty.")
-    if method_name not in registered_methods:
-        raise HTTPException(status_code=400, detail=f"The method '{method_name}' is not allowed.")
 
 
 @router.post("/stream", response_model=SuccessGenerationModel, tags=["generation"])
@@ -133,13 +126,12 @@ async def stream_route(request: GenerationRequest, db: AsyncSession = Depends(ge
     logger.info(request.model_dump_json())  # Use model_dump_json for logging
     logger.info("=" * 50)
 
-    validate_request(request.models, request.method_name, request.prompt_id)
     valid_models = validate_models_and_clients(request.models, request.method_name)
 
     async def generate():
         tasks = []
         for model, client, method in valid_models:
-            async_task = method(model, request.prompt, request.prompt_id, request.id)
+            async_task = method(model, request.prompt, request.id)
             task = asyncio.create_task(async_task)
             tasks.append(task)
 

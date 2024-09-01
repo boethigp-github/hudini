@@ -5,7 +5,7 @@ import random
 from server.app.config.settings import Settings
 from server.app.models.generation.generation_request import GenerationRequest, ModelConfig, ModelCategory, Platform
 from server.app.models.generation.success_generation_model import SuccessGenerationModel
-
+import uuid
 class TestGenerateAndStream(unittest.TestCase):
 
     @classmethod
@@ -18,7 +18,7 @@ class TestGenerateAndStream(unittest.TestCase):
     def test_stream_success(self):
         """Test the /stream endpoint for a successful streaming response."""
         model_config = ModelConfig(
-            id="gpt-3.5-turbo",
+            id=str(uuid.uuid4()),
             platform=Platform.OPENAI,
             model="gpt-3.5-turbo",
             temperature=0.7,
@@ -31,8 +31,7 @@ class TestGenerateAndStream(unittest.TestCase):
         stream_payload = GenerationRequest(
             models=[model_config],
             prompt="Write a rant in the style of Linus Torvalds about using spaces instead of tabs for indentation in code.",
-            id=str(random.randint(1, 1000000)),  # Ensure id is a string
-            prompt_id=random.randint(1, 1000000),  # Integer for prompt_id
+            id=str(uuid.uuid4()),  # Ensure id is a string
             method_name="fetch_completion"
         ).model_dump_json()  # Serialize payload to JSON string
 
@@ -56,9 +55,8 @@ class TestGenerateAndStream(unittest.TestCase):
                         # Ensure all fields are present and correctly formatted
                         if 'id' not in event_data or not isinstance(event_data['id'], str):
                             self.fail("Response missing 'id' or 'id' is not a string")
-                        if 'prompt_id' not in event_data:
-                            self.fail("Response missing 'prompt_id'")
-                        SuccessGenerationModel.parse_obj(event_data)  # Validate response model
+
+                        SuccessGenerationModel.model_validate(event_data)  # Validate response model
                         buffer = ""
                     except json.JSONDecodeError:
                         continue

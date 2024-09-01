@@ -26,11 +26,11 @@ class OpenAIClient:
         logger.addHandler(handler)
         return logger
 
-    async def fetch_completion(self, model: OpenaiModel, prompt: str, prompt_id: int, id:str, presence_penalty: Optional[float] = 0.0):
+    async def fetch_completion(self, openai_model: OpenaiModel, prompt: str, id:str, presence_penalty: Optional[float] = 0.0):
         try:
-            self.logger.debug(f"Fetching streaming completion for model: {model.id} with presence_penalty: {presence_penalty}")
+            self.logger.debug(f"Fetching streaming completion for model: {openai_model.model} with presence_penalty: {presence_penalty}")
             stream = await self.client.chat.completions.create(
-                model=model.id,
+                model=openai_model.model,
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant."},
                     {"role": "user", "content": prompt}
@@ -68,19 +68,18 @@ class OpenAIClient:
 
                         yield (SuccessGenerationModel(
                             id=id,
-                            prompt_id=prompt_id,
-                            model=model.id,
+                            model=openai_model.model,
                             completion=completion
                         ).model_dump_json()).encode('utf-8')
 
             return async_generator()
 
         except Exception as e:
-            self.logger.error(f"OpenAIClient::fetch_completion_stream: Error with model {model.id}: {str(e)}")
+            self.logger.error(f"OpenAIClient::fetch_completion_stream: Error with model {openai_model.id}: {str(e)}")
 
             async def error_generator(error: str):
                 yield (ErrorGenerationModel(
-                    model=model.id,
+                    model=openai_model.id,
                     error=error
                 ).model_dump_json() + '\n').encode('utf-8')
 

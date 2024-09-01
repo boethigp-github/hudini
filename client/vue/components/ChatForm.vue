@@ -240,8 +240,7 @@ export default {
       });
 
       const generationRequest = {
-        id: generateRandomNumberString(),
-        prompt_id: uuid,
+        id: uuid,
         prompt: prompt.value.trim(),
         models: selectedModelInfo
       };
