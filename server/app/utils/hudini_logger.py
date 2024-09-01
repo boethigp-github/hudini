@@ -13,4 +13,4 @@ logging.config.dictConfig(logging_config)
 
 # Create and configure the global logger named 'hudini_logger'
 hudini_logger = logging.getLogger('hudini_logger')
-hudini_logger.debug("Global hudini_logger initialized")
+hudini_logger.debug("Global hudini_logger IN_PROGRESS")

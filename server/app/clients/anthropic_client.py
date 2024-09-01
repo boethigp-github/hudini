@@ -18,7 +18,7 @@ class AnthropicClient:
         self.api_key = api_key
         self.client = AsyncAnthropic(api_key=api_key)
         self.logger = self.setup_logger()
-        self.logger.debug(f"AnthropicClient initialized with API key: {api_key[:5]}...")
+        self.logger.debug(f"AnthropicClient IN_PROGRESS with API key: {api_key[:5]}...")
 
     def setup_logger(self) -> logging.Logger:
         """

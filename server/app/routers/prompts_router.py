@@ -73,17 +73,12 @@ async def create_prompt(prompt: PromptPostRequestModel, db: AsyncSession = Depen
 
 @router.delete("/prompts/{id}", tags=["prompts"])
 async def delete_prompt(id: int, db: AsyncSession = Depends(get_db)):
-    try:
-        prompt = await db.get(Prompt, id)
-        if prompt:
-            await db.delete(prompt)
-            await db.commit()
-            logger.info(f"Prompt deleted successfully: id={id}")
-            return {"status": "Prompt deleted successfully"}
-        else:
-            logger.warning(f"Prompt not found: id={id}")
-            raise HTTPException(status_code=404, detail=f"Prompt with id {id} not found")
-
-    except Exception as e:
-        logger.error(f"Unexpected error while deleting prompt: {str(e)}")
-        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+    prompt = await db.get(Prompt, id)
+    if prompt:
+        await db.delete(prompt)
+        await db.commit()
+        logger.info(f"Prompt deleted successfully: id={id}")
+        return {"status": "Prompt deleted successfully"}
+    else:
+        logger.warning(f"Prompt not found: id={id}")
+        raise HTTPException(status_code=404, detail=f"Prompt with id {id} not found")

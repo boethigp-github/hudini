@@ -395,16 +395,16 @@ components:
           type: string
           enum:
             - initialized
-            - prompt-saved
-            - prompt-updated
-            - prompt-deleted
+            - PROMPT_SAVED
+            - PROMPT_UPDATED
+            - PROMPT_DELETED
             - completed
-            - in_progress
+            - IN_PROGRESS
             - failed
 
 
           description: The current status of the prompt
-          example: "initialized"
+          example: "IN_PROGRESS"
         prompt:
           type: string
           description: The prompt text

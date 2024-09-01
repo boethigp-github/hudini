@@ -15,7 +15,7 @@ class OpenAIClient:
         openai.api_key = api_key  # For synchronous operations
         self.logger = self.setup_logger()
 
-        self.logger.debug(f"OpenAIClient initialized with API key: {api_key[:5]}...")
+        self.logger.debug(f"OpenAIClient IN_PROGRESS with API key: {api_key[:5]}...")
 
     def setup_logger(self):
         logger = logging.getLogger(__name__)

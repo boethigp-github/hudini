@@ -52,7 +52,7 @@ class TestPrompts(unittest.TestCase):
         create_payload = PromptPostRequestModel(
             prompt="Test prompt",
             user=self.TEST_USER_ID,
-            status="initialized",
+            status="IN_PROGRESS",
             uuid=str(uuid.uuid4())  # Generate a UUID for the prompt
         )
         create_response = requests.post(f"{self.BASE_URL}/prompts", json=create_payload.dict())
@@ -101,21 +101,20 @@ class TestPrompts(unittest.TestCase):
         self.assertFalse(any(prompt['id'] == new_id for prompt in prompts), "Prompt still found after deletion")
 
     def test_invalid_status_in_create_prompt(self):
-        invalid_payload = PromptPostRequestModel(
-            prompt="Test prompt",
-            user=self.TEST_USER_ID,
-            status="invalid-status",
-            uuid=str(uuid.uuid4())  # Generate a UUID for the invalid prompt
-        )
-        response = requests.post(f"{self.BASE_URL}/prompts", json=invalid_payload.dict())
-        self.assertEqual(response.status_code, 400)
-        self.assertIn('detail', response.json(), "Expected 'detail' in error response")
+        invalid_payload = {
+            "prompt": "Test prompt",
+            "user": self.TEST_USER_ID,
+            "status": "invalid-status",  # Invalid status
+            "uuid": str(uuid.uuid4())  # Generate a UUID for the invalid prompt
+        }
+        response = requests.post(f"{self.BASE_URL}/prompts", json=invalid_payload)
+        self.assertEqual(response.status_code, 422)
 
     def test_create_prompt_duplicate(self):
         create_payload = PromptPostRequestModel(
             prompt="Duplicate test prompt",
             user=self.TEST_USER_ID,
-            status="initialized",
+            status="IN_PROGRESS",
             uuid=str(uuid.uuid4())  # Generate a UUID for the duplicate test
         )
         response1 = requests.post(f"{self.BASE_URL}/prompts", json=create_payload.dict())

@@ -103,6 +103,16 @@ export default {
     const user = 1; // for now
     const thread_id = 1;
 
+    function generateRandomNumberString(length) {
+      let result = '';
+      for (let i = 0; i < length; i++) {
+        const randomDigit = Math.floor(Math.random() * 10); // Generates a random digit between 0 and 9
+        result += randomDigit.toString();
+      }
+      return result;
+    }
+
+
     /**
      * Fetch Usercontext and fill Responsepanel with thread data
      */
@@ -138,18 +148,20 @@ export default {
         });
 
 
-    const createPromptServerside = async (id) => {
+    const createPromptServerside = async (id, uuid) => {
       if (!prompt.value || typeof prompt.value !== 'string' || prompt.value.trim() === '') {
         message.error(t('invalid_prompt'));
         return;
       }
 
-      const promptData = {
+       const promptData = {
         prompt: prompt.value.trim(),
         user: 1,
-        status: 'prompt-saved',
+        status: 'PROMPT_SAVED',
         id: id,
+        uuid: uuid
       };
+
 
       responses.value.push(promptData);
       updateTrigger.value++;
@@ -206,18 +218,13 @@ export default {
 
       loading.value = true;
 
-      function generateRandomNumberString(length) {
-        let result = '';
-        for (let i = 0; i < length; i++) {
-          const randomDigit = Math.floor(Math.random() * 10); // Generates a random digit between 0 and 9
-          result += randomDigit.toString();
-        }
-        return result;
-      }
+
+
 
       const id = generateRandomNumberString(16);
+      const uuid = uuidv4()
 
-      await createPromptServerside(id);
+      createPromptServerside(id, uuid);
 
       const serviceResponse = await modelsStore.getServiceResponse();
 
@@ -232,14 +239,15 @@ export default {
         return fullModelInfo || {id: modelId, platform: 'unknown'};
       });
 
-      const promptData = {
-        id: id,
+      const generationRequest = {
+        id: generateRandomNumberString(),
+        prompt_id: uuid,
         prompt: prompt.value.trim(),
-        models: selectedModelInfo,
+        models: selectedModelInfo
       };
 
       await streamPrompt(
-          promptData,
+          generationRequest,
           processChunk,
           (error) => {
             console.error('Stream error:', error);

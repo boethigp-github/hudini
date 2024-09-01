@@ -1,6 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import List
 from enum import Enum
+from uuid import UUID, uuid4
 
 class ModelCategory(str, Enum):
     TEXT_COMPLETION = "text_completion"
@@ -14,7 +15,7 @@ class Platform(str, Enum):
     OPENAI = "openai"
 
 class ModelConfig(BaseModel):
-    id: str = Field(..., description="The ID of the model, which should match the model name.")
+    id: UUID = Field(..., description="A unique identifier for the prompt")
     platform: Platform = Platform.OPENAI
     model: str = Field(..., description="The name of the model to be used.")
     temperature: float = Field(default=0.7, ge=0.0, le=1.0)
@@ -22,6 +23,12 @@ class ModelConfig(BaseModel):
     object: str
     category: ModelCategory
     description: str
+
+    @field_validator("id", mode="after")
+    def validate_uuid(cls, value):
+        if value:
+            return str(value)  # Convert UUID to string
+        return value
 
     class Config:
         use_enum_values = True
@@ -52,13 +59,8 @@ class GenerationRequest(BaseModel):
     )
     id: str = Field(
         ...,
-        description="Unique identifier for the request",
-        example="550840021444400000"  # Example of a bigint as a string
-    )
-    prompt_id: int = Field(
-        ...,
-        description="Unique identifier for the prompt",
-        example=123456789012345678  # Example of a bigint
+        description="Unique identifier for the request, usually UUID from prompt",
+        example="6d9b64ee-66f1-4f97-a4a2-e7cc12da0e33"
     )
     method_name: str = Field(
         "fetch_completion",
