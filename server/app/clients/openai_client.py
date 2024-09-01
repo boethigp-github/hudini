@@ -1,8 +1,7 @@
 import logging
-import json
 import openai
 from openai import AsyncOpenAI
-from ..models.success_generation_model import SuccessGenerationModel, Completion, Choice, Message, Usage
+from server.app.models.generation.success_generation_model import SuccessGenerationModel, Completion, Choice, Message, Usage
 from ..models.generation_error_details import ErrorGenerationModel
 from ..models.openai_model import OpenaiModel
 from typing import Optional
@@ -28,7 +27,7 @@ class OpenAIClient:
 
 
 
-    async def fetch_completion(self, model: OpenaiModel, prompt: str, id: str, presence_penalty: Optional[float] = 0.0):
+    async def fetch_completion(self, model: OpenaiModel, prompt: str, prompt_id: int, id:str, presence_penalty: Optional[float] = 0.0):
         try:
             self.logger.debug(f"Fetching streaming completion for model: {model.id} with presence_penalty: {presence_penalty}")
             stream = await self.client.chat.completions.create(
@@ -72,6 +71,7 @@ class OpenAIClient:
 
                         yield (SuccessGenerationModel(
                             id=id,
+                            prompt_id=prompt_id,
                             model=model.id,
                             completion=completion
                         ).model_dump_json()).encode('utf-8')

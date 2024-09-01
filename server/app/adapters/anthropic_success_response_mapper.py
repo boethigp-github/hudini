@@ -1,5 +1,5 @@
 from datetime import datetime
-from ..models.success_generation_model import SuccessGenerationModel, Completion, Choice, Message, Usage
+from server.app.models.generation.success_generation_model import SuccessGenerationModel, Completion, Choice, Message, Usage
 
 class AnthropicResponseToSuccessGenerationResponseAdapter:
     @staticmethod

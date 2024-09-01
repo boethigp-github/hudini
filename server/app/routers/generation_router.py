@@ -12,8 +12,8 @@ from ..clients.anthropic_client import AnthropicClient
 from ..db.base import async_session_maker
 from ..models.openai_model import OpenaiModel
 from ..models.anthropic_model import AnthropicModel
-import uuid
-from ..models.generation_request import GenerationRequest
+from server.app.models.generation.generation_request import GenerationRequest
+from ..models.generation.success_generation_model import SuccessGenerationModel
 
 router = APIRouter()
 settings = Settings()
@@ -84,7 +84,6 @@ def validate_models_and_clients(models: List[ModelConfig], method_name: str) -> 
 
         model_dict = model_data.model_dump(exclude_none=True)  # Use model_dump instead of dict
 
-        # Ensure 'id' is correctly set for OpenAI models
         if platform == "openai":
             if not model_dict.get("id"):
                 if model_dict.get("model_id"):
@@ -92,9 +91,9 @@ def validate_models_and_clients(models: List[ModelConfig], method_name: str) -> 
                 elif model_dict.get("model"):
                     model_dict["id"] = model_dict["model"]
                 else:
-                    raise HTTPException(status_code=400, detail="Either 'model_id' or 'model' must be provided to set 'id' for OpenAI models.")
+                    raise HTTPException(status_code=400,
+                                        detail="Either 'model_id' or 'model' must be provided to set 'id' for OpenAI models.")
 
-        # Ensure 'id' is correctly set for Anthropic models
         if platform == "anthropic":
             if not model_dict.get("id"):
                 if model_dict.get("model_id"):
@@ -102,7 +101,8 @@ def validate_models_and_clients(models: List[ModelConfig], method_name: str) -> 
                 elif model_dict.get("model"):
                     model_dict["id"] = model_dict["model"]
                 else:
-                    raise HTTPException(status_code=400, detail="Either 'model_id' or 'model' must be provided to set 'id' for Anthropic models.")
+                    raise HTTPException(status_code=400,
+                                        detail="Either 'model_id' or 'model' must be provided to set 'id' for Anthropic models.")
 
         try:
             model_instance = model_class(**model_dict)
@@ -124,47 +124,34 @@ def validate_request(models: List[ModelConfig], method_name: str, prompt_id: int
         raise HTTPException(status_code=400, detail=f"The method '{method_name}' is not allowed.")
 
 
-@router.post("/stream", tags=["generation"])
+@router.post("/stream", response_model=SuccessGenerationModel, tags=["generation"])
 async def stream_route(request: GenerationRequest, db: AsyncSession = Depends(get_db)):
     """
     Stream AI-generated content based on the provided prompt and model configurations.
-
-    This endpoint accepts a GenerationRequest object containing:
-    - A list of model configurations
-    - A prompt for content generation
-    - A unique prompt ID
-    - The method name for generation (e.g., 'chat_completion')
-
-    It returns a streaming response with the generated content.
     """
     logger.info("Incoming request to /stream:")
-    logger.info(json.dumps(request.model_dump(), indent=2))  # Use model_dump instead of dict
+    logger.info(request.model_dump_json())  # Use model_dump_json for logging
     logger.info("=" * 50)
 
-    try:
-        validate_request(request.models, request.method_name, request.prompt_id)
-        valid_models = validate_models_and_clients(request.models, request.method_name)
-    except HTTPException as e:
-        logger.error(str(e))
-        raise e
-    except ModelNotFoundException as e:
-        logger.error(str(e))
-        raise HTTPException(status_code=400, detail=str(e))
+    validate_request(request.models, request.method_name, request.prompt_id)
+    valid_models = validate_models_and_clients(request.models, request.method_name)
 
     async def generate():
         tasks = []
         for model, client, method in valid_models:
-            async_task = method(model, request.prompt, request.id)
+            async_task = method(model, request.prompt, request.prompt_id, request.id)
             task = asyncio.create_task(async_task)
             tasks.append(task)
 
         for completed_task in asyncio.as_completed(tasks):
-            try:
-                async_gen = await completed_task
-                async for result in async_gen:
-                    yield result
-            except Exception as exception:
-                logger.error(f"Error during task execution: {str(exception)}")
-                yield json.dumps({"error": str(exception)}).encode('utf-8') + b'\n'
+            async_gen = await completed_task
+            async for result in async_gen:
+                if isinstance(result, bytes):
+                    result = result.decode('utf-8')
+
+                # Deserialize using Pydantic model's model_validate
+                success_model = SuccessGenerationModel.model_validate(json.loads(result))
+                # Serialize using model_dump_json
+                yield success_model.model_dump_json().encode('utf-8') + b'\n'
 
     return StreamingResponse(generate(), media_type='application/json')

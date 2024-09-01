@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 from typing import List
 from enum import Enum
 
@@ -22,15 +22,6 @@ class ModelConfig(BaseModel):
     object: str
     category: ModelCategory
     description: str
-
-    @validator('id', pre=True, always=True)
-    def set_id_from_model(cls, value, values):
-        if not value:
-            model = values.get('model')
-            if model:
-                return model
-            raise ValueError("Model field must be provided")
-        return value
 
     class Config:
         use_enum_values = True
@@ -59,10 +50,15 @@ class GenerationRequest(BaseModel):
         description="The prompt for generation",
         example="Write a rant in the style of Linus Torvalds about using spaces instead of tabs for indentation in code."
     )
-    id: int = Field(
+    id: str = Field(
+        ...,
+        description="Unique identifier for the request",
+        example="550840021444400000"  # Example of a bigint as a string
+    )
+    prompt_id: int = Field(
         ...,
         description="Unique identifier for the prompt",
-        example=550840021444400000  # Example of a bigint
+        example=123456789012345678  # Example of a bigint
     )
     method_name: str = Field(
         "fetch_completion",

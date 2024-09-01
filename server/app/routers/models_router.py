@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
-from fastapi.responses import JSONResponse
 from typing import List
 from ..config.settings import Settings
 from ..clients.openai_client import OpenAIClient
