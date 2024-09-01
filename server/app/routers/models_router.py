@@ -4,7 +4,8 @@ from ..config.settings import Settings
 from ..clients.openai_client import OpenAIClient
 from ..clients.anthropic_client import AnthropicClient
 import logging
-
+from typing import List
+from ..models.models.models_get_response import ModelGetResponseModel
 # Initialize the logger
 logger = logging.getLogger("models_router")
 
@@ -18,7 +19,7 @@ logging.basicConfig(level=logging.WARNING)
 def get_cache(request: Request):
     return request.app.state.cache
 
-@router.get("/models", tags=["models"])
+@router.get("/models", response_model=List[ModelGetResponseModel], tags=["models"])
 async def get_models(cache=Depends(get_cache)):
     """
     Handles the /models route.
@@ -29,31 +30,30 @@ async def get_models(cache=Depends(get_cache)):
     The results are cached for 300 seconds (5 minutes).
 
     Returns:
-        JSONResponse: A JSON response containing a list of all available models.
+        List[ModelGetResponseModel]: A list of all available models.
     """
     try:
-        # Check if the result is in the cache (remove await)
+        # Check if the result is in the cache
         cached_models = cache.get("models_list")
         if cached_models:
             logger.debug("Cache hit: Returning cached models list")
-            return JSONResponse(content=cached_models)
+            return cached_models  # The response model handles the serialization
 
         # Retrieve models from OpenAI and Anthropic
         openai_models = OpenAIClient(api_key=settings.get("default").get("API_KEY_OPEN_AI")).get_available_models()
-        #anthropic_models = AnthropicClient(
-        #    api_key=settings.get("default").get("API_KEY_ANTHROPIC")).get_available_models()
-        anthropic_models=[]
+        #anthropic_models = AnthropicClient(api_key=settings.get("default").get("API_KEY_ANTHROPIC")).get_available_models()
+        anthropic_models = []
 
         # Merge all models into a single list
         all_models = openai_models + anthropic_models
 
-        # Store the result in the cache (remove await)
+        # Store the result in the cache
         cache.set("models_list", all_models, expire=300)
 
         logger.debug("Cache miss: Retrieved and cached new models list")
 
-        # Return the complete list of models as a JSON response
-        return JSONResponse(content=all_models)
+        # Return the complete list of models
+        return all_models
     except Exception as e:
         logger.error(f"Error retrieving models: {str(e)}")
         raise HTTPException(status_code=500, detail=f"An error occurred while retrieving models {str(e)}")

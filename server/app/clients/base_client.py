@@ -10,5 +10,5 @@ class BaseClient(ABC):
         pass
 
     @abstractmethod
-    def stream_response(self,model, prompt,prompt_id):
+    def stream_response(self,model, prompt,id):
         pass

@@ -2,12 +2,13 @@ import logging
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-import uuid
-from jsonschema import validate, ValidationError
-from ..models.prompts import Prompt
-from ..utils.swagger_loader import SwaggerLoader
-from ..db.base import async_session_maker, Base
+from jsonschema import ValidationError
+from server.app.models.prompts.prompts import Prompt
+from ..db.base import async_session_maker
 from ..config.settings import Settings
+from typing import List
+from ..models.prompts.prompts_post_request import PromptPostRequestModel
+from ..models.prompts.prompt_get_response import PromptGetResponseModel
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -16,83 +17,73 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 settings = Settings()
 
-
 # Dependency to get the database session
 async def get_db():
     async with async_session_maker() as session:
         yield session
 
-
-@router.get("/prompt", tags=["prompts"])
+@router.get("/prompts", response_model=List[PromptGetResponseModel], tags=["prompts"])
 async def get_prompts(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Prompt).order_by(Prompt.timestamp.desc()))
-    prompts = result.scalars().all()
-    return [prompt.to_dict() for prompt in prompts]
-
-
-@router.post("/prompt", tags=["prompts"])
-async def create_prompt(prompt: dict, db: AsyncSession = Depends(get_db)):
     try:
-        # Validate the input data against the JSON schema
-        validate(instance=prompt, schema=SwaggerLoader("swagger.yaml").get_component_schema("Prompt"))
+        result = await db.execute(select(Prompt).order_by(Prompt.created_at.desc()))
+        prompts = result.scalars().all()
+        return prompts  # FastAPI will automatically convert SQLAlchemy models to Pydantic models
+    except Exception as e:
+        logger.error(f"Error retrieving prompts: {str(e)}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
-        # Ensure 'user' is converted to a UUID if it isn't already
-        prompt['user'] = uuid.UUID(prompt['user']) if isinstance(prompt['user'], str) else prompt['user']
+@router.post("/prompts", response_model=PromptGetResponseModel, tags=["prompts"])
+async def create_prompt(prompt: PromptPostRequestModel, db: AsyncSession = Depends(get_db)):
+    try:
+        # Log the incoming data
+        logger.debug(f"Incoming prompt data: {prompt}")
 
+        # Check for existing prompt
         result = await db.execute(
-            select(Prompt).filter_by(prompt=prompt['prompt'], user=prompt['user'])
+            select(Prompt).filter_by(prompt=prompt.prompt, user=prompt.user)
         )
         existing_prompt = result.scalars().first()
 
         if existing_prompt:
-            return existing_prompt.to_dict()
+            logger.info(f"Prompt already exists: {existing_prompt}")
+            return PromptGetResponseModel.model_validate(existing_prompt)  # Updated for Pydantic v2
 
-        new_prompt = Prompt(**prompt)
+        # Log data to be saved
+        logger.debug(f"Creating new prompt with data: {prompt.model_dump()}")
+
+        # Create and save new prompt
+        new_prompt = Prompt(**prompt.model_dump())
         db.add(new_prompt)
         await db.commit()
         await db.refresh(new_prompt)
 
-        return new_prompt.to_dict()
+        # Log the newly created prompt
+        logger.debug(f"Prompt created successfully: {new_prompt}")
+
+        return PromptGetResponseModel.model_validate(new_prompt)  # Updated for Pydantic v2
 
     except ValidationError as validation_error:
-        # Log the error with detailed information
-        logger.error(f"Validation error while creating prompt: {validation_error.message}")
-        # Return an HTTP 400 response with the validation error message
-        raise HTTPException(status_code=400, detail=f"Validation error: {validation_error.message}")
+        logger.error(f"Validation error while creating prompt: {validation_error}")
+        raise HTTPException(status_code=400, detail=f"Validation error: {validation_error}")
 
     except Exception as e:
-        # Log any unexpected errors
         logger.error(f"Unexpected error while creating prompt: {str(e)}")
-        await db.rollback()
-        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred {str(e)}")
 
 
-    except ValidationError as validation_error:
-        # Log the error with detailed information
-        logger.error(f"Validation error while creating prompt: {validation_error.message}")
-        # Return an HTTP 400 response with the validation error message
-        raise HTTPException(status_code=400, detail=f"Validation error: {validation_error.message}")
-
-    except Exception as e:
-        # Log any unexpected errors
-        logger.error(f"Unexpected error while creating prompt: {str(e)}")
-        await db.rollback()
-        raise HTTPException(status_code=500, detail="An unexpected error occurred")
-
-
-@router.delete("/prompt/{prompt_id}", tags=["prompts"])
-async def delete_prompt(prompt_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+@router.delete("/prompts/{id}", tags=["prompts"])
+async def delete_prompt(id: int, db: AsyncSession = Depends(get_db)):
     try:
-        prompt = await db.get(Prompt, prompt_id)
+        prompt = await db.get(Prompt, id)
         if prompt:
             await db.delete(prompt)
             await db.commit()
+            logger.info(f"Prompt deleted successfully: id={id}")
             return {"status": "Prompt deleted successfully"}
         else:
-            raise HTTPException(status_code=404, detail=f"Prompt with id {prompt_id} not found")
+            logger.warning(f"Prompt not found: id={id}")
+            raise HTTPException(status_code=404, detail=f"Prompt with id {id} not found")
 
     except Exception as e:
         logger.error(f"Unexpected error while deleting prompt: {str(e)}")
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
-
-

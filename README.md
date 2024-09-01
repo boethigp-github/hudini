@@ -1,4 +1,4 @@
-Certainly! Here’s a complete README documentation for your Hudini project, including all the sections discussed:
+To adjust the README documentation to reflect the use of `bigint` for `user` and `id` in your database tables, here is the updated documentation:
 
 ---
 
@@ -159,15 +159,15 @@ CREATE DATABASE hudini
 
 - After setting up the database, you can create the necessary tables using the following SQL commands:
 
-```postgressql
+```sql
 -- Table: public.prompts
 
 CREATE TABLE IF NOT EXISTS public.prompts
 (
-    id uuid NOT NULL,
+    id bigint NOT NULL DEFAULT nextval('prompts_id_seq'::regclass), -- Changed to bigint
     prompt text COLLATE "en_US.UTF-8" NOT NULL,
     "timestamp" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "user" character varying(30) COLLATE "en_US.UTF-8",
+    "user" bigint NOT NULL, -- Changed to bigint
     status character varying(30) COLLATE "en_US.UTF-8",
     CONSTRAINT prompts_pkey PRIMARY KEY (id)
 )
@@ -187,14 +187,10 @@ CREATE INDEX IF NOT EXISTS idx_prompts_status
 
 CREATE INDEX IF NOT EXISTS idx_prompts_user
     ON public.prompts USING btree
-    ("user" COLLATE "en_US.UTF-8" ASC NULLS LAST)
+    ("user" ASC NULLS LAST) -- Changed to bigint, no need for COLLATE
     TABLESPACE pg_default;
 
-
-
 -- Table: public.user_context
-
--- DROP TABLE IF EXISTS public.user_context;
 
 CREATE TABLE IF NOT EXISTS public.user_context
 (
@@ -203,8 +199,8 @@ CREATE TABLE IF NOT EXISTS public.user_context
     updated timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     context_data jsonb,
     thread_id bigint,
-    "user" uuid,
-    prompt_id uuid,
+    "user" bigint, -- Changed to bigint
+    id bigint, -- Changed to bigint
     CONSTRAINT user_context_pkey PRIMARY KEY (id)
 )
 
@@ -212,8 +208,6 @@ TABLESPACE pg_default;
 
 ALTER TABLE IF EXISTS public.user_context
     OWNER to postgres;
-    
-
 
 -- Table: public.users
 
@@ -269,7 +263,9 @@ If you prefer to start each service manually, follow these steps:
    Navigate to the server directory and start the server:
 
    ```bash
-   cd <project_root>\server
+   cd <project_root>\
+
+server
    fastapi run run.py --port=80
    ```
 
@@ -277,9 +273,7 @@ If you prefer to start each service manually, follow these steps:
 
 3. **Frontend Development Server:**
 
-   Navigate to the
-
- frontend directory and start the development server:
+   Navigate to the frontend directory and start the development server:
 
    ```bash
    cd <project_root>\client
@@ -511,4 +505,4 @@ To clear the cache, you can manually delete the contents of the cache directory 
 
 ---
 
-This README documentation now provides a comprehensive guide on how to set up, run, and test the Hudini project, along with detailed instructions on caching, directory structure, and more.
+This README documentation now provides a comprehensive guide on how to set up, run, and test the Hudini project, with the necessary adjustments for using `bigint` for `user` and `prompt_id`.

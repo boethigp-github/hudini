@@ -24,7 +24,7 @@ class LLamaCppClient(BaseClient):
 
 
 
-    def stream_response(self,model, prompt,prompt_id):
+    def stream_response(self,model, prompt,id):
         output = self.generate(
             prompt,
             max_tokens=1000,

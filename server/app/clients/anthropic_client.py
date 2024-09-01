@@ -35,20 +35,20 @@ class AnthropicClient:
         logger.addHandler(handler)
         return logger
 
-    async def fetch_completion(self, model: AnthropicModel, prompt: str, prompt_id: str) -> AsyncGenerator[bytes, None]:
+    async def fetch_completion(self, model: AnthropicModel, prompt: str, id: str) -> AsyncGenerator[bytes, None]:
         """
         Fetch a text completion from the specified Anthropic model using the provided prompt.
 
         Args:
             model (AnthropicModel): The Anthropic model to use for generating the completion.
             prompt (str): The text prompt to send to the model.
-            prompt_id (str): An identifier for the prompt, useful for logging and tracking.
+            id (str): An identifier for the prompt, useful for logging and tracking.
 
         Yields:
             bytes: Streamed text completion in UTF-8 encoded bytes.
         """
         try:
-            self.logger.info(f"Anthropic model {model.id} called with prompt ID: {prompt_id}")
+            self.logger.info(f"Anthropic model {model.id} called with prompt ID: {id}")
             async with self.client.messages.stream(
                     max_tokens=1024,
                     messages=[

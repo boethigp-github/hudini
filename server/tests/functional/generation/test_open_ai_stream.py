@@ -1,7 +1,7 @@
 import unittest
 import requests
 import json
-import uuid
+import random
 from server.app.config.settings import Settings  # Passe den Import entsprechend deiner Projektstruktur an
 
 class TestGenerateAndStream(unittest.TestCase):
@@ -30,7 +30,7 @@ class TestGenerateAndStream(unittest.TestCase):
                 }
             ],
             "prompt": "Write a rant in the style of Linus Torvalds about using spaces instead of tabs for indentation in code.",
-            "prompt_id": "550e8400-e29b-41d4-a716-446655440000",  # Feste prompt_id aus den Testdaten
+            "id": random.randint(1, 1000000),  # Generate a random bigint for prompt_id
             "method_name": "fetch_completion"
         }
         response = requests.post(f"{self.SERVER_URL}/stream", json=stream_payload, stream=True, timeout=10)
@@ -77,7 +77,7 @@ class TestGenerateAndStream(unittest.TestCase):
                 }
             ],
             "prompt": "This is a test",
-            "prompt_id": str(uuid.uuid4()),
+            "id": random.randint(1, 1000000),  # Generate a random bigint for prompt_id
             "method_name": "fetch_completion"
         }
         response = requests.post(f"{self.SERVER_URL}/stream", json=stream_payload)
@@ -99,7 +99,7 @@ class TestGenerateAndStream(unittest.TestCase):
                 }
             ],
             "prompt": "This is a test",
-            "prompt_id": str(uuid.uuid4()),
+            "id": random.randint(1, 1000000),  # Generate a random bigint for prompt_id
             "method_name": "fetch_completion"
         }
         response = requests.post(f"{self.SERVER_URL}/stream", json=stream_payload)

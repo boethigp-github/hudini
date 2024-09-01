@@ -158,10 +158,10 @@ export default {
           if (currentGroup) {
             groups.push(currentGroup);
           }
-          currentGroup = {
-            promptId: response.prompt_id,
+          currentGroup = id
+            id: response.id,
             items: [{
-              id: response.prompt_id,
+              id: response.id,
               type: 'user',
               content: response.prompt,
               status: response.status
@@ -169,7 +169,7 @@ export default {
           };
         } else if (currentGroup) {
           currentGroup.items.push({
-            id: response.prompt_id + '-response',
+            id: response.id + '-response',
             type: 'bot',
             content: response.completion?.choices[0].message.content,
             model: response.model,
@@ -197,15 +197,15 @@ export default {
       window.dispatchEvent(event);
     };
 
-    const isHighlighted = (prompt_id) => {
-      return prompt_id === highlightedPromptId.value;
+    const isHighlighted = (id) => {
+      return id === highlightedPromptId.value;
     };
 
-    const handleMouseOver = (prompt_id) => {
-      highlightedPromptId.value = prompt_id;
+    const handleMouseOver = (id) => {
+      highlightedPromptId.value = id;
     };
 
-    const handleMouseOut = (prompt_id) => {
+    const handleMouseOut = () => {
       highlightedPromptId.value = null;
     };
 

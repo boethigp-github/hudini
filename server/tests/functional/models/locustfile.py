@@ -1,7 +1,7 @@
 import unittest
 import requests
 import json
-import uuid
+import random
 from server.app.config.settings import Settings  # Passe den Import entsprechend deiner Projektstruktur an
 
 class TestGenerateAndStream(unittest.TestCase):
@@ -35,7 +35,7 @@ class TestGenerateAndStream(unittest.TestCase):
                 }
             ],
             "prompt": "Write a rant in the style of Linus Torvalds about using spaces instead of tabs for indentation in code.",
-            "prompt_id": str(uuid.uuid4()),
+            "prompt_id": random.randint(1, 1000000),  # Generate a random bigint for prompt_id
             "method_name": "fetch_completion"
         }
         response = requests.post(f"{self.SERVER_URL}/stream", json=stream_payload, stream=True, timeout=10)
@@ -65,7 +65,7 @@ class TestGenerateAndStream(unittest.TestCase):
             # Absichtlich das "models"-Feld weggelassen
         }
         response = requests.post(f"{self.SERVER_URL}/stream", json=stream_payload)
-        self.assertEqual(response.status_code, 422)  # Erwarte 400 Bad Request
+        self.assertEqual(response.status_code, 422)  # Erwarte 422 Unprocessable Entity
 
     def test_stream_invalid_model(self):
         """Teste den /stream-Endpunkt mit einem ungültigen Modell."""
@@ -84,7 +84,7 @@ class TestGenerateAndStream(unittest.TestCase):
                 }
             ],
             "prompt": "This is a test",
-            "prompt_id": str(uuid.uuid4()),
+            "prompt_id": random.randint(1, 1000000),  # Generate a random bigint for prompt_id
             "method_name": "fetch_completion"
         }
         response = requests.post(f"{self.SERVER_URL}/stream", json=stream_payload)
@@ -107,7 +107,7 @@ class TestGenerateAndStream(unittest.TestCase):
                 }
             ],
             "prompt": "This is a test",
-            "prompt_id": str(uuid.uuid4()),
+            "prompt_id": random.randint(1, 1000000),  # Generate a random bigint for prompt_id
             "method_name": "fetch_completion"
         }
         response = requests.post(f"{self.SERVER_URL}/stream", json=stream_payload)

@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 import asyncio
@@ -11,9 +12,9 @@ from ..clients.anthropic_client import AnthropicClient
 from ..db.base import async_session_maker
 from ..models.openai_model import OpenaiModel
 from ..models.anthropic_model import AnthropicModel
-import logging
 import uuid
 from ..models.generation_request import GenerationRequest
+
 router = APIRouter()
 settings = Settings()
 
@@ -81,7 +82,7 @@ def validate_models_and_clients(models: List[ModelConfig], method_name: str) -> 
         if not hasattr(platform_client, method_name):
             raise HTTPException(status_code=400, detail=f"Method '{method_name}' not found for platform '{platform}'")
 
-        model_dict = model_data.dict(exclude_none=True)
+        model_dict = model_data.model_dump(exclude_none=True)  # Use model_dump instead of dict
 
         # Ensure 'id' is correctly set for OpenAI models
         if platform == "openai":
@@ -114,7 +115,7 @@ def validate_models_and_clients(models: List[ModelConfig], method_name: str) -> 
     return valid_models
 
 
-def validate_request(models: List[ModelConfig], method_name: str, prompt_id: str):
+def validate_request(models: List[ModelConfig], method_name: str, prompt_id: int):
     if not models:
         raise HTTPException(status_code=400, detail="The 'models' list cannot be empty.")
     if not prompt_id:
@@ -137,7 +138,7 @@ async def stream_route(request: GenerationRequest, db: AsyncSession = Depends(ge
     It returns a streaming response with the generated content.
     """
     logger.info("Incoming request to /stream:")
-    logger.info(json.dumps(request.dict(), indent=2))
+    logger.info(json.dumps(request.model_dump(), indent=2))  # Use model_dump instead of dict
     logger.info("=" * 50)
 
     try:
@@ -153,7 +154,7 @@ async def stream_route(request: GenerationRequest, db: AsyncSession = Depends(ge
     async def generate():
         tasks = []
         for model, client, method in valid_models:
-            async_task = method(model, request.prompt, request.prompt_id)
+            async_task = method(model, request.prompt, request.id)
             task = asyncio.create_task(async_task)
             tasks.append(task)
 

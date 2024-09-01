@@ -1,5 +1,5 @@
-from pydantic import BaseModel, Field, model_validator
-from typing import Optional, List
+from pydantic import BaseModel, Field, validator
+from typing import List
 from enum import Enum
 
 class ModelCategory(str, Enum):
@@ -16,22 +16,21 @@ class Platform(str, Enum):
 class ModelConfig(BaseModel):
     id: str = Field(..., description="The ID of the model, which should match the model name.")
     platform: Platform = Platform.OPENAI
-    model: str
-    temperature: Optional[float] = Field(default=0.7, ge=0.0, le=1.0)
-    max_tokens: Optional[int] = Field(default=100, ge=1)
-    model_id: Optional[str] = None
+    model: str = Field(..., description="The name of the model to be used.")
+    temperature: float = Field(default=0.7, ge=0.0, le=1.0)
+    max_tokens: int = Field(default=100, ge=1)
     object: str
-    category: Optional[ModelCategory] = None
-    description: Optional[str] = None
+    category: ModelCategory
+    description: str
 
-    @model_validator(mode='before')
-    def set_id_from_model(cls, values):
-        model = values.get('model')
-        if not model:
+    @validator('id', pre=True, always=True)
+    def set_id_from_model(cls, value, values):
+        if not value:
+            model = values.get('model')
+            if model:
+                return model
             raise ValueError("Model field must be provided")
-        if not values.get('id'):
-            values['id'] = model
-        return values
+        return value
 
     class Config:
         use_enum_values = True
@@ -48,7 +47,6 @@ class GenerationRequest(BaseModel):
                 "model": "gpt-3.5-turbo",
                 "temperature": 0.7,
                 "max_tokens": 100,
-                "model_id": None,
                 "object": "chat.completion",
                 "category": "text_completion",
                 "description": "A language model for text completions"
@@ -61,11 +59,10 @@ class GenerationRequest(BaseModel):
         description="The prompt for generation",
         example="Write a rant in the style of Linus Torvalds about using spaces instead of tabs for indentation in code."
     )
-    prompt_id: str = Field(
+    id: int = Field(
         ...,
-        min_length=1,
         description="Unique identifier for the prompt",
-        example="550e8400-e29b-41d4-a716-446655440000"
+        example=550840021444400000  # Example of a bigint
     )
     method_name: str = Field(
         "fetch_completion",

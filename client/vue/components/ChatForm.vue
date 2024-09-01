@@ -1,55 +1,54 @@
 <template>
-    <a-layout>
-     <a-layout-header :style="{background:'#e9edf2', padding:'0 5px 0 5px'}">
-        <div style="display: block;min-height: 10px;cursor: pointer" class="chat-header">
-          <div class="header">
-            <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="60"/>
-            <ChatMenu/>
-            <div class="language-switch-container">
-              <LanguageSwitch/>
-            </div>
+  <a-layout>
+    <a-layout-header :style="{background:'#e9edf2', padding:'0 5px 0 5px'}">
+      <div style="display: block;min-height: 10px;cursor: pointer" class="chat-header">
+        <div class="header">
+          <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="60"/>
+          <ChatMenu/>
+          <div class="language-switch-container">
+            <LanguageSwitch/>
           </div>
         </div>
-      </a-layout-header>
-      <a-layout>
-        <a-layout-content :style="{background:'#e9edf2', marginRight:'8px', width:'500px'}" >
-          <ResponsePanel :responses="responses" :loading="loading"/>
-        </a-layout-content>
-           <a-layout-sider width="25%" theme="light" :style="{background:'#e9edf2', width:'90%'}" :collapsed="false">
-          <PromptPanel :key="updateTrigger"/>
-        </a-layout-sider>
-      </a-layout>
-      <a-layout-footer  :style="{background:'#e9edf2',marginTop:'-5px', padding:'5px'}"   >
-        <a-tabs default-active-key="1" class="chat-tabs">
-          <a-tab-pane key="1" :tab="t('model_selection')">
-            <ModelSelection/>
-            <a-form layout="vertical" class="form">
-              <a-form-item class="textarea-container">
-                <div class="prompt-input-wrapper">
-                  <a-textarea
-                      spellcheck="false"
-                      v-model:value="prompt"
-                      :rows="2"
-                      :placeholder="t('enter_prompt')"
-                      @keydown="handleKeydown"
-                      class="prompt_input"
-                      :disabled="loading"
-                  />
-                  <a-button
-                      type="primary"
-                      @click="handleSubmit"
-                      :loading="loading"
-                      class="send-button">
-                    {{ t('send_button') }}
-                  </a-button>
-                </div>
-              </a-form-item>
-            </a-form>
-          </a-tab-pane>
-        </a-tabs>
-      </a-layout-footer>
+      </div>
+    </a-layout-header>
+    <a-layout>
+      <a-layout-content :style="{background:'#e9edf2', marginRight:'8px', width:'500px'}">
+        <ResponsePanel :responses="responses" :loading="loading"/>
+      </a-layout-content>
+      <a-layout-sider width="25%" theme="light" :style="{background:'#e9edf2', width:'90%'}" :collapsed="false">
+        <PromptPanel :key="updateTrigger"/>
+      </a-layout-sider>
     </a-layout>
-
+    <a-layout-footer :style="{background:'#e9edf2',marginTop:'-5px', padding:'5px'}">
+      <a-tabs default-active-key="1" class="chat-tabs">
+        <a-tab-pane key="1" :tab="t('model_selection')">
+          <ModelSelection/>
+          <a-form layout="vertical" class="form">
+            <a-form-item class="textarea-container">
+              <div class="prompt-input-wrapper">
+                <a-textarea
+                    spellcheck="false"
+                    v-model:value="prompt"
+                    :rows="2"
+                    :placeholder="t('enter_prompt')"
+                    @keydown="handleKeydown"
+                    class="prompt_input"
+                    :disabled="loading"
+                />
+                <a-button
+                    type="primary"
+                    @click="handleSubmit"
+                    :loading="loading"
+                    class="send-button">
+                  {{ t('send_button') }}
+                </a-button>
+              </div>
+            </a-form-item>
+          </a-form>
+        </a-tab-pane>
+      </a-tabs>
+    </a-layout-footer>
+  </a-layout>
 
 
 </template>
@@ -64,7 +63,7 @@ import ResponsePanel from './ResponsePanel.vue';
 import LanguageSwitch from './LanguageSwitch.vue';
 import ModelSelection from './ModelSelection.vue';
 import {message} from 'ant-design-vue';
-import {streamPrompt, createPrompt, sendResponsesToUserContext} from './../services/api';
+import {streamPrompt, createPrompt, sendResponsesToUserContext, fetchUserContext} from './../services/api';
 import {v4 as uuidv4} from 'uuid';
 import ChatMenu from './MainMenu.vue';
 import {Tabs, TabPane, Button, Form, Input, Layout, Row, Col} from 'ant-design-vue';
@@ -100,7 +99,49 @@ export default {
     const updateTrigger = ref(0);
     const buffer = ref(''); // Buffer to hold incomplete JSON strings
 
-    const createPromptServerside = async (prompt_id) => {
+
+    const user = '029c3baa-7a84-46cf-98f4-e10addda974a'; // for now
+    const thread_id = 1;
+
+    /**
+     * Fetch Usercontext and fill Responsepanel with thread data
+     */
+    fetchUserContext(user, thread_id)
+        .then(userContext => {
+          if (userContext) {
+            // Initialize responses.value with the user context
+            responses.value = userContext.map(contextItem => {
+              return {
+                id: contextItem.id,
+                user: contextItem.user,
+                status: contextItem.status,
+                id: contextItem.id,
+                prompt: contextItem.prompt,
+                model: contextItem.model,
+                completion: contextItem.completion,
+              };
+            });
+
+
+            console.log("responses.value",    userContext);
+          } else {
+            message.error(t('failed_to_retrieve_user_context'));
+          }
+        })
+        .catch(error => {
+          message.error(t('failed_to_retrieve_user_context'));
+          console.error("Error retrieving user context:", error);
+        })
+        .finally(() => {
+          loading.value = false;
+          updateTrigger.value++
+        });
+
+
+
+
+
+    const createPromptServerside = async (id) => {
       if (!prompt.value || typeof prompt.value !== 'string' || prompt.value.trim() === '') {
         message.error(t('invalid_prompt'));
         return;
@@ -108,9 +149,9 @@ export default {
 
       const promptData = {
         prompt: prompt.value.trim(),
-        user: '029c3baa-7a84-46cf-98f4-e10addda974a',
+        user: 9999,
         status: 'prompt-saved',
-        id: prompt_id,
+        id: id,
       };
 
       responses.value.push(promptData);
@@ -143,7 +184,7 @@ export default {
           responseModel = JSON.parse(jsonString);
 
           const responseIndex = responses.value.findIndex(
-              r => r.prompt_id === responseModel.prompt_id && r.model === responseModel.model
+              r => r.id === responseModel.id && r.model === responseModel.model
           );
 
           if (responseIndex !== -1) {
@@ -167,9 +208,9 @@ export default {
       }
 
       loading.value = true;
-      const prompt_id = uuidv4();
+      const id = uuidv4();
 
-      await createPromptServerside(prompt_id);
+      await createPromptServerside(id);
 
       const serviceResponse = await modelsStore.getServiceResponse();
 
@@ -185,7 +226,7 @@ export default {
       });
 
       const promptData = {
-        prompt_id: prompt_id,
+        id: id,
         prompt: prompt.value.trim(),
         models: selectedModelInfo,
       };
@@ -206,17 +247,17 @@ export default {
 
             // Wrap responses in the required format before sending
             const structuredResponse = {
-                prompt_id: responses.value[0]['id'], // Directly access the prompt_id from the first response
-                user: responses.value[0]['user'], // Directly access the prompt_id from the first response
-                thread_id: 1, // Directly access the prompt_id from the first response
-                context_data: responses.value, // Include all responses
+              id: responses.value[0]['id'], // Directly access the id from the first response
+              user: responses.value[0]['user'], // Directly access the id from the first response
+              thread_id: 1, // Directly access the id from the first response
+              context_data: responses.value, // Include all responses
             };
 
 
             // Send the structured response to /usercontext
             sendResponsesToUserContext(structuredResponse)
                 .catch(error => {
-                    console.error('Error sending responses to /usercontext:', error);
+                  console.error('Error sending responses to /usercontext:', error);
                 });
           }
       );

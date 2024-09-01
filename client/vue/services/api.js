@@ -106,3 +106,35 @@ export const sendResponsesToUserContext = async (structuredResponse) => {
         throw error;
     }
 };
+
+/**
+ * Fetches the user context from the server based on the provided user and thread ID.
+ * @param {string} user - The UUID of the user.
+ * @param {number} threadId - The ID of the thread.
+ * @returns {Promise<Object>} A promise that resolves to the user context data.
+ */
+export const fetchUserContext = async (user, threadId) => {
+    try {
+
+
+        const url = new URL(`${API_BASE_URL}/usercontext`);
+        url.searchParams.append('user', user);
+        url.searchParams.append('thread_id', String(threadId));
+
+        const response = await fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching user context:', error);
+        throw error;
+    }
+};

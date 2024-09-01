@@ -1,6 +1,6 @@
 import unittest
 import requests
-import uuid
+import random
 from server.app.config.settings import Settings  # Adjust the import path according to your project structure
 from server.app.models.usercontext.usercontext_post_request import \
     UserContextPostRequestModel  # Import the request model
@@ -15,10 +15,11 @@ class TestUserContext(unittest.TestCase):
         # Set the BASE_URL from the loaded configuration
         cls.BASE_URL = cls.settings.get("default").get("SERVER_URL")
 
-    def create_user_context(self, thread_id, user_id=None, prompt_id=None, context_data=None):
-        user_id = user_id or str(uuid.uuid4())
-        prompt_id = prompt_id or str(uuid.uuid4())  # Generate a new UUID for prompt_id if not provided
-        context_data = context_data or [{"key": "value"}]  # Default context data
+    def create_user_context(self, thread_id, user_id, prompt_id, context_data):
+        """
+        Creates a user context with the provided thread_id, user_id, prompt_id, and context_data.
+        All parameters must be provided and cannot be None.
+        """
 
         # Use the request model to create the payload
         payload = UserContextPostRequestModel(
@@ -28,12 +29,10 @@ class TestUserContext(unittest.TestCase):
             context_data=context_data
         )
 
-        # Convert the UUID fields to strings before sending the request
-        payload_dict = payload.model_dump()
-        payload_dict['user'] = str(payload.user)
-        payload_dict['prompt_id'] = str(payload.prompt_id)
-
         # Convert the model to a dictionary before sending the request
+        payload_dict = payload.model_dump()
+
+        # Send the request
         response = requests.post(f"{self.BASE_URL}/usercontext", json=payload_dict)
         if response.status_code != 200:
             print("Create User Context Response:", response.text)  # Debugging output
@@ -49,8 +48,13 @@ class TestUserContext(unittest.TestCase):
         self.assertEqual(delete_data['status'], "User context deleted successfully")
 
     def test_create_and_get_user_context(self):
+        # Generate valid user_id and prompt_id
+        user_id = random.randint(1, 1000000000)  # Generate a new bigint for user_id
+        prompt_id = random.randint(1, 1000000000)  # Generate a new bigint for prompt_id
+        context_data = [{"key": "value"}]  # Example context data
+
         thread_id = 1
-        created_context = self.create_user_context(thread_id)
+        created_context = self.create_user_context(thread_id, user_id, prompt_id, context_data)
 
         # Retrieve by thread_id and user
         response = requests.get(f"{self.BASE_URL}/usercontext",
@@ -66,8 +70,13 @@ class TestUserContext(unittest.TestCase):
         self.delete_user_context(created_context["id"])
 
     def test_delete_user_context(self):
+        # Generate valid user_id and prompt_id
+        user_id = random.randint(1, 1000000000)  # Generate a new bigint for user_id
+        prompt_id = random.randint(1, 1000000000)  # Generate a new bigint for prompt_id
+        context_data = [{"key": "value"}]  # Example context data
+
         thread_id = 1
-        created_context = self.create_user_context(thread_id)
+        created_context = self.create_user_context(thread_id, user_id, prompt_id, context_data)
 
         # Ensure the context is created
         response = requests.get(f"{self.BASE_URL}/usercontext",

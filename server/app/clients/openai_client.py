@@ -28,7 +28,7 @@ class OpenAIClient:
 
 
 
-    async def fetch_completion(self, model: OpenaiModel, prompt: str, prompt_id: str, presence_penalty: Optional[float] = 0.0):
+    async def fetch_completion(self, model: OpenaiModel, prompt: str, id: str, presence_penalty: Optional[float] = 0.0):
         try:
             self.logger.debug(f"Fetching streaming completion for model: {model.id} with presence_penalty: {presence_penalty}")
             stream = await self.client.chat.completions.create(
@@ -71,7 +71,7 @@ class OpenAIClient:
 
 
                         yield (SuccessGenerationModel(
-                            prompt_id=prompt_id,
+                            id=id,
                             model=model.id,
                             completion=completion
                         ).model_dump_json()).encode('utf-8')

@@ -89,9 +89,9 @@ global.fetch = vi.fn((url) => {
                                 token: 'Test token',
                                 data: 'Test data',
                                 timestamp: '2024-08-18 12:22:51',
-                                user: 'anonymous',
+                                user: 1234, // Changed to integer
                                 prompt: 'Tell me a short joke',
-                                prompt_id: '1e172fcc-2a98-4f81-bbf8-78b71043aaad',
+                                id: 5678, // Changed to integer
                                 model: 'gpt-3.5-turbo',
                             })
                         ),
@@ -134,9 +134,6 @@ describe('ChatForm.vue', () => {
             wrapper.unmount();
         }
     });
-
-
-
 
     it('checks if the model select box is available', () => {
         const selectBox = wrapper.findComponent({ name: 'ModelSelection' });

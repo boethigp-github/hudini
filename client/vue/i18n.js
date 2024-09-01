@@ -38,7 +38,8 @@ const messages = {
         error: 'Error',
         model_comparison: 'Model Comparison',
         user_prompt: 'User Prompt',
-        no_error: 'No error'
+        no_error: 'No error',
+        copy_clipboard: 'Copy to clipboard' // Added this line
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -77,7 +78,8 @@ const messages = {
         error: 'Fehler',
         model_comparison: 'Modellvergleich',
         user_prompt: 'Benutzereingabe',
-        no_error: 'Kein Fehler'
+        no_error: 'Kein Fehler',
+        copy_clipboard: 'In die Zwischenablage kopieren' // Added this line
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -116,7 +118,8 @@ const messages = {
         error: 'Erreur',
         model_comparison: 'Comparaison de modèles',
         user_prompt: 'Invite de l\'utilisateur',
-        no_error: 'Pas d\'erreur'
+        no_error: 'Pas d\'erreur',
+        copy_clipboard: 'Copier dans le presse-papiers' // Added this line
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
@@ -155,7 +158,8 @@ const messages = {
         error: 'Ошибка',
         model_comparison: 'Сравнение моделей',
         user_prompt: 'Запрос пользователя',
-        no_error: 'Нет ошибки'
+        no_error: 'Нет ошибки',
+        copy_clipboard: 'Скопировать в буфер обмена' // Added this line
     },
     zh: {
         hudini_title: 'Hudini - SLM上的CPU魔术师',
@@ -194,9 +198,11 @@ const messages = {
         error: '错误',
         model_comparison: '模型比较',
         user_prompt: '用户提示',
-        no_error: '无错误'
+        no_error: '无错误',
+        copy_clipboard: '复制到剪贴板' // Added this line
     }
 };
+
 
 const i18n = createI18n({
     legacy: false,

@@ -1,6 +1,5 @@
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel
 from typing import Optional, Dict, Any, List
-from uuid import UUID
 from datetime import datetime
 
 class Message(BaseModel):
@@ -30,16 +29,16 @@ class Completion(BaseModel):
 
 class ContextDataItem(BaseModel):
     prompt: Optional[str] = None
-    user: Optional[str] = None
+    user: Optional[int] = None  # Changed from str to int for bigint
     status: Optional[str] = None
-    id: Optional[UUID] = None
-    prompt_id: Optional[UUID] = None
+    id: Optional[int] = None  # Changed from UUID to int for bigint
+    prompt_id: Optional[int] = None  # Changed from UUID to int for bigint
     model: Optional[str] = None
     completion: Optional[Completion] = None
 
 class UserContextResponseModel(BaseModel):
-    id: int
-    user: UUID
+    id: int  # Changed from UUID to int for bigint
+    user: int  # Changed from UUID to int for bigint
     thread_id: int
     created: datetime
     updated: datetime
