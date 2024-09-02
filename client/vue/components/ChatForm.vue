@@ -11,7 +11,7 @@
         </div>
       </div>
     </a-layout-header>
-    <a-layout>
+    <a-layout :style="{background:'#e9edf2'}">
       <a-layout-content :style="{background:'#e9edf2', marginRight:'8px', width:'500px'}">
         <ResponsePanel :responses="responses" :loading="loading"/>
       </a-layout-content>
