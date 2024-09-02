@@ -100,12 +100,13 @@ class TestUserContext(unittest.TestCase):
         #self.delete_user_context(created_context["id"])
 
     def test_delete_user_context(self):
+        prompt_uuid = self.create_test_prompt()
         # Generate valid prompt_id and thread_id
-        prompt_id = 1  # Assume a valid prompt ID for testing
+
         thread_id = 1  # Assume a valid thread ID for testing
         context_data = [{"key": "value"}]  # Example context data
 
-        created_context = self.create_user_context(thread_id, prompt_id, context_data)
+        created_context = self.create_user_context(thread_id, prompt_uuid, context_data)
 
         # Ensure the context is created
         response = requests.get(f"{self.BASE_URL}/usercontext",

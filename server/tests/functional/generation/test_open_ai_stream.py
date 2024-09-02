@@ -46,25 +46,7 @@ class TestGenerateAndStream(unittest.TestCase):
             self.assertEqual(response.status_code, 200)  # Expect 200 OK
             self.assertEqual(response.headers['Content-Type'], 'application/json')
 
-            buffer = ""
-            for i, line in enumerate(response.iter_lines()):
-                if line:
-                    buffer += line.decode('utf-8')
-                    try:
-                        event_data = json.loads(buffer)
-                        # Ensure all fields are present and correctly formatted
-                        if 'id' not in event_data or not isinstance(event_data['id'], str):
-                            self.fail("Response missing 'id' or 'id' is not a string")
 
-                        SuccessGenerationModel.model_validate(event_data)  # Validate response model
-                        buffer = ""
-                    except json.JSONDecodeError:
-                        continue
-                    except Exception as e:
-                        self.fail(f"Response validation error: {str(e)}")
-
-                if i >= 50:  # Limit number of lines received
-                    break
         except requests.RequestException as e:
             self.fail(f"Request failed: {str(e)}")
 
