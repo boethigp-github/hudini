@@ -3,6 +3,7 @@
     <a-col :span="23">
       <div id="response" class="response" ref="responseElement">
         <template v-for="(dialog, dialogIndex) in groupedResponses" :key="dialogIndex">
+
           <a-card dense  size="small" :id="`dialog_${dialog.promptId}`" class="dialog-card">
             <a-list
               :data-source="dialog.items"

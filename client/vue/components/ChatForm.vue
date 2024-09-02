@@ -154,7 +154,7 @@ export default {
         return;
       }
 
-       const promptData = {
+      const promptData = {
         prompt: prompt.value.trim(),
         user: 1,
         status: 'PROMPT_SAVED',
@@ -183,14 +183,20 @@ export default {
     const processChunk = (chunk) => {
       buffer.value += chunk; // Add chunk to buffer
 
+
       let boundary;
-      while ((boundary = buffer.value.indexOf('}{')) !== -1) {  // Find boundary between JSON objects
+      while ((boundary = buffer.value.indexOf('}\n' + '{')) !== -1) {  // Find boundary between JSON objects
+
+
         const jsonString = buffer.value.slice(0, boundary + 1);
         buffer.value = buffer.value.slice(boundary + 1);
+
+
 
         let responseModel;
         try {
           responseModel = JSON.parse(jsonString);
+
 
           const responseIndex = responses.value.findIndex(
               r => r.id === responseModel.id && r.model === responseModel.model
@@ -217,8 +223,6 @@ export default {
       }
 
       loading.value = true;
-
-
 
 
       const id = generateRandomNumberString(16);
@@ -260,17 +264,14 @@ export default {
           () => {
             loading.value = false;
 
-            // Wrap responses in the required format before sending
-            const userContext = {
-              id: uuid, // Directly access the id from the first response
+
+
+            saveUserContext({
+              prompt_uuid: uuid, // Directly access the id from the first response
               user: responses.value[0]['user'], // Directly access the id from the first response
               thread_id: 1, // Directly access the id from the first response
               context_data: responses.value, // Include all responses
-            };
-
-
-            // Send the structured response to /usercontext
-            saveUserContext(userContext)
+            })
                 .catch(error => {
                   console.error('Error sending responses to /usercontext:', error);
                 });

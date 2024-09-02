@@ -28,7 +28,7 @@ class OpenAIClient:
 
     async def fetch_completion(self, openai_model: OpenaiModel, prompt: str, id:str, presence_penalty: Optional[float] = 0.0):
         try:
-            self.logger.debug(f"Fetching streaming completion for model: {openai_model.model} with presence_penalty: {presence_penalty}")
+            self.logger.debug(f"Fetching streaming completion for model: {openai_model.id} with presence_penalty: {presence_penalty}")
             stream = await self.client.chat.completions.create(
                 model=openai_model.id,
                 messages=[
@@ -59,7 +59,7 @@ class OpenAIClient:
                                 )
                             )],
                             created=chunk.created,
-                            model=chunk.model,
+                            model=openai_model.id,
                             object=chunk.object,
                             # Assuming these are not available in streaming mode
                             system_fingerprint=None,
@@ -68,7 +68,7 @@ class OpenAIClient:
 
                         yield (SuccessGenerationModel(
                             id=id,
-                            model=openai_model.model,
+                            model=openai_model.id,
                             completion=completion
                         ).model_dump_json()).encode('utf-8')
 
@@ -81,7 +81,7 @@ class OpenAIClient:
                 yield (ErrorGenerationModel(
                     model=openai_model.id,
                     error=error
-                ).model_dump_json() + '\n').encode('utf-8')
+                ).model_dump_json()).encode('utf-8')
 
             return error_generator(str(e))
 
