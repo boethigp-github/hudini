@@ -150,7 +150,7 @@ CREATE DATABASE hudini
 
 - Create a user and assign it to the database (replace `your_username` and `your_password` with your desired values):
 
-  ```sql
+  ```postgressql
   CREATE USER your_username WITH PASSWORD 'your_password';
   GRANT ALL PRIVILEGES ON DATABASE hudini TO your_username;
   ```
@@ -159,78 +159,117 @@ CREATE DATABASE hudini
 
 - After setting up the database, you can create the necessary tables using the following SQL commands:
 
-```sql
+```postgressql
 -- Table: public.prompts
+
+-- DROP TABLE IF EXISTS public.prompts;
 
 CREATE TABLE IF NOT EXISTS public.prompts
 (
-    id bigint NOT NULL DEFAULT nextval('prompts_id_seq'::regclass), -- Changed to bigint
-    prompt text COLLATE "en_US.UTF-8" NOT NULL,
-    "timestamp" timestamp without time zone NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "user" bigint NOT NULL, -- Changed to bigint
-    status character varying(30) COLLATE "en_US.UTF-8",
-    CONSTRAINT prompts_pkey PRIMARY KEY (id)
+    id bigint NOT NULL DEFAULT nextval('prompts_id_seq'::regclass),
+    prompt text COLLATE pg_catalog."default" NOT NULL,
+    status character varying(30) COLLATE pg_catalog."default",
+    "user" bigint NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    uuid uuid DEFAULT uuid_generate_v4(),
+    CONSTRAINT prompts_pkey PRIMARY KEY (id),
+    CONSTRAINT fk_user_id FOREIGN KEY ("user")
+        REFERENCES public.users (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
 )
+
 TABLESPACE pg_default;
 
 ALTER TABLE IF EXISTS public.prompts
     OWNER to postgres;
-
 -- Index: idx_prompts_status
+
+-- DROP INDEX IF EXISTS public.idx_prompts_status;
 
 CREATE INDEX IF NOT EXISTS idx_prompts_status
     ON public.prompts USING btree
-    (status COLLATE "en_US.UTF-8" ASC NULLS LAST)
+    (status COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
-
 -- Index: idx_prompts_user
+
+-- DROP INDEX IF EXISTS public.idx_prompts_user;
 
 CREATE INDEX IF NOT EXISTS idx_prompts_user
     ON public.prompts USING btree
-    ("user" ASC NULLS LAST) -- Changed to bigint, no need for COLLATE
+    ("user" ASC NULLS LAST)
     TABLESPACE pg_default;
+-- Index: idx_prompts_uuid
+
+-- DROP INDEX IF EXISTS public.idx_prompts_uuid;
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_prompts_uuid
+    ON public.prompts USING btree
+    (uuid ASC NULLS LAST)
+    TABLESPACE pg_default;
+
+
 
 -- Table: public.user_context
 
+-- DROP TABLE IF EXISTS public.user_context;
+
 CREATE TABLE IF NOT EXISTS public.user_context
 (
-    id integer NOT NULL DEFAULT nextval('user_context_id_seq'::regclass),
+    id bigint NOT NULL DEFAULT nextval('user_context_id_seq'::regclass),
     created timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     updated timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
     context_data jsonb,
     thread_id bigint,
-    "user" bigint, -- Changed to bigint
-    id bigint, -- Changed to bigint
-    CONSTRAINT user_context_pkey PRIMARY KEY (id)
+    "user" bigint,
+    prompt_uuid uuid NOT NULL DEFAULT uuid_generate_v4(),
+    CONSTRAINT user_context_pkey PRIMARY KEY (id),
+    CONSTRAINT fk_prompt_uuid FOREIGN KEY (prompt_uuid)
+        REFERENCES public.prompts (uuid) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE,
+    CONSTRAINT fk_user_id FOREIGN KEY ("user")
+        REFERENCES public.users (id) MATCH SIMPLE
+        ON UPDATE NO ACTION
+        ON DELETE CASCADE
 )
 
 TABLESPACE pg_default;
 
 ALTER TABLE IF EXISTS public.user_context
     OWNER to postgres;
+    
+    
+    
+    
+    -- Table: public.users
 
--- Table: public.users
+-- DROP TABLE IF EXISTS public.users;
 
 CREATE TABLE IF NOT EXISTS public.users
 (
-    id integer NOT NULL DEFAULT nextval('users_id_seq'::regclass),
-    username character varying(50) COLLATE "en_US.UTF-8" NOT NULL,
-    email character varying(100) COLLATE "en_US.UTF-8" NOT NULL,
+    id bigint NOT NULL DEFAULT nextval('users_id_seq'::regclass),
+    username character varying(50) COLLATE pg_catalog."default" NOT NULL,
+    email character varying(100) COLLATE pg_catalog."default" NOT NULL,
     created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     last_login timestamp without time zone,
     CONSTRAINT users_pkey PRIMARY KEY (id)
 )
+
 TABLESPACE pg_default;
 
 ALTER TABLE IF EXISTS public.users
     OWNER to postgres;
-
 -- Index: idx_username
+
+-- DROP INDEX IF EXISTS public.idx_username;
 
 CREATE INDEX IF NOT EXISTS idx_username
     ON public.users USING btree
-    (username COLLATE "en_US.UTF-8" ASC NULLS LAST)
+    (username COLLATE pg_catalog."default" ASC NULLS LAST)
     TABLESPACE pg_default;
+
+
 ```
 
 ### 5. Configure Environment Variables

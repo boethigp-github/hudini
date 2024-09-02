@@ -58,7 +58,6 @@
             </a-list>
           </a-card>
         </template>
-
         <ComparisonDrawer :plugins="plugins" :comparisonData="comparisonData" width="90%" />
       </div>
     </a-col>
