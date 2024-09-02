@@ -1,53 +1,51 @@
+<!--suppress CssUnusedSymbol -->
 <template>
-    <a-card size="small" class="previous-prompt-card" :title="$t('previous_prompts')">
-        <div class="prompt-panel">
-            <a-collapse v-model:activeKey="activeKey" accordion>
-                <a-collapse-panel v-for="prompt in previousPrompts" :key="prompt.id">
-                    <template #header>
-                        <div class="panel-header">
-                            <span class="timestamp">{{ formatTimestamp(prompt.created_at) }}</span>
-                            <div class="header-actions">
-                                <icon-copy-prompt @click.stop="copyPromptToEvent(prompt)" class="copy-icon" :title="$t('rerun_prompt', 'Rerun')" />
-                                <icon-copy @click.stop="copyToClipboard(prompt.prompt)" class="copy-icon" :title="$t('copy_clipboard', 'Copy to clipboard')" />
-                                <icon-delete @click.stop="deletePrompt(prompt.id)" class="copy-icon" :title="$t('delete')" />
-                            </div>
+       <a-card size="small" class="previous-prompt-card" :title="$t('previous_prompts')" >
+  <div class="prompt-panel">
+        <a-collapse v-model:activeKey="activeKey" accordion>
+            <a-collapse-panel v-for="prompt in previousPrompts" :key="prompt.id">
+                <template #header>
+                    <div class="panel-header">
+                        <span class="timestamp">{{ formatTimestamp(prompt.created_at) }}</span>
+                        <div class="header-actions">
+                            <icon-copy @click.stop="copyToClipboard(prompt.prompt)" class="copy-icon" :title=" $t('copy_clipboard', 'Copy to clipboard')" />
+                            <icon-delete @click.stop="deletePrompt(prompt.id)" class="copy-icon" :title=" $t('delete')" />
                         </div>
-                        <span class="title">{{ getTitle(prompt) }}</span>
-                    </template>
-                    <div class="prompt-content">
-                        {{ prompt.prompt }}
                     </div>
-                </a-collapse-panel>
-            </a-collapse>
-        </div>
-    </a-card>
+                    <span class="title">{{ getTitle(prompt) }}</span>
+                </template>
+                <div class="prompt-content">
+                    {{ prompt.prompt }}
+                </div>
+            </a-collapse-panel>
+        </a-collapse>
+    </div>
+       </a-card>
 </template>
 
 <script>
 import { ref, defineComponent, onMounted } from "vue";
 import { useI18n } from 'vue-i18n';
 import { message, Collapse, Button } from "ant-design-vue";
-import { CopyOutlined, DeleteFilled, FileTextOutlined } from "@ant-design/icons-vue";
+import { CopyOutlined, DeleteFilled } from "@ant-design/icons-vue";
 import { Card } from 'ant-design-vue';
-
 export default defineComponent({
     components: {
         IconCopy: CopyOutlined,
         IconDelete: DeleteFilled,
-        IconCopyPrompt: FileTextOutlined,
         ACollapse: Collapse,
         ACollapsePanel: Collapse.Panel,
         AButton: Button,
-        'a-card': Card,
+      'a-card': Card,
     },
     setup() {
         const { t } = useI18n();
         const previousPrompts = ref([]);
         const serverUrl = import.meta.env.SERVER_URL;
 
-        if (!serverUrl) {
-            console.error("SERVER_URL not set. Check Env. All envs", import.meta.env);
-        }
+      if (!serverUrl) {
+        console.error("SERVER_URL not set. Check Env. All envs", import.meta.env);
+      }
         const activeKey = ref([]);
 
         const copyToClipboard = (text) => {
@@ -60,11 +58,6 @@ export default defineComponent({
                     message.error(t('failed_to_copy'));
                     console.error("Copy failed:", error);
                 });
-        };
-
-        const copyPromptToEvent = (prompt) => {
-            const event = new CustomEvent('prompt-to-input', { detail: prompt });
-            window.dispatchEvent(event);
         };
 
         const loadPrompts = () => {
@@ -129,7 +122,6 @@ export default defineComponent({
         return {
             t,
             copyToClipboard,
-            copyPromptToEvent,
             previousPrompts,
             activeKey,
             deletePrompt,
@@ -141,7 +133,7 @@ export default defineComponent({
 });
 </script>
 
-<style>
+<style >
 .prompt-panel {
     height: auto;
     max-height: 66.5vh;
@@ -150,11 +142,13 @@ export default defineComponent({
     width: 100%;
 }
 
-.previous-prompt-card {
-    width: 100%!important;
-    margin-top: 0;
-}
 
+.previous-prompt-card{
+  width: 100%!important;
+
+  margin-top: 0;
+
+}
 .acollapse {
     max-height: 100%; /* Make sure the collapse container fills the parent height */
     overflow-y: auto; /* Ensure content inside the collapse panel is scrollable */
@@ -188,15 +182,15 @@ export default defineComponent({
     margin-top: -13px;
 }
 
-.copy-icon:hover {
-    color: #da6e00;
+.copy-icon:hover{
+  color: #999;
 }
 
 .delete-button {
     color: red;
     font-size: 12px;
     margin-top: -20px;
-    margin-right: -20px;
+  margin-right: -20px;
 }
 
 .prompt-content {
@@ -206,12 +200,13 @@ export default defineComponent({
 
 /* Previous Prompts */
 .previous-prompts {
-    background: none;
+    background:none;
     padding: 0;
     border-radius: 10px;
-    width: 40%;
-    max-width: 100%!important;
+    width:40%;
+    max-width:100%!important;
     height: 89vh;
     align-items: center; /* Optional: Center vertically */
 }
+
 </style>
