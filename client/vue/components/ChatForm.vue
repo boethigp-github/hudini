@@ -117,23 +117,19 @@ export default {
      * Fetch Usercontext and fill Responsepanel with thread data
      */
     fetchUserContext(user, thread_id)
-        .then(userContext => {
+        .then(async userContext => {
           if (userContext) {
-            // Initialize responses.value with the user context
-            responses.value = userContext.map(contextItem => {
-              return {
-                prompt_id: contextItem.prompt_id,
-                user: contextItem.user,
-                status: contextItem.status,
-                id: contextItem.id,
-                prompt: contextItem.prompt,
-                model: contextItem.model,
-                completion: contextItem.completion,
-              };
-            });
+
+             const json = await userContext.json();
+
+             console.log("json",json);
+
+             json.forEach(response=>{
+              responses.value = response.context_data
+             })
 
 
-            console.log("responses.value", userContext);
+
           } else {
             message.error(t('failed_to_retrieve_user_context'));
           }
@@ -143,8 +139,13 @@ export default {
           console.error("Error retrieving user context:", error);
         })
         .finally(() => {
+
+
+
+
           loading.value = false;
           updateTrigger.value++
+
         });
 
 
@@ -267,10 +268,10 @@ export default {
 
 
             saveUserContext({
-              prompt_uuid: uuid, // Directly access the id from the first response
-              user: responses.value[0]['user'], // Directly access the id from the first response
-              thread_id: 1, // Directly access the id from the first response
-              context_data: responses.value, // Include all responses
+              prompt_uuid: uuid,
+              user: user,
+              thread_id: thread_id,
+              context_data: responses.value,
             })
                 .catch(error => {
                   console.error('Error sending responses to /usercontext:', error);

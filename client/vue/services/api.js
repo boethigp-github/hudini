@@ -113,7 +113,7 @@ export const saveUserContext = async (structuredResponse) => {
  * @param {number} threadId - The ID of the thread.
  * @returns {Promise<Object>} A promise that resolves to the user context data.
  */
-export const fetchUserContext = async (user, threadId) => {
+export const fetchUserContext = (user, threadId) => {
     try {
 
 
@@ -121,18 +121,12 @@ export const fetchUserContext = async (user, threadId) => {
         url.searchParams.append('user', user);
         url.searchParams.append('thread_id', String(threadId));
 
-        const response = await fetch(url.toString(), {
+        return fetch(url.toString(), {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
             },
-        });
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        return await response.json();
+        })
     } catch (error) {
         console.error('Error fetching user context:', error);
         throw error;
