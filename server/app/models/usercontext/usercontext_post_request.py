@@ -1,5 +1,6 @@
-from pydantic import BaseModel, Field
-from typing import List, Optional, Any, Dict
+from pydantic import BaseModel, Field, field_validator
+from typing import List, Optional, Dict, Any
+from uuid import UUID
 
 class Message(BaseModel):
     content: str
@@ -28,15 +29,19 @@ class Completion(BaseModel):
 
 class ContextDataItem(BaseModel):
     prompt: Optional[str] = None
-    user: Optional[int] = None  # Changed from UUID to int for bigint
+    user: Optional[int] = None
     status: Optional[str] = None
-    id: Optional[int] = None  # Changed from UUID to int for bigint
-    prompt_id: Optional[int] = None  # Changed from UUID to int for bigint
     model: Optional[str] = None
     completion: Optional[Dict[str, Any]] = None
 
 class UserContextPostRequestModel(BaseModel):
-    prompt_id: int  # Changed from UUID to int for bigint
-    user: int  # Changed from str to int for bigint
+    prompt_uuid: UUID = Field(..., description="A unique identifier for the prompt")
+    user: int
     thread_id: int
-    context_data: List[ContextDataItem]  # Allow a list of dictionaries
+    context_data: List[ContextDataItem]
+
+    @field_validator("prompt_uuid")
+    def validate_prompt_uuid(cls, value):
+        if not isinstance(value, UUID):
+            raise ValueError("Invalid UUID format")
+        return value

@@ -63,7 +63,7 @@ import ResponsePanel from './ResponsePanel.vue';
 import LanguageSwitch from './LanguageSwitch.vue';
 import ModelSelection from './ModelSelection.vue';
 import {message} from 'ant-design-vue';
-import {streamPrompt, createPrompt, sendResponsesToUserContext, fetchUserContext} from './../services/api';
+import {stream, createPrompt, saveUserContext, fetchUserContext} from './../services/api';
 import {v4 as uuidv4} from 'uuid';
 import ChatMenu from './MainMenu.vue';
 import {Tabs, TabPane, Button, Form, Input, Layout, Row, Col} from 'ant-design-vue';
@@ -234,7 +234,7 @@ export default {
         return;
       }
 
-      const selectedModelInfo = modelsStore.selectedModels.map(modelId => {
+      const selectedModels = modelsStore.selectedModels.map(modelId => {
         const fullModelInfo = serviceResponse.find(model => model.id === modelId);
         return fullModelInfo || {id: modelId, platform: 'unknown'};
       });
@@ -242,10 +242,11 @@ export default {
       const generationRequest = {
         id: uuid,
         prompt: prompt.value.trim(),
-        models: selectedModelInfo
+        models: selectedModels,
+        method_name: 'fetch_completion'
       };
 
-      await streamPrompt(
+      await stream(
           generationRequest,
           processChunk,
           (error) => {
@@ -260,8 +261,8 @@ export default {
             loading.value = false;
 
             // Wrap responses in the required format before sending
-            const structuredResponse = {
-              id: responses.value[0]['id'], // Directly access the id from the first response
+            const userContext = {
+              id: uuid, // Directly access the id from the first response
               user: responses.value[0]['user'], // Directly access the id from the first response
               thread_id: 1, // Directly access the id from the first response
               context_data: responses.value, // Include all responses
@@ -269,7 +270,7 @@ export default {
 
 
             // Send the structured response to /usercontext
-            sendResponsesToUserContext(structuredResponse)
+            saveUserContext(userContext)
                 .catch(error => {
                   console.error('Error sending responses to /usercontext:', error);
                 });

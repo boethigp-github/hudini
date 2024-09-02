@@ -30,7 +30,7 @@ class OpenAIClient:
         try:
             self.logger.debug(f"Fetching streaming completion for model: {openai_model.model} with presence_penalty: {presence_penalty}")
             stream = await self.client.chat.completions.create(
-                model=openai_model.model,
+                model=openai_model.id,
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant."},
                     {"role": "user", "content": prompt}

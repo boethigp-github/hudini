@@ -1,13 +1,14 @@
 from sqlalchemy import Column, Integer, String, DateTime, JSON
 from datetime import datetime
 from ...db.base import Base  # Import Base aus dem gemeinsamen Modul
-
+from sqlalchemy.dialects.postgresql import UUID
+import uuid
 class UserContextModel(Base):
     __tablename__ = 'user_context'  # Tabellenname in der Datenbank
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     user = Column(Integer, nullable=False)  # Changed to bigint (Integer in SQLAlchemy)
-    prompt_id = Column(Integer, nullable=False)  # Changed to bigint (Integer in SQLAlchemy)
+    prompt_uuid = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
     thread_id = Column(Integer, nullable=False)
     created = Column(DateTime, default=datetime.utcnow)
     updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -18,7 +19,7 @@ class UserContextModel(Base):
             "id": self.id,
             "user": self.user,
             "thread_id": self.thread_id,
-            "prompt_id": self.prompt_id,
+            "prompt_uuid": str(self.prompt_uuid),
             "created": self.created.isoformat(),
             "updated": self.updated.isoformat(),
             "context_data": self.context_data,

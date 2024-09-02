@@ -2,19 +2,19 @@ const API_BASE_URL = import.meta.env.SERVER_URL || 'http://localhost:8000';
 
 /**
  * Sends a prompt to the server and streams the response.
- * @param {Object} promptData - The data to send to the server.
+ * @param {Object} generationRequest - The data to send to the server.
  * @param {Function} onChunk - Callback function to handle each chunk of the response.
  * @param {Function} onError - Callback function to handle any errors.
  * @param {Function} onComplete - Callback function called when the stream is complete.
  */
-export const streamPrompt = async (promptData, onChunk, onError, onComplete) => {
+export const stream = async (generationRequest, onChunk, onError, onComplete) => {
     try {
         const response = await fetch(`${API_BASE_URL}/stream`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(promptData),
+            body: JSON.stringify(generationRequest),
         });
 
         if (!response.ok) {
@@ -88,7 +88,7 @@ export const createPrompt = async (promptData) => {
  * @param {object} structuredResponse - Array of response objects to send.
  * @returns {Promise<void>} A promise that resolves when the request is complete.
  */
-export const sendResponsesToUserContext = async (structuredResponse) => {
+export const saveUserContext = async (structuredResponse) => {
     try {
         const response = await fetch(`${API_BASE_URL}/usercontext`, {
             method: 'POST',

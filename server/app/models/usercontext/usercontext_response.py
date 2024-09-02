@@ -1,7 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel , field_validator
 from typing import Optional, Dict, Any, List
 from datetime import datetime
-
+from uuid import UUID, uuid4
 class Message(BaseModel):
     content: str
     refusal: Optional[str] = None
@@ -31,18 +31,25 @@ class ContextDataItem(BaseModel):
     prompt: Optional[str] = None
     user: Optional[int] = None  # Changed from str to int for bigint
     status: Optional[str] = None
-    id: Optional[int] = None  # Changed from UUID to int for bigint
-    prompt_id: Optional[int] = None  # Changed from UUID to int for bigint
+    id: Optional[int] = None
+
     model: Optional[str] = None
     completion: Optional[Completion] = None
 
 class UserContextResponseModel(BaseModel):
-    id: int  # Changed from UUID to int for bigint
-    user: int  # Changed from UUID to int for bigint
+    id: int  
+    user: int  
     thread_id: int
+    prompt_uuid: UUID  # Add the UUID field
     created: datetime
     updated: datetime
     context_data: List[ContextDataItem]  # Allow a list of ContextDataItem objects
+
+    @field_validator("prompt_uuid")
+    def validate_prompt_uuid(cls, value):
+        if not isinstance(value, UUID):
+            raise ValueError("Invalid UUID format")
+        return value
 
     class Config:
         orm_mode = True
