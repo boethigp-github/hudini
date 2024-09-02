@@ -54,20 +54,20 @@
 </template>
 
 <script>
-import {ref, watch} from 'vue';
-import {useI18n} from 'vue-i18n';
-import {useModelsStore} from './../stores/models';
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useModelsStore } from './../stores/models';
 import PromptPanel from './PromptPanel.vue';
 import ArtifactsPanel from './ResponsePanel/ArtifactsPanels.vue';
 import ResponsePanel from './ResponsePanel.vue';
 import LanguageSwitch from './LanguageSwitch.vue';
 import ModelSelection from './ModelSelection.vue';
-import {message} from 'ant-design-vue';
-import {stream, createPrompt, saveUserContext, fetchUserContext} from './../services/api';
-import {v4 as uuidv4} from 'uuid';
+import { message } from 'ant-design-vue';
+import { stream, createPrompt, saveUserContext, fetchUserContext } from './../services/api';
+import { v4 as uuidv4 } from 'uuid';
 import ChatMenu from './MainMenu.vue';
-import {Tabs, TabPane, Button, Form, Input, Layout, Row, Col} from 'ant-design-vue';
-import {PlusOutlined, SettingOutlined} from '@ant-design/icons-vue';
+import { Tabs, TabPane, Button, Form, Input, Layout, Row, Col } from 'ant-design-vue';
+import { PlusOutlined, SettingOutlined } from '@ant-design/icons-vue';
 
 export default {
   name: 'ChatForm',
@@ -90,7 +90,7 @@ export default {
     SettingOutlined,
   },
   setup() {
-    const {t} = useI18n();
+    const { t } = useI18n();
     const prompt = ref('');
     const responses = ref([]);
     const loading = ref(false);
@@ -98,7 +98,6 @@ export default {
     const modelsStore = useModelsStore();
     const updateTrigger = ref(0);
     const buffer = ref(''); // Buffer to hold incomplete JSON strings
-
 
     const user = 1; // for now
     const thread_id = 1;
@@ -112,42 +111,29 @@ export default {
       return result;
     }
 
-
     /**
      * Fetch Usercontext and fill Responsepanel with thread data
      */
     fetchUserContext(user, thread_id)
-        .then(async userContext => {
-          if (userContext) {
-
-             const json = await userContext.json();
-
-             console.log("json",json);
-
-             json.forEach(response=>{
-              responses.value = response.context_data
-             })
-
-
-
-          } else {
-            message.error(t('failed_to_retrieve_user_context'));
-          }
-        })
-        .catch(error => {
+      .then(async userContext => {
+        if (userContext) {
+          const json = await userContext.json();
+          console.log("json", json);
+          json.forEach(response => {
+            responses.value = response.context_data
+          })
+        } else {
           message.error(t('failed_to_retrieve_user_context'));
-          console.error("Error retrieving user context:", error);
-        })
-        .finally(() => {
-
-
-
-
-          loading.value = false;
-          updateTrigger.value++
-
-        });
-
+        }
+      })
+      .catch(error => {
+        message.error(t('failed_to_retrieve_user_context'));
+        console.error("Error retrieving user context:", error);
+      })
+      .finally(() => {
+        loading.value = false;
+        updateTrigger.value++
+      });
 
     const createPromptServerside = async (id, uuid) => {
       if (!prompt.value || typeof prompt.value !== 'string' || prompt.value.trim() === '') {
@@ -162,7 +148,6 @@ export default {
         id: id,
         uuid: uuid
       };
-
 
       responses.value.push(promptData);
       updateTrigger.value++;
@@ -184,23 +169,17 @@ export default {
     const processChunk = (chunk) => {
       buffer.value += chunk; // Add chunk to buffer
 
-
       let boundary;
       while ((boundary = buffer.value.indexOf('}\n' + '{')) !== -1) {  // Find boundary between JSON objects
-
-
         const jsonString = buffer.value.slice(0, boundary + 1);
         buffer.value = buffer.value.slice(boundary + 1);
-
-
 
         let responseModel;
         try {
           responseModel = JSON.parse(jsonString);
 
-
           const responseIndex = responses.value.findIndex(
-              r => r.id === responseModel.id && r.model === responseModel.model
+            r => r.id === responseModel.id && r.model === responseModel.model
           );
 
           if (responseIndex !== -1) {
@@ -225,7 +204,6 @@ export default {
 
       loading.value = true;
 
-
       const id = generateRandomNumberString(16);
       const uuid = uuidv4()
 
@@ -241,7 +219,7 @@ export default {
 
       const selectedModels = modelsStore.selectedModels.map(modelId => {
         const fullModelInfo = serviceResponse.find(model => model.id === modelId);
-        return fullModelInfo || {id: modelId, platform: 'unknown'};
+        return fullModelInfo || { id: modelId, platform: 'unknown' };
       });
 
       const generationRequest = {
@@ -252,31 +230,29 @@ export default {
       };
 
       await stream(
-          generationRequest,
-          processChunk,
-          (error) => {
-            console.error('Stream error:', error);
-            responses.value.push({
-              status: 'error',
-              token: t('server_connection_error'),
+        generationRequest,
+        processChunk,
+        (error) => {
+          console.error('Stream error:', error);
+          responses.value.push({
+            status: 'error',
+            token: t('server_connection_error'),
+          });
+          loading.value = false;
+        },
+        () => {
+          loading.value = false;
+
+          saveUserContext({
+            prompt_uuid: uuid,
+            user: user,
+            thread_id: thread_id,
+            context_data: responses.value,
+          })
+            .catch(error => {
+              console.error('Error sending responses to /usercontext:', error);
             });
-            loading.value = false;
-          },
-          () => {
-            loading.value = false;
-
-
-
-            saveUserContext({
-              prompt_uuid: uuid,
-              user: user,
-              thread_id: thread_id,
-              context_data: responses.value,
-            })
-                .catch(error => {
-                  console.error('Error sending responses to /usercontext:', error);
-                });
-          }
+        }
       );
     };
 
@@ -284,6 +260,20 @@ export default {
       if (!newValue) {
         prompt.value = '';
       }
+    });
+
+
+    const handlePromptToInput = (event) => {
+      prompt.value = event.detail.prompt;
+      handleSubmit()
+    };
+
+    onMounted(() => {
+      window.addEventListener('prompt-to-input', handlePromptToInput);
+    });
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('prompt-to-input', handlePromptToInput);
     });
 
     return {

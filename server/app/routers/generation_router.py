@@ -115,35 +115,27 @@ def validate_models_and_clients(models: List[ModelConfig], method_name: str) -> 
     return valid_models
 
 
-
-
 @router.post("/stream", response_model=SuccessGenerationModel, tags=["generation"])
 async def stream_route(request: GenerationRequest, db: AsyncSession = Depends(get_db)):
     """
     Stream AI-generated content based on the provided prompt and model configurations.
     """
     logger.info("Incoming request to /stream:")
-    logger.info(request.model_dump_json())  # Use model_dump_json for logging
+    logger.info(request.model_dump_json())
     logger.info("=" * 50)
 
     valid_models = validate_models_and_clients(request.models, request.method_name)
 
     async def generate():
-        tasks = []
-        for model, client, method in valid_models:
-            async_task = method(model, request.prompt, request.id)
-            task = asyncio.create_task(async_task)
-            tasks.append(task)
+        # Create tasks for each model's generation
+        tasks = [
+            client.generate([model], request.prompt, request.id)
+            for model, client, _ in valid_models
+        ]
 
-        for completed_task in asyncio.as_completed(tasks):
-            async_gen = await completed_task
-            async for result in async_gen:
-                if isinstance(result, bytes):
-                    result = result.decode('utf-8')
-
-                # Deserialize using Pydantic model's model_validate
-                success_model = SuccessGenerationModel.model_validate(json.loads(result))
-                # Serialize using model_dump_json
-                yield success_model.model_dump_json().encode('utf-8') + b'\n'
+        # Run all tasks concurrently and yield results as they come
+        for result in asyncio.as_completed(tasks):
+            async for chunk in await result:
+                yield chunk
 
     return StreamingResponse(generate(), media_type='application/json')
