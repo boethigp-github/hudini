@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from server.app.config.settings import Settings
 from server.app.db.base import async_session_maker
 from server.app.models.generation.generation_request import GenerationRequest
-from server.app.clients.anthropic_client import AnthropicClient
+from server.app.clients.anthropic.anthropic_client import AnthropicClient
 from server.app.models.generation.success_generation_model import SuccessGenerationModel
 
 router = APIRouter()

@@ -2,8 +2,8 @@ import logging
 import openai
 from openai import AsyncOpenAI
 from server.app.models.generation.success_generation_model import SuccessGenerationModel, Completion, Choice, Message, Usage
-from ..models.generation_error_details import ErrorGenerationModel
-from ..models.openai_model import OpenaiModel
+from server.app.models.generation_error_details import ErrorGenerationModel
+from server.app.models.generation.openai_model import OpenaiModel
 from typing import Optional
 
 class OpenAIClient:

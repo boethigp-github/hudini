@@ -5,7 +5,7 @@ from sqlalchemy.future import select
 from server.app.models.usercontext.user_context import UserContextModel
 from server.app.models.usercontext.usercontext_post_request import UserContextPostRequestModel
 from server.app.models.usercontext.usercontext_response import UserContextResponseModel
-from ..db.base import async_session_maker
+from server.app.db.base import async_session_maker
 from typing import List
 
 

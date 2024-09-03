@@ -3,7 +3,7 @@ from typing import AsyncGenerator, List
 import anthropic
 from server.app.models.generation.success_generation_model import SuccessGenerationModel, Completion, Choice, Message, Usage
 from server.app.models.generation.generation_request import GenerationRequest, ModelConfig
-from server.app.models.anthropic_model import AnthropicModel
+from server.app.models.generation.anthropic_model import AnthropicModel
 from datetime import datetime
 class AnthropicClient:
     async_methods = ['fetch_completion']

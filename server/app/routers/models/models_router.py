@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List
-from ..config.settings import Settings
-from ..clients.openai_client import OpenAIClient
-from ..clients.anthropic_client import AnthropicClient
+from server.app.config.settings import Settings
+from server.app.clients.openai.openai_client import OpenAIClient
+from server.app.clients.anthropic.anthropic_client import AnthropicClient
 import logging
-from ..models.models.models_get_response import ModelGetResponseModel  # Your provided path
+from server.app.models.models.models_get_response import ModelGetResponseModel  # Your provided path
 
 # Initialize the logger
 logger = logging.getLogger("models_router")

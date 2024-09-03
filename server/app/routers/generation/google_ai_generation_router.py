@@ -1,17 +1,14 @@
 import logging
-import os
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from server.app.config.settings import Settings
 from server.app.db.base import async_session_maker
 from server.app.models.generation.generation_request import GenerationRequest
-from server.app.clients.google_ai_client import GoogleAICLient
-import google.generativeai as genai
+from server.app.clients.googleai.google_ai_client import GoogleAICLient
 from server.app.models.generation.success_generation_model import SuccessGenerationModel
 
-# Configure the Google Generative AI SDK
-genai.configure(api_key=os.environ["API_KEY_GEMINI"])
+
 
 router = APIRouter()
 settings = Settings()

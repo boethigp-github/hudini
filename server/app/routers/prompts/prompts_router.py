@@ -4,11 +4,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from jsonschema import ValidationError
 from server.app.models.prompts.prompts import Prompt
-from ..db.base import async_session_maker
-from ..config.settings import Settings
+from server.app.db.base import async_session_maker
+from server.app.config.settings import Settings
 from typing import List
-from ..models.prompts.prompts_post_request import PromptPostRequestModel
-from ..models.prompts.prompt_get_response import PromptGetResponseModel
+from server.app.models.prompts.prompts_post_request import PromptPostRequestModel
+from server.app.models.prompts.prompt_get_response import PromptGetResponseModel
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)

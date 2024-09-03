@@ -1,7 +1,7 @@
 import os
 from llama_cpp import Llama
-from .base_client import BaseClient
-from ..models.stream_response import StreamResponse
+from server.app.clients.base_client import BaseClient
+from server.app.models.stream_response import StreamResponse
 import json
 import time
 

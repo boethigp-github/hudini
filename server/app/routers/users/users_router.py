@@ -4,11 +4,11 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import List
-from ..db.base import async_session_maker
-from ..config.settings import Settings
-from ..models.users.users_get_response import UsersGetResponseModel
-from ..models.users.users_post_request import UserPostRequestModel  # For user creation
-from ..models.users.user import User
+from server.app.db.base import async_session_maker
+from server.app.config.settings import Settings
+from server.app.models.users.users_get_response import UsersGetResponseModel
+from server.app.models.users.users_post_request import UserPostRequestModel  # For user creation
+from server.app.models.users.user import User
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
