@@ -214,12 +214,13 @@ export default {
 
     // Function to handle prompt submission
     const handleSubmit = async () => {
+
+
+      const promptValue =  prompt.value.trim();
       loading.value = true;
       createPromptServerside(uuid);
       for (const model of await modelsStore.getSelectedModelsWithMetaData()) {
-        const generationRequest = PromptPostRequestModel(uuidv4(), model, prompt.value.trim());
-
-
+        const generationRequest = PromptPostRequestModel(uuidv4(), model, promptValue);
         await stream(
             model.stream_url, // Use the stream URL from the selected model
             generationRequest,
