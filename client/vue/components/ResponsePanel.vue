@@ -63,20 +63,7 @@
     </a-col>
 
     <a-col :span="1" class="nav-container">
-      <a-menu
-        title="comparison"
-        size="small"
-        id="response_panel_action"
-        :inlineCollapsed="true"
-        v-model:openKeys="openKeys"
-        v-model:selectedKeys="selectedKeys"
-      >
-        <a-sub-menu size="small" key="sub1" @titleClick="titleClick">
-          <template #icon>
-            <TableOutlined />
-          </template>
-        </a-sub-menu>
-      </a-menu>
+     <ResponsePanelMenu/>
     </a-col>
   </a-row>
 </template>
@@ -104,7 +91,7 @@ import Markdown from 'vue3-markdown-it';
 import './ResponsePanel/Highlite.css';
 import ComparisonDrawer from './ResponsePanel/ComparisonDrawer.vue';
 import './ResponsePanel/response_panel.css';
-
+import ResponsePanelMenu from './ResponsePanel/ResponsePanelMenu.vue'
 export default {
   name: 'ResponsePanel',
   components: {
@@ -128,6 +115,7 @@ export default {
     'a-list-item-meta': List.Item.Meta,
     'a-card': Card,
     ComparisonDrawer,
+    ResponsePanelMenu
   },
   props: {
     responses: {
