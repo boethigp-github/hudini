@@ -54,7 +54,7 @@
 </template>
 
 <script>
-import {ref, watch} from 'vue';
+import {onBeforeUnmount, onMounted, ref, watch} from 'vue';
 import {useI18n} from 'vue-i18n';
 import {useModelsStore} from './../stores/models';
 import PromptPanel from './PromptPanel.vue';
@@ -63,7 +63,14 @@ import ResponsePanel from './ResponsePanel.vue';
 import LanguageSwitch from './LanguageSwitch.vue';
 import ModelSelection from './ModelSelection.vue';
 import {message} from 'ant-design-vue';
-import {stream, createPrompt, saveUserContext, fetchUserContext} from './../services/api';
+import {
+  stream,
+  createPrompt,
+  saveUserContext,
+  fetchUserContext,
+  processChunk,
+  deleteUserContext
+} from './../services/api';
 import {v4 as uuidv4} from 'uuid';
 import ChatMenu from './MainMenu.vue';
 import {Tabs, TabPane, Button, Form, Input, Layout, Row, Col} from 'ant-design-vue';
@@ -90,76 +97,110 @@ export default {
     SettingOutlined,
   },
   setup() {
-    const {t} = useI18n();
+    const uuid = uuidv4();
+    const user = 1; // for now
+    const thread_id = 1; // for now
+    let userContextModel = {
+      id: null,
+      prompt_uuid: uuid,
+      user: user,
+      thread_id: thread_id,
+      context_data: [],
+      created: null,
+      updated: null,
+    };
+
+
+    const buffer = ref('');
     const prompt = ref('');
     const responses = ref([]);
+    const userContext = ref(userContextModel);
     const loading = ref(false);
-
     const modelsStore = useModelsStore();
     const updateTrigger = ref(0);
-    const buffer = ref(''); // Buffer to hold incomplete JSON strings
+    const {t} = useI18n();
 
-
-    const user = 1; // for now
-    const thread_id = 1;
-
-    function generateRandomNumberString(length) {
-      let result = '';
-      for (let i = 0; i < length; i++) {
-        const randomDigit = Math.floor(Math.random() * 10); // Generates a random digit between 0 and 9
-        result += randomDigit.toString();
-      }
-      return result;
+    // Function to update user context data
+    const updateUserContextData = (value) => {
+      userContext.value = value;
     }
 
+    const PromptPostRequestModel = (uuid, model, promptValue) => {
+      return {
+        id: uuid,
+        prompt: promptValue,
+        models: [model], // Pass the current model configuration
+        method_name: 'fetch_completion',
+      };
+    };
 
-    /**
-     * Fetch Usercontext and fill Responsepanel with thread data
-     */
+    // Function to handle keydown event
+    const handleKeydown = (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        handleSubmit();
+      }
+    };
+    // Event handling for delete-thread
+    onMounted(() => {
+      window.addEventListener('delete-thread', deleteThread);
+    });
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('comparison-close', deleteThread);
+    });
+
+    const deleteThread = async () => {
+      await deleteUserContext(userContext.value.id);
+    };
+
+    // Function to set responses
+    const setResponses = (value) => {
+      responses.value = value;
+    }
+
+    // Callback function for fetching user context
+    const fetchUserContextCallback = async (userContextResponse) => {
+      if (userContextResponse) {
+        const userContext = await userContextResponse.json();
+        if (userContextResponse.status === 200) {
+          setResponses(userContext.context_data);
+          updateUserContextData(userContext);
+        }
+      } else {
+        message.error(t('failed_to_retrieve_user_context'));
+      }
+    };
+
+    const postSaveUserContextCallback = () => {
+      const callback = async () => {};
+      userContext.value.context_data = responses.value;
+      saveUserContext(userContext.value, callback).catch((error) => {
+        console.error('Error sending responses to /usercontext:', error);
+      });
+    };
+
+    // Fetch user context
     fetchUserContext(user, thread_id)
-        .then(async userContext => {
-          if (userContext) {
-
-            const json = await userContext.json();
-
-            console.log("json", json);
-
-            json.forEach(response => {
-              responses.value = response.context_data
-            })
-
-
-          } else {
-            message.error(t('failed_to_retrieve_user_context'));
-          }
-        })
-        .catch(error => {
+        .then(fetchUserContextCallback)
+        .catch((error) => {
           message.error(t('failed_to_retrieve_user_context'));
-          console.error("Error retrieving user context:", error);
+          console.error('Error retrieving user context:', error);
         })
         .finally(() => {
-
-
           loading.value = false;
-          updateTrigger.value++
-
+          updateTrigger.value++;
         });
 
 
-    const createPromptServerside = async (id, uuid) => {
-      if (!prompt.value || typeof prompt.value !== 'string' || prompt.value.trim() === '') {
-        message.error(t('invalid_prompt'));
-        return;
-      }
-
+    // Function to create prompt on the server side
+    const createPromptServerside = async (uuid) => {
       const promptData = {
         prompt: prompt.value.trim(),
         user: 1,
         status: 'PROMPT_SAVED',
-        id: id,
-        uuid: uuid
+        uuid: uuid,
       };
-
 
       responses.value.push(promptData);
       updateTrigger.value++;
@@ -171,119 +212,37 @@ export default {
       }
     };
 
-    const handleKeydown = (event) => {
-      if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        handleSubmit();
-      }
-    };
-
-    const processChunk = (chunk) => {
-      buffer.value += chunk; // Add chunk to buffer
-
-
-      let boundary;
-      while ((boundary = buffer.value.indexOf('}\n' + '{')) !== -1) {  // Find boundary between JSON objects
-
-
-        const jsonString = buffer.value.slice(0, boundary + 1);
-        buffer.value = buffer.value.slice(boundary + 1);
-
-
-        let responseModel;
-        try {
-          responseModel = JSON.parse(jsonString);
-
-
-          const responseIndex = responses.value.findIndex(
-              r => r.id === responseModel.id && r.model === responseModel.model
-          );
-
-          if (responseIndex !== -1) {
-            responses.value[responseIndex] = {
-              ...responses.value[responseIndex],
-              completion: responseModel.completion,
-            };
-          } else {
-            responses.value.push(responseModel);
-          }
-        } catch (error) {
-          console.log("Error parsing JSON chunk:", error, jsonString);
-        }
-      }
-    };
-
+    // Function to handle prompt submission
     const handleSubmit = async () => {
-  if (!prompt.value.trim() || modelsStore.selectedModels.length === 0) {
-    message.error(t('enter_prompt_and_select_model'));
-    return;
-  }
-
-  loading.value = true;
-
-  const id = generateRandomNumberString(16);
-  const uuid = uuidv4();
-
-  createPromptServerside(id, uuid);
-
-  const serviceResponse = await modelsStore.getServiceResponse();
-
-  if (!serviceResponse) {
-    message.error(t('failed_to_retrieve_model_information'));
-    loading.value = false;
-    return;
-  }
-      const selectedModels = modelsStore.selectedModels.map(modelId => {
-        const fullModelInfo = serviceResponse.find(model => model.id === modelId);
-        return fullModelInfo || {id: modelId, platform: 'unknown'};
-      });
-
-   const promptValue =  prompt.value.trim()
-
-  // Loop over the selected models and call the stream function for each model
-  for (const model of selectedModels) {
+      loading.value = true;
+      createPromptServerside(uuid);
+      for (const model of await modelsStore.getSelectedModelsWithMetaData()) {
+        const generationRequest = PromptPostRequestModel(uuidv4(), model, prompt.value.trim());
 
 
-
-    const generationRequest = {
-      id: uuid,
-      prompt: promptValue,
-      models: [model], // Pass the current model configuration
-      method_name: 'fetch_completion'
-    };
-    console.log("generationRequest", generationRequest)
-
-
-     stream(
-      model.stream_url,  // Use the stream URL from the selected model
-      generationRequest,
-      processChunk,
-      (error) => {
-        console.error('Stream error:', error);
-        responses.value.push({
-          status: 'error',
-          token: t('server_connection_error'),
-        });
-        loading.value = false;
-      },
-      () => {
-        loading.value = false;
-
-        saveUserContext({
-          prompt_uuid: uuid,
-          user: user,
-          thread_id: thread_id,
-          context_data: responses.value,
-        }).catch(error => {
-          console.error('Error sending responses to /usercontext:', error);
-        });
+        await stream(
+            model.stream_url, // Use the stream URL from the selected model
+            generationRequest,
+            processChunk,
+            buffer,
+            responses,
+            (error) => {
+              console.error('Stream error:', error);
+              responses.value.push({
+                status: 'error',
+                token: t('server_connection_error'),
+              });
+              loading.value = false;
+            },
+            () => {
+              loading.value = false;
+              postSaveUserContextCallback();
+            }
+        );
       }
-    );
-  }
-};
+    };
 
-
-
+    // Watcher to reset prompt after loading
     watch(loading, (newValue) => {
       if (!newValue) {
         prompt.value = '';
@@ -299,10 +258,12 @@ export default {
       handleSubmit,
       updateTrigger,
       t,
+      userContext,
     };
   },
 };
 </script>
+
 
 <style scoped>
 .header {

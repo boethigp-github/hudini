@@ -39,7 +39,9 @@ const messages = {
         model_comparison: 'Model Comparison',
         user_prompt: 'User Prompt',
         no_error: 'No error',
-        copy_clipboard: 'Copy to clipboard' // Added this line
+        copy_clipboard: 'Copy to clipboard',
+        comparison_view: 'Comparison View',  // Added this line
+        delete_thread: 'Delete Thread'       // Added this line
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -79,7 +81,9 @@ const messages = {
         model_comparison: 'Modellvergleich',
         user_prompt: 'Benutzereingabe',
         no_error: 'Kein Fehler',
-        copy_clipboard: 'In die Zwischenablage kopieren' // Added this line
+        copy_clipboard: 'In die Zwischenablage kopieren',
+        comparison_view: 'Vergleichsansicht',  // Added this line
+        delete_thread: 'Thread löschen'        // Added this line
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -119,7 +123,9 @@ const messages = {
         model_comparison: 'Comparaison de modèles',
         user_prompt: 'Invite de l\'utilisateur',
         no_error: 'Pas d\'erreur',
-        copy_clipboard: 'Copier dans le presse-papiers' // Added this line
+        copy_clipboard: 'Copier dans le presse-papiers',
+        comparison_view: 'Vue de Comparaison',  // Added this line
+        delete_thread: 'Supprimer le thread'     // Added this line
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
@@ -159,7 +165,9 @@ const messages = {
         model_comparison: 'Сравнение моделей',
         user_prompt: 'Запрос пользователя',
         no_error: 'Нет ошибки',
-        copy_clipboard: 'Скопировать в буфер обмена' // Added this line
+        copy_clipboard: 'Скопировать в буфер обмена',
+        comparison_view: 'Сравнительный Вид',  // Added this line
+        delete_thread: 'Удалить тему'          // Added this line
     },
     zh: {
         hudini_title: 'Hudini - SLM上的CPU魔术师',
@@ -199,7 +207,9 @@ const messages = {
         model_comparison: '模型比较',
         user_prompt: '用户提示',
         no_error: '无错误',
-        copy_clipboard: '复制到剪贴板' // Added this line
+        copy_clipboard: '复制到剪贴板',
+        comparison_view: '比较视图',            // Added this line
+        delete_thread: '删除线程'               // Added this line
     }
 };
 

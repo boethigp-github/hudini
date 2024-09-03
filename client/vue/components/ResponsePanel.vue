@@ -182,14 +182,7 @@ export default {
       return groups.reverse();
     });
 
-    const handleClick = e => {
-      // Handle click event if needed
-    };
 
-    const titleClick = e => {
-      const event = new CustomEvent("comparison-open", {});
-      window.dispatchEvent(event);
-    };
 
     const isHighlighted = (prompt_id) => {
       return prompt_id === highlightedPromptId.value;
@@ -275,8 +268,6 @@ const comparisonData = computed(() => {
       plugins,
       comparisonData,
       openKeys,
-      handleClick,
-      titleClick,
       selectedKeys,
       handleMouseOver,
       handleMouseOut,

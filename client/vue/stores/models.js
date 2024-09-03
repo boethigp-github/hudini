@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import {defineStore} from 'pinia'
 import localforage from 'localforage'
 
 // Initialize localforage
@@ -17,6 +17,14 @@ export const useModelsStore = defineStore('models', {
             this.selectedModels = models;
             await this.saveToStorage();
         },
+
+        async getSelectedModelsWithMetaData() {
+               return this.selectedModels.map((modelId) => {
+                const fullModelInfo = this.serviceResponse.find((model) => model.id === modelId);
+                return fullModelInfo || {id: modelId, platform: 'unknown'};
+            });
+        },
+
         async loadFromStorage() {
             const storedModels = await localforage.getItem('selectedModels');
             if (storedModels) {
@@ -68,3 +76,5 @@ export const useModelsStore = defineStore('models', {
     },
     persist: true // We'll handle persistence manually
 });
+
+
