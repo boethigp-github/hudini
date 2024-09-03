@@ -13,6 +13,7 @@ class ModelGetResponseModel(BaseModel):
     category: str = Field(..., description="The category of the model, e.g., 'text_completion'.")
     description: str = Field(..., description="A description of the model.")
     platform: str = Field(..., description="The platform where the model is available, e.g., 'openai'.")
+    stream_url: str = Field(..., description="Local Streaming url, e.g., '/stream/openai or /stream/anthropic'.")
 
     # Example usage
     model_config = ConfigDict(
@@ -29,7 +30,8 @@ class ModelGetResponseModel(BaseModel):
                 "parent": None,
                 "category": "text_completion",
                 "description": "Model gpt-4o-2024-05-13 categorized as text_completion, available on openai",
-                "platform": "openai"
+                "platform": "openai",
+                "stream_url": "/stream/openai"
             }
         }
     )

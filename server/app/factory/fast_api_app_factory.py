@@ -2,12 +2,11 @@ from diskcache import FanoutCache
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import os
-from ..utils.hudini_logger import hudini_logger
 from ..routers.models_router import router as models_router
 from ..routers.prompts_router import router as prompts_router
-from ..routers.generation_router import router as generation_router
+from server.app.routers.generation.generation_router import router as generation_router
 from ..routers.usercontext_router import router as usercontext_router
+from ..routers.generation.anthropic_generation_router import router as anthropic_generation_router
 from ..routers.users_router import router as users_router
 
 class FastAPIAppFactory:
@@ -60,4 +59,5 @@ class FastAPIAppFactory:
         self.app.include_router(generation_router)
         self.app.include_router(usercontext_router)
         self.app.include_router(users_router)
+        self.app.include_router(anthropic_generation_router)
         self.logger.debug("Finished: Registering routes")

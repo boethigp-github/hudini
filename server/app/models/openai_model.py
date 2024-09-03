@@ -12,6 +12,7 @@ class ModelCategory(str, Enum):
 
 class Platform(str, Enum):
     OPENAI = "openai"
+    STREAM_URL = "/stream/openai"
 
 class OpenaiModel(BaseModel):
     id: str
@@ -23,8 +24,9 @@ class OpenaiModel(BaseModel):
     root: Optional[str] = None
     parent: Optional[str] = None
     category: Optional[ModelCategory] = Field(default=None)
-    description: Optional[str] = None  # A brief description of the model's purpose
-    platform: Platform = Platform.OPENAI  # Default platform is OpenAI
+    description: Optional[str] = None
+    platform: Platform = Platform.OPENAI
+    stream_url: str = Field(default=Platform.STREAM_URL.value)
 
     @classmethod
     def from_dict(cls, model_dict: dict):

@@ -16,7 +16,7 @@ class Platform(str, Enum):
 
 class ModelConfig(BaseModel):
     id: str = Field(..., description="uuid")
-    platform: Platform = Platform.OPENAI
+    platform: str = Field(..., description="The name of the platform to be used.")
     model: str = Field(..., description="The name of the model to be used.")
     temperature: float = Field(default=0.7, ge=0.0, le=1.0)
     max_tokens: int = Field(default=100, ge=1)

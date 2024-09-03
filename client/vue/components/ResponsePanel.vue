@@ -97,6 +97,8 @@ import MarkdownSub from 'markdown-it-sub';
 import MarkdownSup from 'markdown-it-sup';
 import MarkdownTaskList from 'markdown-it-task-lists';
 import MarkdownMark from 'markdown-it-mark';
+import MarkdownCollapsible from 'markdown-it-collapsible';
+import MarkdownCheckbox from 'markdown-it-checkbox';
 import MarkdownTocDoneRight from 'markdown-it-toc-done-right';
 import Markdown from 'vue3-markdown-it';
 import './ResponsePanel/Highlite.css';
@@ -112,6 +114,8 @@ export default {
     StarOutlined,
     LikeOutlined,
     MessageOutlined,
+    MarkdownCollapsible,
+    MarkdownCheckbox,
     VueMarkdownIT: Markdown,
     'a-button': Button,
     'a-skeleton': Skeleton,
@@ -243,6 +247,8 @@ export default {
       { plugin: MarkdownTaskList },
       { plugin: MarkdownTocDoneRight },
       { plugin: MarkdownMark },
+      { plugin: MarkdownCollapsible },
+      { plugin: MarkdownCheckbox },
     ];
 
     const formatTimestamp = timestamp => {

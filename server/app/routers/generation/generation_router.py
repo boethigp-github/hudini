@@ -6,14 +6,14 @@ import json
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Any, Dict, Type, Optional
 from pydantic import BaseModel, Field
-from ..config.settings import Settings
-from ..clients.openai_client import OpenAIClient
-from ..clients.anthropic_client import AnthropicClient
-from ..db.base import async_session_maker
-from ..models.openai_model import OpenaiModel
-from ..models.anthropic_model import AnthropicModel
+from server.app.config.settings import Settings
+from server.app.clients.openai_client import OpenAIClient
+from server.app.clients.anthropic_client import AnthropicClient
+from server.app.db.base import async_session_maker
+from server.app.models.openai_model import OpenaiModel
+from server.app.models.anthropic_model import AnthropicModel
 from server.app.models.generation.generation_request import GenerationRequest
-from ..models.generation.success_generation_model import SuccessGenerationModel
+from server.app.models.generation.success_generation_model import SuccessGenerationModel
 
 router = APIRouter()
 settings = Settings()
