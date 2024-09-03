@@ -19,8 +19,30 @@ async def get_db():
     async with async_session_maker() as session:
         yield session
 
-@router.post("/stream/anthropic", response_model=SuccessGenerationModel, tags=["generation"])
+@router.post(
+    "/stream/anthropic",
+    response_model=SuccessGenerationModel,
+    tags=["generation"],
+    summary="Stream Anthropic Model Generation",
+    description=(
+        "This endpoint streams the output from the Anthropic model generation. "
+        "It accepts a `GenerationRequest` containing the models to be used for generation. "
+        "If the request does not include any models, a `400 Bad Request` error is raised. "
+        "The endpoint returns a streaming JSON response that contains the generated output."
+    ),
+)
 async def stream_anthropic_route(request: GenerationRequest, db: AsyncSession = Depends(get_db)):
+    """
+    Stream output from the Anthropic model based on the provided generation request.
+
+    - **request**: A `GenerationRequest` object containing the models and other parameters for generation.
+    - **db**: Database session dependency.
+
+    This endpoint interacts with the AnthropicClient to generate text outputs from the specified models.
+    It logs the request details and handles errors if no models are provided in the request.
+
+    **Returns**: A streaming JSON response with the generation result.
+    """
     logger.info("Incoming request to /stream/anthropic:")
     logger.info(request.model_dump_json())
     logger.info("=" * 50)

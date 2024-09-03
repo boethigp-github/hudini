@@ -11,7 +11,7 @@ class ModelCategory(str, Enum):
 
 class Platform(str, Enum):
     GOOGLE = "google"
-    STREAM_URL = "/stream/google"
+    STREAM_URL = "/stream/google-ai"
 
 class GoogleAIModel(BaseModel):
     id: str

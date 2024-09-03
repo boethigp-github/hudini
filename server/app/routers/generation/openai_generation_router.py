@@ -45,12 +45,12 @@ class ModelNotFoundException(Exception):
 
 
 class ModelConfig(BaseModel):
-    platform: str = Field(..., example="openai", description="The AI platform to use")
-    model: str = Field(..., example="gpt-3.5-turbo", description="The specific model to use")
-    temperature: float = Field(0.7, ge=0, le=1, example=0.7, description="Controls randomness in output")
-    max_tokens: int = Field(100, gt=0, example=100, description="Maximum number of tokens to generate")
-    model_id: Optional[str] = Field(None, description="Unique identifier for the model (if applicable)")
-    object: Optional[str] = Field(None, description="Object type (if applicable)")
+    platform: str = Field(..., example="openai", description="The AI platform to use.")
+    model: str = Field(..., example="gpt-3.5-turbo", description="The specific model to use.")
+    temperature: float = Field(0.7, ge=0, le=1, example=0.7, description="Controls randomness in output.")
+    max_tokens: int = Field(100, gt=0, example=100, description="Maximum number of tokens to generate.")
+    model_id: Optional[str] = Field(None, description="Unique identifier for the model (if applicable).")
+    object: Optional[str] = Field(None, description="Object type (if applicable).")
 
 
 async def get_db():
@@ -82,7 +82,7 @@ def validate_models_and_clients(models: List[ModelConfig], method_name: str) -> 
         if not hasattr(platform_client, method_name):
             raise HTTPException(status_code=400, detail=f"Method '{method_name}' not found for platform '{platform}'")
 
-        model_dict = model_data.model_dump(exclude_none=True)  # Use model_dump instead of dict
+        model_dict = model_data.model_dump(exclude_none=True)
 
         if platform == "openai":
             if not model_dict.get("id"):
@@ -115,12 +115,30 @@ def validate_models_and_clients(models: List[ModelConfig], method_name: str) -> 
     return valid_models
 
 
-
-
-@router.post("/stream/openai", response_model=SuccessGenerationModel, tags=["generation"])
+@router.post(
+    "/stream/openai",
+    response_model=SuccessGenerationModel,
+    tags=["generation"],
+    summary="Stream OpenAI or Anthropic Model Generation",
+    description=(
+            "This endpoint streams AI-generated content based on the provided prompt and model configurations. "
+            "It supports models from OpenAI and Anthropic platforms. "
+            "The request must specify the platform and model configuration in the `models` field. "
+            "The method specified in the `method_name` field will be invoked on the selected models. "
+            "If the configuration is invalid or the platform is not supported, a `400 Bad Request` error is raised."
+    ),
+)
 async def stream_route(request: GenerationRequest, db: AsyncSession = Depends(get_db)):
     """
     Stream AI-generated content based on the provided prompt and model configurations.
+
+    - **request**: A `GenerationRequest` object containing the models, method name, and other parameters for generation.
+    - **db**: Database session dependency.
+
+    This endpoint validates the model configurations and method name, then streams the generated content
+    as a JSON response. It supports concurrent model generation and handles errors related to invalid configurations.
+
+    **Returns**: A streaming JSON response with the generation result.
     """
     logger.info("Incoming request to /stream/openai:")
     logger.info(request.model_dump_json())  # Use model_dump_json for logging
