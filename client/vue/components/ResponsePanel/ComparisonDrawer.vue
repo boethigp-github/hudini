@@ -88,7 +88,7 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const { t } = useI18n(); // Use i18n
+    const { t } = useI18n();
     const closeDrawer = ()=>{
       const event = new CustomEvent("comparison-close", {  });
       window.dispatchEvent(event);

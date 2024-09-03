@@ -40,8 +40,13 @@ const messages = {
         user_prompt: 'User Prompt',
         no_error: 'No error',
         copy_clipboard: 'Copy to clipboard',
-        comparison_view: 'Comparison View',  // Added this line
-        delete_thread: 'Delete Thread'       // Added this line
+        comparison_view: 'Comparison View',
+        delete_thread: 'Delete Thread',
+        delete_thread_confirmation_title: 'Are you sure you want to delete this thread?',
+        delete_thread_confirmation_content: 'This action cannot be undone.',
+        delete_thread_ok_text: 'Yes, delete it',
+        delete_thread_cancel_text: 'No, keep it',
+        delete_thread_cancel_log: 'Deletion canceled',
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -82,8 +87,13 @@ const messages = {
         user_prompt: 'Benutzereingabe',
         no_error: 'Kein Fehler',
         copy_clipboard: 'In die Zwischenablage kopieren',
-        comparison_view: 'Vergleichsansicht',  // Added this line
-        delete_thread: 'Thread löschen'        // Added this line
+        comparison_view: 'Vergleichsansicht',
+        delete_thread: 'Thread löschen',
+        delete_thread_confirmation_title: 'Sind Sie sicher, dass Sie diesen Thread löschen möchten?',
+        delete_thread_confirmation_content: 'Diese Aktion kann nicht rückgängig gemacht werden.',
+        delete_thread_ok_text: 'Ja, löschen',
+        delete_thread_cancel_text: 'Nein, behalten',
+        delete_thread_cancel_log: 'Löschung abgebrochen',
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -124,8 +134,13 @@ const messages = {
         user_prompt: 'Invite de l\'utilisateur',
         no_error: 'Pas d\'erreur',
         copy_clipboard: 'Copier dans le presse-papiers',
-        comparison_view: 'Vue de Comparaison',  // Added this line
-        delete_thread: 'Supprimer le thread'     // Added this line
+        comparison_view: 'Vue de Comparaison',
+        delete_thread: 'Supprimer le thread',
+        delete_thread_confirmation_title: 'Êtes-vous sûr de vouloir supprimer ce fil de discussion ?',
+        delete_thread_confirmation_content: 'Cette action est irréversible.',
+        delete_thread_ok_text: 'Oui, supprimer',
+        delete_thread_cancel_text: 'Non, garder',
+        delete_thread_cancel_log: 'Suppression annulée',
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
@@ -166,8 +181,13 @@ const messages = {
         user_prompt: 'Запрос пользователя',
         no_error: 'Нет ошибки',
         copy_clipboard: 'Скопировать в буфер обмена',
-        comparison_view: 'Сравнительный Вид',  // Added this line
-        delete_thread: 'Удалить тему'          // Added this line
+        comparison_view: 'Сравнительный Вид',
+        delete_thread: 'Удалить тему',
+        delete_thread_confirmation_title: 'Вы уверены, что хотите удалить эту тему?',
+        delete_thread_confirmation_content: 'Это действие необратимо.',
+        delete_thread_ok_text: 'Да, удалить',
+        delete_thread_cancel_text: 'Нет, оставить',
+        delete_thread_cancel_log: 'Удаление отменено',
     },
     zh: {
         hudini_title: 'Hudini - SLM上的CPU魔术师',
@@ -208,11 +228,15 @@ const messages = {
         user_prompt: '用户提示',
         no_error: '无错误',
         copy_clipboard: '复制到剪贴板',
-        comparison_view: '比较视图',            // Added this line
-        delete_thread: '删除线程'               // Added this line
+        comparison_view: '比较视图',
+        delete_thread: '删除线程',
+        delete_thread_confirmation_title: '您确定要删除此线程吗？',
+        delete_thread_confirmation_content: '此操作无法撤消。',
+        delete_thread_ok_text: '是的，删除它',
+        delete_thread_cancel_text: '不，保留它',
+        delete_thread_cancel_log: '删除已取消',
     }
 };
-
 
 const i18n = createI18n({
     legacy: false,

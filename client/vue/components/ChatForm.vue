@@ -1,5 +1,6 @@
 <template>
   <a-layout>
+    <!-- Header Layout -->
     <a-layout-header :style="{background:'#e9edf2', padding:'0 5px 0 5px'}">
       <div style="display: block;min-height: 10px;cursor: pointer" class="chat-header">
         <div class="header">
@@ -11,14 +12,20 @@
         </div>
       </div>
     </a-layout-header>
+
+    <!-- Main Content Layout -->
     <a-layout :style="{background:'#e9edf2'}">
       <a-layout-content :style="{background:'#e9edf2', marginRight:'8px', width:'500px'}">
         <ResponsePanel :responses="responses" :loading="loading"/>
       </a-layout-content>
+
+      <!-- Sidebar Layout -->
       <a-layout-sider width="25%" theme="light" :style="{background:'#e9edf2', width:'90%'}" :collapsed="false">
-        <PromptPanel :key="updateTrigger"/>
+        <PromptPanel :key="promptPanelUpdateTrigger"/>
       </a-layout-sider>
     </a-layout>
+
+    <!-- Footer Layout -->
     <a-layout-footer :style="{background:'#e9edf2',marginTop:'-5px', padding:'5px'}">
       <a-tabs default-active-key="1" class="chat-tabs">
         <a-tab-pane key="1" :tab="t('model_selection')">
@@ -49,8 +56,6 @@
       </a-tabs>
     </a-layout-footer>
   </a-layout>
-
-
 </template>
 
 <script>
@@ -98,8 +103,10 @@ export default {
   },
   setup() {
     const uuid = uuidv4();
-    const user = 1; // for now
-    const thread_id = 1; // for now
+    const user = 1; // Currently hardcoded user ID
+    const thread_id = 1; // Currently hardcoded thread ID
+
+    // Initial user context model
     let userContextModel = {
       id: null,
       prompt_uuid: uuid,
@@ -110,21 +117,38 @@ export default {
       updated: null,
     };
 
-
+    // Reactive references for handling various state
     const buffer = ref('');
     const prompt = ref('');
     const responses = ref([]);
     const userContext = ref(userContextModel);
     const loading = ref(false);
     const modelsStore = useModelsStore();
-    const updateTrigger = ref(0);
+    const promptPanelUpdateTrigger = ref(0);
     const {t} = useI18n();
 
-    // Function to update user context data
+    // Watcher to reset prompt input after loading completes
+    watch(loading, (newValue) => {
+      if (!newValue) {
+        prompt.value = '';
+      }
+    });
+
+    /**
+     * Updates the user context data with the provided value.
+     * @param {Object} value - The new user context data.
+     */
     const updateUserContextData = (value) => {
       userContext.value = value;
-    }
+    };
 
+    /**
+     * Creates a prompt post request model.
+     * @param {String} uuid - The UUID for the prompt.
+     * @param {Object} model - The model configuration.
+     * @param {String} promptValue - The prompt input from the user.
+     * @returns {Object} - The request model for the prompt.
+     */
     const PromptPostRequestModel = (uuid, model, promptValue) => {
       return {
         id: uuid,
@@ -134,91 +158,98 @@ export default {
       };
     };
 
-    // Function to handle keydown event
+    /**
+     * Handles the keydown event for the prompt input.
+     * Submits the prompt when the Enter key is pressed without Shift.
+     * @param {Event} event - The keydown event.
+     */
     const handleKeydown = (event) => {
       if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
         handleSubmit();
       }
     };
-    // Event handling for delete-thread
+
+    /**
+     * Mount lifecycle hook to set up event listeners.
+     * Registers a listener for the "delete-thread" event.
+     */
     onMounted(() => {
       window.addEventListener('delete-thread', deleteThread);
     });
 
+    /**
+     * Before unmount lifecycle hook to clean up event listeners.
+     * Removes the listener for the "delete-thread" event.
+     */
     onBeforeUnmount(() => {
-      window.removeEventListener('comparison-close', deleteThread);
+      window.removeEventListener('delete-thread', deleteThread);
     });
 
+    /**
+     * resets user context
+     */
+    const resetUserContext = () => {
+      userContext.value = userContextModel
+    }
+    /**
+     * Deletes the current thread by calling the API.
+     * Triggered by the "delete-thread" event.
+     */
     const deleteThread = async () => {
+      resetUserContext()
+      setResponses([])
       await deleteUserContext(userContext.value.id);
     };
 
-    // Function to set responses
+    /**
+     * Sets the responses data.
+     * @param {Array} value - The new responses to set.
+     */
     const setResponses = (value) => {
       responses.value = value;
-    }
+    };
 
-    // Callback function for fetching user context
+    /**
+     * Triggers prompt panel update
+     */
+    const triggerPromptPanelUpdate=()=>{
+      promptPanelUpdateTrigger.value++;
+    }
+    /**
+     * Callback function for handling the fetched user context.
+     * Updates the responses and user context data.
+     * @param {Response} userContextResponse - The response from the user context fetch API.
+     */
     const fetchUserContextCallback = async (userContextResponse) => {
-      if (userContextResponse) {
-        const userContext = await userContextResponse.json();
+      const userContext = await userContextResponse.json();
         if (userContextResponse.status === 200) {
           setResponses(userContext.context_data);
           updateUserContextData(userContext);
+        }else{
+           message.error(t('failed_to_retrieve_user_context'));
         }
-      } else {
-        message.error(t('failed_to_retrieve_user_context'));
-      }
     };
 
+    /**
+     * Callback function for saving user context after response.
+     * Calls the API to save the current user context.
+     */
     const postSaveUserContextCallback = () => {
-      const callback = async () => {};
+      const callback = async () => {
+      };
       userContext.value.context_data = responses.value;
       saveUserContext(userContext.value, callback).catch((error) => {
         console.error('Error sending responses to /usercontext:', error);
       });
     };
 
-    // Fetch user context
-    fetchUserContext(user, thread_id)
-        .then(fetchUserContextCallback)
-        .catch((error) => {
-          message.error(t('failed_to_retrieve_user_context'));
-          console.error('Error retrieving user context:', error);
-        })
-        .finally(() => {
-          loading.value = false;
-          updateTrigger.value++;
-        });
-
-
-    // Function to create prompt on the server side
-    const createPromptServerside = async (uuid) => {
-      const promptData = {
-        prompt: prompt.value.trim(),
-        user: 1,
-        status: 'PROMPT_SAVED',
-        uuid: uuid,
-      };
-
-      responses.value.push(promptData);
-      updateTrigger.value++;
-
-      try {
-        await createPrompt(promptData);
-      } catch (error) {
-        message.error(t('failed_to_save_prompt'));
-      }
-    };
-
-    // Function to handle prompt submission
-    const handleSubmit = async () => {
-
-
-      const promptValue =  prompt.value.trim();
-      loading.value = true;
-      createPromptServerside(uuid);
+    /**
+     * Wired stuff
+     * @param promptValue
+     * @returns {Promise<void>}
+     */
+    async function processGenerationStreaming(promptValue) {
       for (const model of await modelsStore.getSelectedModelsWithMetaData()) {
         const generationRequest = PromptPostRequestModel(uuidv4(), model, promptValue);
         await stream(
@@ -233,38 +264,89 @@ export default {
                 status: 'error',
                 token: t('server_connection_error'),
               });
-              loading.value = false;
+              hideLoader();
             },
             () => {
-              loading.value = false;
+              hideLoader();
               postSaveUserContextCallback();
             }
         );
       }
+    }
+
+    /**
+     * Fetches the user context from the server.
+     * Handles loading state and triggers an update when complete.
+     */
+    fetchUserContext(user, thread_id)
+        .then(fetchUserContextCallback)
+        .catch((error) => {
+          message.error(t('failed_to_retrieve_user_context'));
+          console.error('Error retrieving user context:', error);
+        })
+        .finally(() => {
+          hideLoader();
+          triggerPromptPanelUpdate()
+        });
+
+    /**
+     * Creates a prompt on the server side.
+     * Sends the current prompt data to the server.
+     * @param {String} uuid - The UUID of the prompt.
+     */
+    const createPromptServerside = async (uuid) => {
+      const promptData = {
+        prompt: prompt.value.trim(),
+        user: 1,
+        status: 'PROMPT_SAVED',
+        uuid: uuid,
+      };
+      responses.value.push(promptData);
+      triggerPromptPanelUpdate()
+      await createPrompt(promptData);
     };
 
-    // Watcher to reset prompt after loading
-    watch(loading, (newValue) => {
-      if (!newValue) {
-        prompt.value = '';
-      }
-    });
+    /**
+     * Show loader
+     */
+    const showLoader=()=>{
+      loading.value = true
+    }
+
+    /**
+     * Hides loader
+     */
+    const hideLoader=()=>{
+      loading.value=false
+    }
+
+
+    /**
+     * Handles the submission of the prompt.
+     * Sends the prompt to the server and handles streaming responses.
+     */
+    const handleSubmit = async () => {
+      const promptValue = prompt.value.trim();
+      showLoader()
+      createPromptServerside(uuid);
+      processGenerationStreaming(promptValue);
+    };
+
 
     return {
+      handleKeydown,
+      handleSubmit,
+      promptPanelUpdateTrigger,
+      t,
+      userContext,
       prompt,
       responses,
       loading,
       modelsStore,
-      handleKeydown,
-      handleSubmit,
-      updateTrigger,
-      t,
-      userContext,
     };
   },
 };
 </script>
-
 
 <style scoped>
 .header {
@@ -313,6 +395,4 @@ export default {
 .textarea-container {
   clear: both;
 }
-
-
 </style>
