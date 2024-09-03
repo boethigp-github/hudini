@@ -63,7 +63,6 @@ class AnthropicClient:
                     finish_reason="incomplete"  # Adjust as needed
                 )
 
-                self.logger.debug(f"SuccessModel Anthropic: {success_model.model_dump_json()}")
 
                 yield success_model.model_dump_json().encode('utf-8') + b'\n'
 

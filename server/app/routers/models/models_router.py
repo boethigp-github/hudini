@@ -3,6 +3,7 @@ from typing import List
 from server.app.config.settings import Settings
 from server.app.clients.openai.openai_client import OpenAIClient
 from server.app.clients.anthropic.anthropic_client import AnthropicClient
+from server.app.clients.googleai.google_ai_client import GoogleAICLient
 import logging
 from server.app.models.models.models_get_response import ModelGetResponseModel  # Your provided path
 
@@ -36,9 +37,10 @@ async def get_models(cache=Depends(get_cache)):
         # Retrieve models from OpenAI and potentially other sources
         openai_models = OpenAIClient(api_key=settings.get("default").get("API_KEY_OPEN_AI")).get_available_models()
         anthropic_models = AnthropicClient(api_key=settings.get("default").get("API_KEY_ANTHROPIC")).get_available_models()
+        google_ai_models = GoogleAICLient(api_key=settings.get("default").get("API_KEY_GOOGLE_AI")).get_available_models()
 
         # Merge and cache the models
-        all_models = openai_models + anthropic_models
+        all_models = openai_models + anthropic_models + google_ai_models
         cache.set("models_list", all_models, expire=300)
         logger.debug("Cache miss: Retrieved and cached new models list")
 

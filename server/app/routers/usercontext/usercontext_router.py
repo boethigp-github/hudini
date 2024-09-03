@@ -59,8 +59,8 @@ async def save_user_context(user_context: UserContextPostRequestModel, db: Async
 
         if existing_user_context:
             logger.info(f"Updating existing user context with user {user_context.user} and thread_id {user_context.thread_id}")
-            for field, value in user_context_dict.items():
-                setattr(existing_user_context, field, value)
+            # Update only the context_data field and updated timestamp
+            existing_user_context.context_data = user_context_dict['context_data']
             await db.commit()
             await db.refresh(existing_user_context)
             return UserContextResponseModel.model_validate(existing_user_context)
@@ -76,6 +76,7 @@ async def save_user_context(user_context: UserContextPostRequestModel, db: Async
         logger.error(f"Error occurred while saving user context: {str(e)}")
         await db.rollback()
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
+
 
 @router.delete("/usercontext/{user_context_id}", tags=["usercontext"])
 async def delete_user_context(user_context_id: int, db: AsyncSession = Depends(get_db)):
