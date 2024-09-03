@@ -27,23 +27,25 @@ class AnthropicClient:
 
     async def generate(self, models: List[ModelConfig], request: GenerationRequest) -> AsyncGenerator[bytes, None]:
         for model_config in models:
-            async for result in self._stream_model_response(model_config, request.prompt):
+            async for result in self._stream_model_response(model_config, request):
                 yield result
 
-    async def _stream_model_response(self, model_config: ModelConfig, prompt: str) -> AsyncGenerator[bytes, None]:
+    async def _stream_model_response(self, model_config: ModelConfig, request: GenerationRequest) -> AsyncGenerator[bytes, None]:
         with self.client.messages.stream(
                 max_tokens=model_config.max_tokens,
-                messages=[{"role": "user", "content": prompt}],
+                messages=[{"role": "user", "content": request.prompt}],
                 model=model_config.model,
         ) as stream:
+            full_content = ""
             for text in stream.text_stream:
+                full_content +=text
                 completion = Completion(
-                    id=model_config.id,
+                    id=request.id,
                     choices=[Choice(
                         finish_reason="null",
                         index=1,
                         message=Message(
-                            content=text,
+                            content=full_content,
                             role="assistant"
                         )
                     )],
@@ -55,7 +57,7 @@ class AnthropicClient:
                 )
 
                 success_model = SuccessGenerationModel(
-                    id=model_config.id,
+                    id=request.id,
                     model=model_config.model,
                     completion=completion,
                     finish_reason="incomplete"  # Adjust as needed

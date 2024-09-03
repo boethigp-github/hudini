@@ -1,43 +1,46 @@
 const API_BASE_URL = import.meta.env.SERVER_URL || 'http://localhost:8000';
 
 /**
- * Sends a prompt to the server and streams the response.
- * @param {Object} generationRequest - The data to send to the server.
- * @param {Function} onChunk - Callback function to handle each chunk of the response.
- * @param {Function} onError - Callback function to handle any errors.
- * @param {Function} onComplete - Callback function called when the stream is complete.
+ *
+ * @param stream_url
+ * @param generationRequest
+ * @param onChunk
+ * @param onError
+ * @param onComplete
+ * @returns {Promise<void>}
  */
-export const stream = async (generationRequest, onChunk, onError, onComplete) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/stream`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(generationRequest),
-        });
+export const stream = async (stream_url, generationRequest, onChunk, onError, onComplete) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}${stream_url}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(generationRequest),
+    });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) {
-                onComplete();
-                break;
-            }
-            const chunk = decoder.decode(value);
-            onChunk(chunk);
-        }
-    } catch (error) {
-        console.error('Error in stream:', error);
-        onError(error);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        onComplete();
+        break;
+      }
+      const chunk = decoder.decode(value);
+      onChunk(chunk);
+    }
+  } catch (error) {
+    console.error('Error in stream:', error);
+    onError(error);
+  }
 };
+
 
 /**
  * Fetches available models from the server.

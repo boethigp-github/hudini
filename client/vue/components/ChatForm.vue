@@ -120,14 +120,13 @@ export default {
         .then(async userContext => {
           if (userContext) {
 
-             const json = await userContext.json();
+            const json = await userContext.json();
 
-             console.log("json",json);
+            console.log("json", json);
 
-             json.forEach(response=>{
+            json.forEach(response => {
               responses.value = response.context_data
-             })
-
+            })
 
 
           } else {
@@ -139,8 +138,6 @@ export default {
           console.error("Error retrieving user context:", error);
         })
         .finally(() => {
-
-
 
 
           loading.value = false;
@@ -193,7 +190,6 @@ export default {
         buffer.value = buffer.value.slice(boundary + 1);
 
 
-
         let responseModel;
         try {
           responseModel = JSON.parse(jsonString);
@@ -218,67 +214,75 @@ export default {
     };
 
     const handleSubmit = async () => {
-      if (!prompt.value.trim() || modelsStore.selectedModels.length === 0) {
-        message.error(t('enter_prompt_and_select_model'));
-        return;
-      }
+  if (!prompt.value.trim() || modelsStore.selectedModels.length === 0) {
+    message.error(t('enter_prompt_and_select_model'));
+    return;
+  }
 
-      loading.value = true;
+  loading.value = true;
 
+  const id = generateRandomNumberString(16);
+  const uuid = uuidv4();
 
-      const id = generateRandomNumberString(16);
-      const uuid = uuidv4()
+  createPromptServerside(id, uuid);
 
-      createPromptServerside(id, uuid);
+  const serviceResponse = await modelsStore.getServiceResponse();
 
-      const serviceResponse = await modelsStore.getServiceResponse();
-
-      if (!serviceResponse) {
-        message.error(t('failed_to_retrieve_model_information'));
-        loading.value = false;
-        return;
-      }
-
+  if (!serviceResponse) {
+    message.error(t('failed_to_retrieve_model_information'));
+    loading.value = false;
+    return;
+  }
       const selectedModels = modelsStore.selectedModels.map(modelId => {
         const fullModelInfo = serviceResponse.find(model => model.id === modelId);
         return fullModelInfo || {id: modelId, platform: 'unknown'};
       });
 
-      const generationRequest = {
-        id: uuid,
-        prompt: prompt.value.trim(),
-        models: selectedModels,
-        method_name: 'fetch_completion'
-      };
+   const promptValue =  prompt.value.trim()
 
-      await stream(
-          generationRequest,
-          processChunk,
-          (error) => {
-            console.error('Stream error:', error);
-            responses.value.push({
-              status: 'error',
-              token: t('server_connection_error'),
-            });
-            loading.value = false;
-          },
-          () => {
-            loading.value = false;
+  // Loop over the selected models and call the stream function for each model
+  for (const model of selectedModels) {
 
 
 
-            saveUserContext({
-              prompt_uuid: uuid,
-              user: user,
-              thread_id: thread_id,
-              context_data: responses.value,
-            })
-                .catch(error => {
-                  console.error('Error sending responses to /usercontext:', error);
-                });
-          }
-      );
+    const generationRequest = {
+      id: uuid,
+      prompt: promptValue,
+      models: [model], // Pass the current model configuration
+      method_name: 'fetch_completion'
     };
+    console.log("generationRequest", generationRequest)
+
+
+     stream(
+      model.stream_url,  // Use the stream URL from the selected model
+      generationRequest,
+      processChunk,
+      (error) => {
+        console.error('Stream error:', error);
+        responses.value.push({
+          status: 'error',
+          token: t('server_connection_error'),
+        });
+        loading.value = false;
+      },
+      () => {
+        loading.value = false;
+
+        saveUserContext({
+          prompt_uuid: uuid,
+          user: user,
+          thread_id: thread_id,
+          context_data: responses.value,
+        }).catch(error => {
+          console.error('Error sending responses to /usercontext:', error);
+        });
+      }
+    );
+  }
+};
+
+
 
     watch(loading, (newValue) => {
       if (!newValue) {

@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, field_validator
 from typing import List
 from enum import Enum
-from uuid import UUID, uuid4
+
 
 class ModelCategory(str, Enum):
     TEXT_COMPLETION = "text_completion"

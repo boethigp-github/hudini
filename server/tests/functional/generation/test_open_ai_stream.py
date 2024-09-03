@@ -16,7 +16,7 @@ class TestGenerateAndStream(unittest.TestCase):
         cls.SERVER_URL = cls.settings.get("default").get("SERVER_URL")
 
     def test_stream_success(self):
-        """Test the /stream endpoint for a successful streaming response."""
+        """Test the /stream/openai endpoint for a successful streaming response."""
         model_config = ModelConfig(
             id=str(uuid.uuid4()),
             platform=Platform.OPENAI,
@@ -37,7 +37,7 @@ class TestGenerateAndStream(unittest.TestCase):
 
         try:
             response = requests.post(
-                f"{self.SERVER_URL}/stream",
+                f"{self.SERVER_URL}/stream/openai",
                 data=stream_payload,  # Pass the JSON string
                 headers={"Content-Type": "application/json"},
                 stream=True,

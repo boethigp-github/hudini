@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from ..routers.models_router import router as models_router
 from ..routers.prompts_router import router as prompts_router
-from server.app.routers.generation.generation_router import router as generation_router
+from server.app.routers.generation.openai_generation_router import router as generation_router
 from ..routers.usercontext_router import router as usercontext_router
 from ..routers.generation.anthropic_generation_router import router as anthropic_generation_router
 from ..routers.users_router import router as users_router

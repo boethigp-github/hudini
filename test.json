@@ -1,0 +1,28 @@
+{
+    "id": "85d9bc1f-438f-4f60-93b0-e17d777550d6",
+    "model": "gpt-4o",
+    "completion": {
+        "id": "chatcmpl-A3Nj9OQDQouELpjyGRgpxloBci6EU",
+        "choices": [
+            {
+                "finish_reason": "null",
+                "index": 0,
+                "logprobs": null,
+                "message": {
+                    "content": "",
+                    "refusal": null,
+                    "role": "assistant"
+                }
+            }
+        ],
+        "created": 1725369555,
+        "model": "gpt-4o",
+        "object": "chat.completion.chunk",
+        "system_fingerprint": null,
+        "usage": {
+            "completion_tokens": 0,
+            "prompt_tokens": 0,
+            "total_tokens": 0
+        }
+    }
+}

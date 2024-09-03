@@ -117,12 +117,12 @@ def validate_models_and_clients(models: List[ModelConfig], method_name: str) -> 
 
 
 
-@router.post("/stream", response_model=SuccessGenerationModel, tags=["generation"])
+@router.post("/stream/openai", response_model=SuccessGenerationModel, tags=["generation"])
 async def stream_route(request: GenerationRequest, db: AsyncSession = Depends(get_db)):
     """
     Stream AI-generated content based on the provided prompt and model configurations.
     """
-    logger.info("Incoming request to /stream:")
+    logger.info("Incoming request to /stream/openai:")
     logger.info(request.model_dump_json())  # Use model_dump_json for logging
     logger.info("=" * 50)
 
