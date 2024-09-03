@@ -107,7 +107,7 @@ export default {
     const thread_id = 1; // Currently hardcoded thread ID
 
     // Initial user context model
-    let userContextModel = {
+    const userContextModel = {
       id: null,
       prompt_uuid: uuid,
       user: user,
@@ -116,6 +116,23 @@ export default {
       created: null,
       updated: null,
     };
+
+    /**
+     * Creates a prompt post request model.
+     * @param {String} uuid - The UUID for the prompt.
+     * @param {Object} model - The model configuration.
+     * @param {String} promptValue - The prompt input from the user.
+     * @returns {Object} - The request model for the prompt.
+     */
+    const PromptPostRequestModel = (uuid, model, promptValue) => {
+      return {
+        id: uuid,
+        prompt: promptValue,
+        models: [model], // Pass the current model configuration
+        method_name: 'fetch_completion',
+      };
+    };
+
 
     // Reactive references for handling various state
     const buffer = ref('');
@@ -142,21 +159,6 @@ export default {
       userContext.value = value;
     };
 
-    /**
-     * Creates a prompt post request model.
-     * @param {String} uuid - The UUID for the prompt.
-     * @param {Object} model - The model configuration.
-     * @param {String} promptValue - The prompt input from the user.
-     * @returns {Object} - The request model for the prompt.
-     */
-    const PromptPostRequestModel = (uuid, model, promptValue) => {
-      return {
-        id: uuid,
-        prompt: promptValue,
-        models: [model], // Pass the current model configuration
-        method_name: 'fetch_completion',
-      };
-    };
 
     /**
      * Handles the keydown event for the prompt input.
@@ -175,7 +177,7 @@ export default {
      * Registers a listener for the "delete-thread" event.
      */
     onMounted(() => {
-      window.addEventListener('delete-thread', deleteThread);
+      window.addEventListener('delete-thread', deleteThreadEvent);
     });
 
     /**
@@ -183,7 +185,7 @@ export default {
      * Removes the listener for the "delete-thread" event.
      */
     onBeforeUnmount(() => {
-      window.removeEventListener('delete-thread', deleteThread);
+      window.removeEventListener('delete-thread', deleteThreadEvent);
     });
 
     /**
@@ -196,10 +198,11 @@ export default {
      * Deletes the current thread by calling the API.
      * Triggered by the "delete-thread" event.
      */
-    const deleteThread = async () => {
+    const deleteThreadEvent = async () => {
+
+      await deleteUserContext(userContext.value.id);
       resetUserContext()
       setResponses([])
-      await deleteUserContext(userContext.value.id);
     };
 
     /**
@@ -213,7 +216,7 @@ export default {
     /**
      * Triggers prompt panel update
      */
-    const triggerPromptPanelUpdate=()=>{
+    const triggerPromptPanelUpdate = () => {
       promptPanelUpdateTrigger.value++;
     }
     /**
@@ -223,12 +226,13 @@ export default {
      */
     const fetchUserContextCallback = async (userContextResponse) => {
       const userContext = await userContextResponse.json();
-        if (userContextResponse.status === 200) {
-          setResponses(userContext.context_data);
-          updateUserContextData(userContext);
-        }else{
-           message.error(t('failed_to_retrieve_user_context'));
-        }
+      if (userContextResponse.status === 200) {
+        setResponses(userContext.context_data);
+        updateUserContextData(userContext);
+      } else {
+        message.error(t('failed_to_retrieve_user_context'))
+        console.error(t('failed_to_retrieve_user_context'))
+      }
     };
 
     /**
@@ -237,7 +241,7 @@ export default {
      */
     const postSaveUserContextCallback = () => {
       const callback = async () => {
-      };
+      } //@todo: calls pina usercontext storage
       userContext.value.context_data = responses.value;
       saveUserContext(userContext.value, callback).catch((error) => {
         console.error('Error sending responses to /usercontext:', error);
@@ -309,15 +313,15 @@ export default {
     /**
      * Show loader
      */
-    const showLoader=()=>{
+    const showLoader = () => {
       loading.value = true
     }
 
     /**
      * Hides loader
      */
-    const hideLoader=()=>{
-      loading.value=false
+    const hideLoader = () => {
+      loading.value = false
     }
 
 
