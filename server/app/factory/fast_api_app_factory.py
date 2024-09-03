@@ -7,6 +7,7 @@ from ..routers.prompts_router import router as prompts_router
 from server.app.routers.generation.openai_generation_router import router as generation_router
 from ..routers.usercontext_router import router as usercontext_router
 from ..routers.generation.anthropic_generation_router import router as anthropic_generation_router
+from ..routers.generation.google_ai_generation_router import router as google_ai_generation_router
 from ..routers.users_router import router as users_router
 
 class FastAPIAppFactory:
@@ -60,4 +61,5 @@ class FastAPIAppFactory:
         self.app.include_router(usercontext_router)
         self.app.include_router(users_router)
         self.app.include_router(anthropic_generation_router)
+        self.app.include_router(google_ai_generation_router)
         self.logger.debug("Finished: Registering routes")
