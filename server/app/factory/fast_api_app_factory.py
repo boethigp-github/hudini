@@ -10,12 +10,19 @@ from server.app.routers.generation.anthropic_generation_router import router as 
 from server.app.routers.generation.google_ai_generation_router import router as google_ai_generation_router
 from server.app.routers.users.users_router import router as users_router
 
+
 class FastAPIAppFactory:
     def __init__(self, settings):
         self.logger = logging.getLogger("hudini_logger")
         self.logger.debug("FastAPIAppFactory: Set hudini_logger")
         self.settings = settings
-        self.app = FastAPI()
+        self.app = FastAPI(
+            title="Hudini",
+            description="""Hudini is a comprehensive API designed to facilitate interaction with various AI models, including those from OpenAI and Anthropic. 
+            The API allows for seamless integration and management of AI-driven tasks such as text generation, image creation, and user context handling.
+            """,
+            version="1.0.0",
+        )
 
     def create_app(self):
         self.logger.debug("Creating FastAPI application")
@@ -41,7 +48,7 @@ class FastAPIAppFactory:
         origins = [
             "http://localhost:5173",  # Your Vue.js development server
             "http://localhost:8080",  # Another common development port
-            "http://localhost",       # For production, if served from the same domain
+            "http://localhost",  # For production, if served from the same domain
             # Add any other origins you need to allow
         ]
 
