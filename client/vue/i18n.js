@@ -94,7 +94,7 @@ const messages = {
         timestamp: 'Zeitstempel',
         error: 'Fehler',
         model_comparison: 'Modellvergleich',
-        user_prompt: 'Benutzereingabe',
+        user_prompt: 'Userprompt',
         no_error: 'Kein Fehler',
         copy_clipboard: 'In die Zwischenablage kopieren',
         comparison_view: 'Vergleichsansicht',

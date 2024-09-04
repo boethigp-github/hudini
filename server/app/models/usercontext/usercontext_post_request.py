@@ -35,13 +35,7 @@ class ContextDataItem(BaseModel):
     completion: Optional[Dict[str, Any]] = None
 
 class UserContextPostRequestModel(BaseModel):
-    prompt_uuid: UUID = Field(..., description="A unique identifier for the prompt")
     user: int
     thread_id: int
     context_data: List[ContextDataItem]
 
-    @field_validator("prompt_uuid")
-    def validate_prompt_uuid(cls, value):
-        if not isinstance(value, UUID):
-            raise ValueError("Invalid UUID format")
-        return value

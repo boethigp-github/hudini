@@ -35,7 +35,7 @@
               <div class="prompt-input-wrapper">
                 <a-textarea
                     spellcheck="false"
-                    v-model:value="prompt"
+                    v-model:value="prompt.prompt"
                     :rows="2"
                     :placeholder="t('enter_prompt')"
                     @keydown="handleKeydown"
@@ -106,7 +106,32 @@ export default {
     const user = 1; // Currently hardcoded user ID
     const thread_id = 1; // Currently hardcoded thread ID
 
-    // Initial user context model
+    /**
+     * Prompt data model
+     * @type {{prompt: string, user: number, uuid: (`${string}-${string}-${string}-${string}-${string}`|*|string), status: string}}
+     */
+    const promptModel = {
+      prompt: '',
+      user: user,
+      status: 'PROMPT_SAVED',
+      uuid: uuid,
+    };
+
+    /**
+     * Stream request moel
+     * @type {{models: *[], method_name: string, id: (`${string}-${string}-${string}-${string}-${string}`|*|string), prompt: string}}
+     */
+    const streamRequestModel = {
+      id: uuid,
+      prompt: '',
+      models: [], // Pass the current model configuration
+      method_name: 'fetch_completion',
+    };
+
+    /**
+     * UserContext model
+     * @type {{context_data: *[], thread_id: number, created: null, prompt_uuid: (`${string}-${string}-${string}-${string}-${string}`|*|string), id: null, user: number, updated: null}}
+     */
     const userContextModel = {
       id: null,
       prompt_uuid: uuid,
@@ -118,25 +143,37 @@ export default {
     };
 
     /**
-     * Creates a prompt post request model.
-     * @param {String} uuid - The UUID for the prompt.
-     * @param {Object} model - The model configuration.
-     * @param {String} promptValue - The prompt input from the user.
-     * @returns {Object} - The request model for the prompt.
+     * Creates a stream request model
+     *
+     * @param promptPostRequest
+     * @param models
+     * @param method_name
+     * @returns {{models: *[], method_name: string, id: (`${string}-${string}-${string}-${string}-${string}`|*|string), prompt: *}}
+     * @constructor
      */
-    const PromptPostRequestModel = (uuid, model, promptValue) => {
-      return {
-        id: uuid,
-        prompt: promptValue,
-        models: [model], // Pass the current model configuration
-        method_name: 'fetch_completion',
-      };
+    const getStreamPostRequestModel = (promptPostRequest, models, method_name = 'fetch_completion') => {
+      const {uuid: id, prompt} = promptPostRequest
+
+      return {...streamRequestModel, id, prompt, models, method_name};
     };
 
+    /**
+     * Requestmodel for saving prompts
+     *
+     * @returns {{uuid, prompt, user: *, status}}
+     * @constructor
+     */
+const PromptPostRequestModel = (uuid, user, prompt, status = 'INITIALIZED') => {
+  promptModel.uuid = uuid;
+  promptModel.prompt = prompt;
+  promptModel.status = status;
+  promptModel.user = user;
+  return structuredClone(promptModel);
+};
 
     // Reactive references for handling various state
     const buffer = ref('');
-    const prompt = ref('');
+    const prompt = ref(promptModel);
     const responses = ref([]);
     const userContext = ref(userContextModel);
     const loading = ref(false);
@@ -147,7 +184,7 @@ export default {
     // Watcher to reset prompt input after loading completes
     watch(loading, (newValue) => {
       if (!newValue) {
-        prompt.value = '';
+        prompt.value.prompt = '';
       }
     });
 
@@ -211,7 +248,7 @@ export default {
      */
     const rerunPrompt = async (event) => {
       console.log("rerun: ", prompt)
-      prompt.value = event.detail.prompt;
+      prompt.value.prompt = event.detail.prompt;
       handleSubmit()
     };
 
@@ -258,40 +295,30 @@ export default {
      * Callback function for saving user context after response.
      * Calls the API to save the current user context.
      */
-    const postSaveUserContextCallback = (uuid) => {
+    const saveUserContextServerside = (promptPostRequest) => {
       const callback = async () => {
       } //@todo: calls pina usercontext storage
-      userContext.value.context_data = responses.value;
-      userContext.value.id=userContext.value.prompt_uuid
-
-      console.log("userContext", userContext.value);
+      userContext.value.context_data = responses.value
+      userContext.value.id = promptPostRequest.uuid
       saveUserContext(userContext.value, callback).catch((error) => {
         console.error('Error sending responses to /usercontext:', error);
       });
     };
 
+    const pushToResponseStack=(promptPostRequest)=>{
+      responses.value.push(promptPostRequest);
+    }
+
 
     /**
      * Wired stuff
-     * @param uuid
-     * @param promptValue
      * @returns {Promise<void>}
      */
-    async function processGenerationStreaming(promptValue) {
-
-           const promptData = {
-        prompt: prompt.value.trim(),
-        user: 1,
-        status: 'PROMPT_SAVED',
-        uuid: uuid,
-      };
-      responses.value.push(promptData);
-
+    async function streamGeneration(promptPostRequest) {
       for (const model of await modelsStore.getSelectedModelsWithMetaData()) {
-        const generationRequest = PromptPostRequestModel(uuid, model, promptValue);
         await stream(
             model.stream_url, // Use the stream URL from the selected model
-            generationRequest,
+            getStreamPostRequestModel(promptPostRequest, [model], "fetch_completion"),
             processChunk,
             buffer,
             responses,
@@ -308,10 +335,6 @@ export default {
             }
         );
       }
-
-      createPromptServerside(uuid, promptData)
-      postSaveUserContextCallback(uuid)
-      dispatchOnCompleteEvent()
     }
 
     /**
@@ -332,12 +355,11 @@ export default {
     /**
      * Creates a prompt on the server side.
      * Sends the current prompt data to the server.
-     * @param {String} uuid - The UUID of the prompt.
-     * @param promptData
+     * @param promptPostRequest
      */
-    const createPromptServerside = async (uuid, promptData) => {
+    const createPromptServerside = async (promptPostRequest) => {
       triggerPromptPanelUpdate()
-      await createPrompt(promptData);
+      await createPrompt(promptPostRequest);
     };
 
     /**
@@ -360,11 +382,14 @@ export default {
      * Sends the prompt to the server and handles streaming responses.
      */
     const handleSubmit = async () => {
-      const promptValue = prompt.value.trim();
+      const promptPostRequest = PromptPostRequestModel(uuidv4(), user, prompt.value.prompt.trim(), 'INITIALIZED' )
       showLoader()
-      processGenerationStreaming(promptValue);
+      pushToResponseStack(promptPostRequest);
+      streamGeneration(promptPostRequest).then(() => {});
+      createPromptServerside(promptPostRequest).then(() => {});
+      saveUserContextServerside(promptPostRequest);
+      dispatchOnCompleteEvent()
     };
-
 
     return {
       handleKeydown,

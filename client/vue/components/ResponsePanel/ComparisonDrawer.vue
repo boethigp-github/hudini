@@ -1,53 +1,63 @@
 <template>
   <a-drawer
-    :title="$t('model_comparison', 'model comparison')"
-    placement="right"
-    :visible="drawerVisible"
-    @close="closeDrawer"
-    :width="width">
+      :title="$t('model_comparison', 'model comparison')"
+      placement="right"
+      :visible="drawerVisible"
+      @close="closeDrawer"
+      :width="width">
     <div v-if="responses.length > 0">
       <a-table
-        bordered
-        size="small"
-        :dataSource="responses"
-        :columns="columns"
-        rowKey="model"
-        :pagination="false"
-        :rowClassName="getRowClass">
+          bordered
+          size="small"
+          :dataSource="responses"
+          :columns="columns"
+          rowKey="model"
+          :pagination="false"
+          :rowClassName="getRowClass">
         <template v-slot:bodyCell="{ record, column, index }">
+          <!-- Userprompt Spalte 1-->
+          <div v-if="record.prompt && column.dataIndex==='model'">
+            {{ $t("user_prompt") }}
+          </div>
+          <!-- Userprompt Spalte prompt-->
+          <div v-else-if="record.prompt && column.dataIndex==='content'">
+            {{ record.prompt }}
+          </div>
+          <!-- Modelcontent-->
           <VueMarkdownIT
-            v-if="column.dataIndex === 'content' && record.completion?.choices[0]?.message?.content"
-            style="margin-top:11px"
-            :breaks="true"
-            :plugins="plugins"
-            :source="record.completion?.choices[0].message.content"
+              v-else-if="column.dataIndex === 'content' && record.completion?.choices[0]?.message?.content"
+              style="margin-top:11px"
+              :breaks="true"
+              :plugins="plugins"
+              :source="record.completion?.choices[0].message.content"
           />
+          <!-- Statistic -->
           <div v-else-if="column.dataIndex === 'statistics'">
             <a-list
-              v-if="record?.completion?.usage"
-              :dataSource="[record.completion.usage]"
-              :bordered="false"
-              size="small"
+                v-if="record?.completion?.usage"
+                :dataSource="[record.completion.usage]"
+                :bordered="false"
+                size="small"
             >
               <template #renderItem="{ item }">
                 <a-list-item size="small">
                   <a-list-item-meta>
                     <template #title>
                       <a-statistic
-                        :title="$t('completion_tokens', 'Completion Tokens')"
-                        :value="item.completion_tokens"
+                          :title="$t('completion_tokens', 'Completion Tokens')"
+                          :value="item.completion_tokens"
                       />
                       <a-statistic
-                        :title="$t('prompt_tokens', 'Prompt Tokens')"
-                        :value="item.prompt_tokens"
+                          :title="$t('prompt_tokens', 'Prompt Tokens')"
+                          :value="item.prompt_tokens"
                       />
                       <a-statistic
-                        :title="$t('all_tokens', 'All Tokens')"
-                        :value="item.total_tokens"
+                          :title="$t('all_tokens', 'All Tokens')"
+                          :value="item.total_tokens"
                       />
                       <a-statistic
-                        :title="$t('run_time', 'Run Time')"
-                        :value="formatDuration(item.started, item.ended)"
+                          :title="$t('run_time', 'Run Time')"
+                          :value="formatDuration(item.started, item.ended)"
                       />
                     </template>
                   </a-list-item-meta>
@@ -55,7 +65,7 @@
               </template>
             </a-list>
           </div>
-          <div v-else>
+          <div v-else-if="column.dataIndex==='model'">
             {{ record[column.dataIndex] }}
           </div>
         </template>
@@ -68,11 +78,11 @@
 </template>
 
 <script>
-import { defineComponent, onBeforeUnmount, onMounted, ref } from 'vue';
-import { Drawer, Table, List, Statistic } from 'ant-design-vue';
+import {defineComponent, onBeforeUnmount, onMounted, ref} from 'vue';
+import {Drawer, Table, List, Statistic} from 'ant-design-vue';
 import Markdown from 'vue3-markdown-it';
-import { useI18n } from 'vue-i18n';
-import { RobotOutlined, UserOutlined } from '@ant-design/icons-vue';
+import {useI18n} from 'vue-i18n';
+import {RobotOutlined, UserOutlined} from '@ant-design/icons-vue';
 
 export default defineComponent({
   name: 'ComparisonDrawer',
@@ -103,7 +113,7 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const { t } = useI18n();
+    const {t} = useI18n();
     const closeDrawer = () => {
       const event = new CustomEvent('comparison-close', {});
       window.dispatchEvent(event);
@@ -128,18 +138,18 @@ export default defineComponent({
     };
 
     const getRowClass = (record, index) => {
-      return record.model === 'UserPrompt' ? 'userpromptrow' : 'compare-row';
+      return record.prompt ? 'userpromptrow' : 'compare-row';
     };
 
-const formatTimestamp = (timestamp) => {
-  if (!timestamp) return '';
-  const date = new Date(timestamp); // Convert milliseconds to Date object
-  return date.toLocaleString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  }); // Format as readable date-time string with seconds
-};
+    const formatTimestamp = (timestamp) => {
+      if (!timestamp) return '';
+      const date = new Date(timestamp); // Convert milliseconds to Date object
+      return date.toLocaleString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      }); // Format as readable date-time string with seconds
+    };
 
     const formatDuration = (start, end) => {
       const duration = end - start;
@@ -160,7 +170,7 @@ const formatTimestamp = (timestamp) => {
     });
 
 
-    const onStreamComplete=()=>{
+    const onStreamComplete = () => {
       console.log("111111111111111111111111");
     }
 
@@ -184,12 +194,7 @@ const formatTimestamp = (timestamp) => {
         key: 'statistics',
         width: 220,
       },
-      {
-        title: t('timestamp'),
-        dataIndex: 'timestamp',
-        key: 'timestamp',
-        width: 170,
-      },
+
     ]);
 
     return {

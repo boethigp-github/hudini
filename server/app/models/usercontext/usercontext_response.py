@@ -1,4 +1,4 @@
-from pydantic import BaseModel , field_validator
+from pydantic import BaseModel , field_validator, Field
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 from uuid import UUID, uuid4
@@ -14,6 +14,8 @@ class Choice(BaseModel):
     message: Message
 
 class Usage(BaseModel):
+    started: int = Field(int(datetime.utcnow().timestamp()), example=1633046400)  # Example timestamp
+    ended: int = Field(int(datetime.utcnow().timestamp()), example=1633046400)  # Example timestamp
     completion_tokens: int
     prompt_tokens: int
     total_tokens: int
@@ -40,16 +42,9 @@ class UserContextResponseModel(BaseModel):
     id: int  
     user: int  
     thread_id: int
-    prompt_uuid: UUID  # Add the UUID field
     created: datetime
     updated: datetime
     context_data: List[ContextDataItem]  # Allow a list of ContextDataItem objects
-
-    @field_validator("prompt_uuid")
-    def validate_prompt_uuid(cls, value):
-        if not isinstance(value, UUID):
-            raise ValueError("Invalid UUID format")
-        return value
 
     class Config:
         orm_mode = True
