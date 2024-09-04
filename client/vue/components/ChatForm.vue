@@ -217,6 +217,13 @@ export default {
     };
 
     /**
+     * on stream complete
+     */
+    const dispatchOnCompleteEvent = () => {
+      const event = new CustomEvent("stream-complete", {});
+      window.dispatchEvent(event);
+    }
+    /**
      * Sets the responses data.
      * @param {Array} value - The new responses to set.
      */
@@ -240,8 +247,7 @@ export default {
       if (userContextResponse.status === 200) {
         setResponses(userContext.context_data);
         updateUserContextData(userContext);
-      }
-      else if (userContextResponse.status === 404) {
+      } else if (userContextResponse.status === 404) {
         console.log('Info: usercontext empty');
       } else {
         message.error(t('failed_to_retrieve_user_context'));
@@ -253,23 +259,37 @@ export default {
      * Callback function for saving user context after response.
      * Calls the API to save the current user context.
      */
-    const postSaveUserContextCallback = () => {
+    const postSaveUserContextCallback = (uuid) => {
       const callback = async () => {
       } //@todo: calls pina usercontext storage
       userContext.value.context_data = responses.value;
+      userContext.value.id=userContext.value.prompt_uuid
+
+      console.log("userContext", userContext.value);
       saveUserContext(userContext.value, callback).catch((error) => {
         console.error('Error sending responses to /usercontext:', error);
       });
     };
 
+
     /**
      * Wired stuff
+     * @param uuid
      * @param promptValue
      * @returns {Promise<void>}
      */
     async function processGenerationStreaming(promptValue) {
+
+           const promptData = {
+        prompt: prompt.value.trim(),
+        user: 1,
+        status: 'PROMPT_SAVED',
+        uuid: uuid,
+      };
+      responses.value.push(promptData);
+
       for (const model of await modelsStore.getSelectedModelsWithMetaData()) {
-        const generationRequest = PromptPostRequestModel(uuidv4(), model, promptValue);
+        const generationRequest = PromptPostRequestModel(uuid, model, promptValue);
         await stream(
             model.stream_url, // Use the stream URL from the selected model
             generationRequest,
@@ -282,14 +302,17 @@ export default {
                 status: 'error',
                 token: t('server_connection_error'),
               });
-              hideLoader();
+              hideLoader()
             },
             () => {
-              hideLoader();
-              postSaveUserContextCallback();
+              hideLoader()
             }
         );
       }
+
+      createPromptServerside(uuid, promptData)
+      postSaveUserContextCallback(uuid)
+      dispatchOnCompleteEvent()
     }
 
     /**
@@ -311,15 +334,9 @@ export default {
      * Creates a prompt on the server side.
      * Sends the current prompt data to the server.
      * @param {String} uuid - The UUID of the prompt.
+     * @param promptData
      */
-    const createPromptServerside = async (uuid) => {
-      const promptData = {
-        prompt: prompt.value.trim(),
-        user: 1,
-        status: 'PROMPT_SAVED',
-        uuid: uuid,
-      };
-      responses.value.push(promptData);
+    const createPromptServerside = async (uuid, promptData) => {
       triggerPromptPanelUpdate()
       await createPrompt(promptData);
     };
@@ -346,7 +363,6 @@ export default {
     const handleSubmit = async () => {
       const promptValue = prompt.value.trim();
       showLoader()
-      createPromptServerside(uuid);
       processGenerationStreaming(promptValue);
     };
 

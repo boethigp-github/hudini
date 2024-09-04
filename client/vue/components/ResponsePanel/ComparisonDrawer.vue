@@ -153,12 +153,19 @@ const formatTimestamp = (timestamp) => {
     onMounted(() => {
       window.addEventListener('comparison-close', closeComparison);
       window.addEventListener('comparison-open', openComparison);
+      window.addEventListener('stream-complete', onStreamComplete);
     });
 
     onBeforeUnmount(() => {
       window.removeEventListener('comparison-close', closeComparison);
       window.removeEventListener('comparison-open', openComparison);
+      window.addEventListener('stream-complete', onStreamComplete);
     });
+
+
+    const onStreamComplete=()=>{
+      console.log("111111111111111111111111");
+    }
 
     let drawerVisible = ref(false)
 
