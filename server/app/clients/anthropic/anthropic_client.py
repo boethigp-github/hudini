@@ -56,7 +56,8 @@ class AnthropicClient:
                     usage=Usage(
                         completion_tokens=len(full_content.split()),  # Calculate tokens using accumulated content
                         prompt_tokens=len(request.prompt.split()),
-                        total_tokens=len(full_content.split()) + len(request.prompt.split())
+                        total_tokens=len(full_content.split()) + len(request.prompt.split()),
+                        ended=int(datetime.utcnow().timestamp())
                     )
                 )
 

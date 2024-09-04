@@ -1,70 +1,59 @@
 <template>
   <a-drawer
-      :title="$t('model_comparison', 'model comparison')"
-      placement="right"
-      :visible="drawerVisible"
-      @close="closeDrawer"
-      :width="width"
+    :title="$t('model_comparison', 'model comparison')"
+    placement="right"
+    :visible="drawerVisible"
+    @close="closeDrawer"
+    :width="width"
   >
-
     <div v-if="comparisonData.length > 0">
-      <!-- Search inputs -->
-      <!--      <div class="search-fields">-->
-      <!--        <a-input-->
-      <!--            placeholder="Search Model"-->
-      <!--            v-model="searchTerms.model"-->
-      <!--            @input="filterData"-->
-      <!--            style="margin-bottom: 8px;"-->
-      <!--        />-->
-      <!--        <a-input-->
-      <!--            placeholder="Search Content"-->
-      <!--            v-model="searchTerms.content"-->
-      <!--            @input="filterData"-->
-      <!--            style="margin-bottom: 8px;"-->
-      <!--        />-->
-      <!--        <a-input-->
-      <!--            placeholder="Search Timestamp"-->
-      <!--            v-model="searchTerms.timestamp"-->
-      <!--            @input="filterData"-->
-      <!--            style="margin-bottom: 8px;"-->
-      <!--        />-->
-      <!--        <a-input-->
-      <!--            placeholder="Search Error"-->
-      <!--            v-model="searchTerms.error"-->
-      <!--            @input="filterData"-->
-      <!--        />-->
-      <!--      </div>-->
       <a-table
-          bordered
-          size="small"
-          :dataSource="comparisonData"
-          :columns="columns"
-          rowKey="model"
-          :pagination="false"
-          :rowClassName="getRowClass"
+        bordered
+        size="small"
+        :dataSource="comparisonData"
+        :columns="columns"
+        rowKey="model"
+        :pagination="false"
+        :rowClassName="getRowClass"
       >
         <template v-slot:bodyCell="{ record, column, index }">
-          <VueMarkdownIT style="margin-top:11px" v-if="column.dataIndex==='content'" :breaks="true" :plugins="plugins"
-                         :source="record.content"/>
-          <div v-else-if="column.dataIndex==='statistics' && index > 0">
-
-            <a-list v-if="record.rawData?.completion?.usage"
-                    :data-source="Array(record.rawData.completion.usage)"
-                    :bordered="false"
-                    size="small"
+          <VueMarkdownIT
+            v-if="column.dataIndex === 'content'"
+            style="margin-top:11px"
+            :breaks="true"
+            :plugins="plugins"
+            :source="record.content"
+          />
+          <div v-else-if="column.dataIndex === 'statistics'">
+            <a-list
+              v-if="record.rawData?.completion?.usage"
+              :dataSource="[record.rawData.completion.usage]"
+              :bordered="false"
+              size="small"
             >
               <template #renderItem="{ item }">
                 <a-list-item size="small">
                   <a-list-item-meta>
                     <template #title>
-                      <a-statistic :title="$t('completion_tokens', 'Completion Tokens')"
-                                   :value="item.completion_tokens"/>
-                      <a-statistic :title="$t('prompt_tokens', 'Prompt Tokens')" :value="item.prompt_tokens"/>
-                      <a-statistic :title="$t('all_tokens', 'All Tokens')" :value="item.total_tokens"/>
+                      <a-statistic
+                        :title="$t('completion_tokens', 'Completion Tokens')"
+                        :value="item.completion_tokens"
+                      />
+                      <a-statistic
+                        :title="$t('prompt_tokens', 'Prompt Tokens')"
+                        :value="item.prompt_tokens"
+                      />
+                      <a-statistic
+                        :title="$t('all_tokens', 'All Tokens')"
+                        :value="item.total_tokens"
+                      />
+                      <a-statistic
+                        :title="$t('run_time', 'Run Time')"
+                        :value="formatDuration(item.started, item.ended)"
+                      />
                     </template>
                   </a-list-item-meta>
                 </a-list-item>
-
               </template>
             </a-list>
           </div>
@@ -75,24 +64,27 @@
       </a-table>
     </div>
     <div v-else>
-      {{ $t("no_data_to_compare", "No data to compare.") }}
+      {{ $t('no_data_to_compare', 'No data to compare.') }}
     </div>
   </a-drawer>
 </template>
 
 <script>
-import {defineComponent, onBeforeUnmount, onMounted, ref} from 'vue';
-import {Drawer, Table} from 'ant-design-vue';
+import { defineComponent, onBeforeUnmount, onMounted, ref } from 'vue';
+import { Drawer, Table, List, Statistic } from 'ant-design-vue';
 import Markdown from 'vue3-markdown-it';
-import {useI18n} from 'vue-i18n';
-import {RobotOutlined, UserOutlined} from "@ant-design/icons-vue";
+import { useI18n } from 'vue-i18n';
+import { RobotOutlined, UserOutlined } from '@ant-design/icons-vue';
 
 export default defineComponent({
   name: 'ComparisonDrawer',
   components: {
-    UserOutlined, RobotOutlined,
+    UserOutlined,
+    RobotOutlined,
     'a-drawer': Drawer,
     'a-table': Table,
+    'a-list': List,
+    'a-statistic': Statistic,
     'VueMarkdownIT': Markdown,
   },
   props: {
@@ -113,9 +105,9 @@ export default defineComponent({
     },
   },
   setup(props) {
-    const {t} = useI18n();
+    const { t } = useI18n();
     const closeDrawer = () => {
-      const event = new CustomEvent("comparison-close", {});
+      const event = new CustomEvent('comparison-close', {});
       window.dispatchEvent(event);
     }
     const searchTerms = ref({
@@ -124,7 +116,6 @@ export default defineComponent({
       timestamp: '',
       error: ''
     });
-
 
     const filterData = () => {
       // Filtering logic handled by computed property
@@ -142,16 +133,31 @@ export default defineComponent({
       return record.model === 'UserPrompt' ? 'userpromptrow' : 'compare-row';
     };
 
+const formatTimestamp = (timestamp) => {
+  if (!timestamp) return '';
+  const date = new Date(timestamp); // Convert milliseconds to Date object
+  return date.toLocaleString([], {
 
-    // Handle event listeners in lifecycle hooks
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }); // Format as readable date-time string with seconds
+};
+
+    const formatDuration = (start, end) => {
+      const duration = end - start;
+      const seconds = ((duration % 60000)).toFixed(0);
+      return `${seconds}ms`;
+    };
+
     onMounted(() => {
-      window.addEventListener("comparison-close", closeComparison);
-      window.addEventListener("comparison-open", openComparison);
+      window.addEventListener('comparison-close', closeComparison);
+      window.addEventListener('comparison-open', openComparison);
     });
 
     onBeforeUnmount(() => {
-      window.removeEventListener("comparison-close", closeComparison);
-      window.removeEventListener("comparison-open", openComparison);
+      window.removeEventListener('comparison-close', closeComparison);
+      window.removeEventListener('comparison-open', openComparison);
     });
 
     let drawerVisible = ref(false)
@@ -180,7 +186,6 @@ export default defineComponent({
         key: 'timestamp',
         width: 170,
       },
-
     ]);
 
     return {
@@ -190,13 +195,15 @@ export default defineComponent({
       drawerVisible,
       getRowClass,
       searchTerms,
-      filterData
+      filterData,
+      formatTimestamp,
+      formatDuration
     };
   },
 });
 </script>
-<style>
 
+<style>
 .userpromptrow {
   background: #e7e7e7 !important;
   font-weight: bold;

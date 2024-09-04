@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
@@ -16,6 +18,8 @@ class Usage(BaseModel):
     completion_tokens: int = Field(..., example=50)
     prompt_tokens: int = Field(..., example=100)
     total_tokens: int = Field(..., example=150)
+    started: int = Field(int(datetime.utcnow().timestamp()), example=1633046400)  # Example timestamp
+    ended: int = Field(int(datetime.utcnow().timestamp()), example=1633046400)  # Example timestamp
 
 class Completion(BaseModel):
     id: str = Field(..., example="abc123")

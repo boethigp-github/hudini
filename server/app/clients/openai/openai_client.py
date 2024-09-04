@@ -1,4 +1,6 @@
 import logging
+from datetime import datetime
+
 import openai
 from openai import AsyncOpenAI
 from server.app.models.generation.success_generation_model import SuccessGenerationModel, Completion, Choice, Message, \
@@ -73,7 +75,8 @@ class OpenAIClient:
                                 completion_tokens=len(full_content.split()),
                                 # Calculate tokens using accumulated content
                                 prompt_tokens=len(prompt.split()),
-                                total_tokens=len(full_content.split()) + len(prompt.split())
+                                total_tokens=len(full_content.split()) + len(prompt.split()),
+                                ended=int(datetime.utcnow().timestamp())
                             )
                         )
 
