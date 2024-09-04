@@ -49,6 +49,7 @@ const messages = {
         delete_thread_cancel_log: 'Deletion canceled',
         rerun_prompt: 'Rerun Prompt',
         failed_to_retrieve_user_context: 'Failed to retrieve user context',
+        no_data_to_compare: 'Keine Daten zum Vergleichen',
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -98,6 +99,7 @@ const messages = {
         delete_thread_cancel_log: 'Löschung abgebrochen',
         rerun_prompt: 'Prompt erneut ausführen',
         failed_to_retrieve_user_context: 'Fehler beim Abrufen des Benutzerkontexts',
+        no_data_to_compare: 'Keine Daten zum Vergleichen',
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -146,7 +148,8 @@ const messages = {
         delete_thread_cancel_text: 'Non, garder',
         delete_thread_cancel_log: 'Suppression annulée',
         rerun_prompt: 'Relancer le Prompt',
-        failed_to_retrieve_user_context: 'Échec de la récupération du contexte utilisateur'
+        failed_to_retrieve_user_context: 'Échec de la récupération du contexte utilisateur',
+         no_data_to_compare: 'Aucune donnée à comparer',
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
@@ -175,27 +178,28 @@ const messages = {
         server_connection_error: 'Произошла ошибка при подключении к серверу.',
         select_category_and_model: 'Пожалуйста, выберите категорию и модель',
         model_responses: 'Ответы модели',
-        prompts: 'Подсказки',
+        prompts: 'Запросы',
         models: 'Модели',
         compare: 'Сравнить',
-        model_selection: 'Выбор Модели',
-        prompt_submission: 'Отправка Запроса',
+        model_selection: 'Выбор модели',
+        prompt_submission: 'Отправка запроса',
         content: 'Содержание',
-        timestamp: 'Временная метка',
+        timestamp: 'Метка времени',
         error: 'Ошибка',
         model_comparison: 'Сравнение моделей',
         user_prompt: 'Запрос пользователя',
         no_error: 'Нет ошибки',
         copy_clipboard: 'Скопировать в буфер обмена',
-        comparison_view: 'Сравнительный Вид',
-        delete_thread: 'Удалить тему',
-        delete_thread_confirmation_title: 'Вы уверены, что хотите удалить эту тему?',
+        comparison_view: 'Просмотр сравнения',
+        delete_thread: 'Удалить поток',
+        delete_thread_confirmation_title: 'Вы уверены, что хотите удалить этот поток?',
         delete_thread_confirmation_content: 'Это действие необратимо.',
         delete_thread_ok_text: 'Да, удалить',
         delete_thread_cancel_text: 'Нет, оставить',
         delete_thread_cancel_log: 'Удаление отменено',
-        rerun_prompt: 'Перезапустить запрос',
+        rerun_prompt: 'Повторно выполнить запрос',
         failed_to_retrieve_user_context: 'Не удалось получить контекст пользователя',
+        no_data_to_compare: 'Нет данных для сравнения',
     },
     zh: {
         hudini_title: 'Hudini - SLM上的CPU魔术师',
@@ -245,8 +249,10 @@ const messages = {
         delete_thread_cancel_log: '删除已取消',
         rerun_prompt: '重新运行提示',
         failed_to_retrieve_user_context: '无法获取用户上下文',
+        no_data_to_compare: '没有数据可比较',
     }
 };
+
 
 const i18n = createI18n({
     legacy: false,

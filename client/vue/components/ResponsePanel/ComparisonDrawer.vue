@@ -52,7 +52,7 @@
       </a-table>
     </div>
     <div v-else>
-      No data to compare.
+      {{$t("no_data_to_compare","No data to compare.")}}
     </div>
   </a-drawer>
 </template>
