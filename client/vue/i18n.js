@@ -47,6 +47,8 @@ const messages = {
         delete_thread_ok_text: 'Yes, delete it',
         delete_thread_cancel_text: 'No, keep it',
         delete_thread_cancel_log: 'Deletion canceled',
+        rerun_prompt: 'Rerun Prompt',
+        failed_to_retrieve_user_context: 'Failed to retrieve user context',
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -94,6 +96,8 @@ const messages = {
         delete_thread_ok_text: 'Ja, löschen',
         delete_thread_cancel_text: 'Nein, behalten',
         delete_thread_cancel_log: 'Löschung abgebrochen',
+        rerun_prompt: 'Prompt erneut ausführen',
+        failed_to_retrieve_user_context: 'Fehler beim Abrufen des Benutzerkontexts',
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -141,6 +145,8 @@ const messages = {
         delete_thread_ok_text: 'Oui, supprimer',
         delete_thread_cancel_text: 'Non, garder',
         delete_thread_cancel_log: 'Suppression annulée',
+        rerun_prompt: 'Relancer le Prompt',
+        failed_to_retrieve_user_context: 'Échec de la récupération du contexte utilisateur'
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
@@ -188,6 +194,8 @@ const messages = {
         delete_thread_ok_text: 'Да, удалить',
         delete_thread_cancel_text: 'Нет, оставить',
         delete_thread_cancel_log: 'Удаление отменено',
+        rerun_prompt: 'Перезапустить запрос',
+        failed_to_retrieve_user_context: 'Не удалось получить контекст пользователя',
     },
     zh: {
         hudini_title: 'Hudini - SLM上的CPU魔术师',
@@ -235,6 +243,8 @@ const messages = {
         delete_thread_ok_text: '是的，删除它',
         delete_thread_cancel_text: '不，保留它',
         delete_thread_cancel_log: '删除已取消',
+        rerun_prompt: '重新运行提示',
+        failed_to_retrieve_user_context: '无法获取用户上下文',
     }
 };
 

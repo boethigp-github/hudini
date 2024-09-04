@@ -178,6 +178,7 @@ export default {
      */
     onMounted(() => {
       window.addEventListener('delete-thread', deleteThreadEvent);
+      window.addEventListener('rerun-prompt', rerunPrompt);
     });
 
     /**
@@ -186,6 +187,7 @@ export default {
      */
     onBeforeUnmount(() => {
       window.removeEventListener('delete-thread', deleteThreadEvent);
+      window.removeEventListener('rerun-prompt', rerunPrompt);
     });
 
     /**
@@ -203,6 +205,15 @@ export default {
       await deleteUserContext(userContext.value.id);
       resetUserContext()
       setResponses([])
+    };
+    /**
+     *Reruns prompt.
+     * Triggered by the rerun-prompr" event.
+     */
+    const rerunPrompt = async (event) => {
+      console.log("rerun: ", prompt)
+      prompt.value = event.detail.prompt;
+      handleSubmit()
     };
 
     /**
@@ -229,9 +240,12 @@ export default {
       if (userContextResponse.status === 200) {
         setResponses(userContext.context_data);
         updateUserContextData(userContext);
+      }
+      else if (userContextResponse.status === 404) {
+        console.log('Info: usercontext empty');
       } else {
-        message.error(t('failed_to_retrieve_user_context'))
-        console.error(t('failed_to_retrieve_user_context'))
+        message.error(t('failed_to_retrieve_user_context'));
+        console.error(t('failed_to_retrieve_user_context'));
       }
     };
 
