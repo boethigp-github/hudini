@@ -71,26 +71,24 @@ You need to create an Anaconda environment with the name specified in the enviro
 **Example environment variables content:**
 
 ```plaintext
+## Startupscripts
 ANACONDA_ENV_NAME=hudini
+
 SERVER_URL=http://localhost:80
 PROJECT_MODEL_PATH=C:\\projects\\llama.cpp\\models\\custom\
-PROJECT_ROOT=C:\projects\llama.cpp\projects\src\llama-cpp-chat\src
 
-# Replace these with your actual API keys
-API_KEY_OPEN_AI=your-openai-api-key-here
-API_KEY_ANTHROPIC=your-anthropic-api-key-here
-
+PROJEKT_ROOT=C:\projects\llama.cpp\projects\src\llama-cpp-chat\src
+API_KEY_OPEN_AI=<API_KEY_OPEN_AI>
+API_KEY_ANTHROPIC=<API_KEY_ANTHROPIC>
+API_KEY_GOOGLE_AI=<API_KEY_GOOGLE_AI>
 PROJECT_FRONTEND_DIRECTORY=C:\\projects\\llama.cpp\\projects\\src\\llama-cpp-chat\\src\\frontend\
 DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost/hudini
-
 APP_DEBUG=False
 APP_ENV=development
-APP_TESTING=False
+APP_Testing=False
 APP_LOG_LEVEL=DEBUG
 APP_PROJECT_NAME=HUDINI
 APP_CORS_ORIGIN=http://localhost:5173,https://editor.swagger.io
-APP_CACHE=C:\projects\hudini\server\var\cache
-
 DB_SQL_ECHO=False
 DB_POOL_SIZE=20
 DB_MAX_OVERFLOW=5
