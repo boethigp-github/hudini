@@ -108,7 +108,7 @@ const messages = {
         no_data_to_compare: 'Keine Daten zum Vergleichen',
         statistics: 'Statistiken',
         system_prompts: 'Systemaufforderungen',
-        completion_tokens: 'Vervollständigungs-Token',
+        completion_tokens: 'Completion Tokens',
         prompt_tokens: 'Prompt-Token',
         all_tokens: 'Alle Token',
         run_time: 'Ausführungszeit',

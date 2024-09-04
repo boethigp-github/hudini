@@ -147,7 +147,7 @@ const formatTimestamp = (timestamp) => {
     const formatDuration = (start, end) => {
       const duration = end - start;
       const seconds = ((duration % 60000)).toFixed(0);
-      return `${seconds}ms`;
+      return `${seconds} ms`;
     };
 
     onMounted(() => {
