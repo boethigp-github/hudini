@@ -49,11 +49,15 @@ class AnthropicClient:
                             role="assistant"
                         )
                     )],
-                    created=11111,
+                    created=int(datetime.utcnow().timestamp()),
                     model=model_config.model,
                     object="model",
                     system_fingerprint=None,
-                    usage=Usage(completion_tokens=0, prompt_tokens=0, total_tokens=0)
+                    usage=Usage(
+                        completion_tokens=len(full_content.split()),  # Calculate tokens using accumulated content
+                        prompt_tokens=len(request.prompt.split()),
+                        total_tokens=len(full_content.split()) + len(request.prompt.split())
+                    )
                 )
 
                 success_model = SuccessGenerationModel(

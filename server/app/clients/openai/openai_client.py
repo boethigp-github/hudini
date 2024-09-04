@@ -1,10 +1,12 @@
 import logging
 import openai
 from openai import AsyncOpenAI
-from server.app.models.generation.success_generation_model import SuccessGenerationModel, Completion, Choice, Message, Usage
+from server.app.models.generation.success_generation_model import SuccessGenerationModel, Completion, Choice, Message, \
+    Usage
 from server.app.models.generation_error_details import ErrorGenerationModel
 from server.app.models.generation.openai_model import OpenaiModel
 from typing import Optional
+
 
 class OpenAIClient:
     async_methods = ['fetch_completion']
@@ -26,9 +28,11 @@ class OpenAIClient:
         logger.addHandler(handler)
         return logger
 
-    async def fetch_completion(self, openai_model: OpenaiModel, prompt: str, id:str, presence_penalty: Optional[float] = 0.0):
+    async def fetch_completion(self, openai_model: OpenaiModel, prompt: str, id: str,
+                               presence_penalty: Optional[float] = 0.0):
         try:
-            self.logger.debug(f"Fetching streaming completion for model: {openai_model.id} with presence_penalty: {presence_penalty}")
+            self.logger.debug(
+                f"Fetching streaming completion for model: {openai_model.id} with presence_penalty: {presence_penalty}")
             stream = await self.client.chat.completions.create(
                 model=openai_model.id,
                 messages=[
@@ -43,6 +47,8 @@ class OpenAIClient:
             async def async_generator():
                 full_content = ""
                 async for chunk in stream:
+                    self.logger.debug(
+                        f"OpenAIClient::fetch_completion_stream chunk: {chunk}")
                     if chunk.choices[0].delta.content is not None:
                         content = chunk.choices[0].delta.content
                         full_content += content
@@ -63,7 +69,12 @@ class OpenAIClient:
                             object=chunk.object,
                             # Assuming these are not available in streaming mode
                             system_fingerprint=None,
-                            usage=Usage(completion_tokens=0, prompt_tokens=0, total_tokens=0)
+                            usage=Usage(
+                                completion_tokens=len(full_content.split()),
+                                # Calculate tokens using accumulated content
+                                prompt_tokens=len(prompt.split()),
+                                total_tokens=len(full_content.split()) + len(prompt.split())
+                            )
                         )
 
                         yield (SuccessGenerationModel(

@@ -18,7 +18,7 @@ class TestGenerateAndStream(unittest.TestCase):
     def test_stream_success(self):
         """Test the /stream/openai endpoint for a successful streaming response."""
         model_config = ModelConfig(
-            id=str(uuid.uuid4()),
+            id='gpt-3.5-turbo',
             platform=Platform.OPENAI,
             model="gpt-3.5-turbo",
             temperature=0.7,
