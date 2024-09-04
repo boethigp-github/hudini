@@ -1,7 +1,6 @@
 <template>
   <a-row>
     <a-col :span="23">
-
       <div id="response" class="response" ref="responseElement">
         <template v-for="(dialog, dialogIndex) in groupedResponses" :key="dialogIndex">
           <a-card dense  size="small" :id="`dialog_${dialog.promptId}`" class="dialog-card">
@@ -144,9 +143,6 @@ export default {
     const groupedResponses = computed(() => {
       const groups = [];
       let currentGroup = null;
-
-
-
       props.responses.forEach(response => {
         if (response.prompt) {
           if (currentGroup) {
@@ -158,7 +154,8 @@ export default {
               id: response.prompt_id,
               type: 'user',
               content: response.prompt,
-              status: response.status
+              status: response.status,
+              rawData:response
             }]
           };
         } else if (currentGroup) {
@@ -169,7 +166,8 @@ export default {
             model: response.model,
             timestamp: response.completion?.created,
             error: response.error,
-            status: response.status
+            status: response.status,
+             rawData:response
           });
         }
       });
@@ -246,6 +244,7 @@ const comparisonData = computed(() => {
       content: item.content || '',
       timestamp: item.timestamp ? formatTimestamp(item.timestamp) : '',
       error: item.error || '',
+      rawData:item.rawData
     }))
   );
 });
