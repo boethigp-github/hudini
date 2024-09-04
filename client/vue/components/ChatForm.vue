@@ -159,7 +159,6 @@ export default {
       userContext.value = value;
     };
 
-
     /**
      * Handles the keydown event for the prompt input.
      * Submits the prompt when the Enter key is pressed without Shift.

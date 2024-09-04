@@ -4,30 +4,28 @@
     placement="right"
     :visible="drawerVisible"
     @close="closeDrawer"
-    :width="width"
-  >
-    <div v-if="comparisonData.length > 0">
+    :width="width">
+    <div v-if="responses.length > 0">
       <a-table
         bordered
         size="small"
-        :dataSource="comparisonData"
+        :dataSource="responses"
         :columns="columns"
         rowKey="model"
         :pagination="false"
-        :rowClassName="getRowClass"
-      >
+        :rowClassName="getRowClass">
         <template v-slot:bodyCell="{ record, column, index }">
           <VueMarkdownIT
-            v-if="column.dataIndex === 'content'"
+            v-if="column.dataIndex === 'content' && record.completion?.choices[0]?.message?.content"
             style="margin-top:11px"
             :breaks="true"
             :plugins="plugins"
-            :source="record.content"
+            :source="record.completion?.choices[0].message.content"
           />
           <div v-else-if="column.dataIndex === 'statistics'">
             <a-list
-              v-if="record.rawData?.completion?.usage"
-              :dataSource="[record.rawData.completion.usage]"
+              v-if="record?.completion?.usage"
+              :dataSource="[record.completion.usage]"
               :bordered="false"
               size="small"
             >
@@ -88,7 +86,7 @@ export default defineComponent({
     'VueMarkdownIT': Markdown,
   },
   props: {
-    comparisonData: {
+    responses: {
       type: Array,
       required: true,
       default: () => [],
@@ -137,7 +135,6 @@ const formatTimestamp = (timestamp) => {
   if (!timestamp) return '';
   const date = new Date(timestamp); // Convert milliseconds to Date object
   return date.toLocaleString([], {
-
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
@@ -209,7 +206,6 @@ const formatTimestamp = (timestamp) => {
   },
 });
 </script>
-
 <style>
 .userpromptrow {
   background: #e7e7e7 !important;
