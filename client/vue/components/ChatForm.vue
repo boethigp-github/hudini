@@ -163,13 +163,13 @@ export default {
      * @returns {{uuid, prompt, user: *, status}}
      * @constructor
      */
-const PromptPostRequestModel = (uuid, user, prompt, status = 'INITIALIZED') => {
-  promptModel.uuid = uuid;
-  promptModel.prompt = prompt;
-  promptModel.status = status;
-  promptModel.user = user;
-  return structuredClone(promptModel);
-};
+    const PromptPostRequestModel = (uuid, user, prompt, status = 'INITIALIZED') => {
+      promptModel.uuid = uuid;
+      promptModel.prompt = prompt;
+      promptModel.status = status;
+      promptModel.user = user;
+      return structuredClone(promptModel);
+    };
 
     // Reactive references for handling various state
     const buffer = ref('');
@@ -247,9 +247,8 @@ const PromptPostRequestModel = (uuid, user, prompt, status = 'INITIALIZED') => {
      * Triggered by the rerun-prompr" event.
      */
     const rerunPrompt = async (event) => {
-      console.log("rerun: ", prompt)
       prompt.value.prompt = event.detail.prompt;
-      handleSubmit()
+      handleSubmit().then()
     };
 
     /**
@@ -298,15 +297,23 @@ const PromptPostRequestModel = (uuid, user, prompt, status = 'INITIALIZED') => {
     const saveUserContextServerside = (promptPostRequest) => {
       const callback = async () => {
       } //@todo: calls pina usercontext storage
-      userContext.value.context_data = responses.value
-      userContext.value.id = promptPostRequest.uuid
+      prepareUserContextForPosting(promptPostRequest);
       saveUserContext(userContext.value, callback).catch((error) => {
         console.error('Error sending responses to /usercontext:', error);
       });
     };
 
-    const pushToResponseStack=(promptPostRequest)=>{
+    const pushToResponseStack = (promptPostRequest) => {
       responses.value.push(promptPostRequest);
+    }
+
+    /**
+     * maps responses to context and sets uuid
+     * @param promptPostRequest
+     */
+    const prepareUserContextForPosting = (promptPostRequest) => {
+      userContext.value.context_data = responses.value
+      userContext.value.id = promptPostRequest.uuid
     }
 
 
@@ -382,13 +389,15 @@ const PromptPostRequestModel = (uuid, user, prompt, status = 'INITIALIZED') => {
      * Sends the prompt to the server and handles streaming responses.
      */
     const handleSubmit = async () => {
-      const promptPostRequest = PromptPostRequestModel(uuidv4(), user, prompt.value.prompt.trim(), 'INITIALIZED' )
+      const promptPostRequest = PromptPostRequestModel(uuidv4(), user, prompt.value.prompt.trim(), 'INITIALIZED')
       showLoader()
       pushToResponseStack(promptPostRequest);
-      streamGeneration(promptPostRequest).then(() => {});
-      createPromptServerside(promptPostRequest).then(() => {});
-      saveUserContextServerside(promptPostRequest);
-      dispatchOnCompleteEvent()
+      streamGeneration(promptPostRequest).then(() => {
+        createPromptServerside(promptPostRequest).then(() => {
+          saveUserContextServerside(promptPostRequest);
+          dispatchOnCompleteEvent()
+        });
+      });
     };
 
     return {

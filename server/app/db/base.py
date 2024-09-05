@@ -1,22 +1,23 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import create_engine  # For synchronous migrations
 from sqlalchemy.pool import NullPool
-from ..config.settings import Settings
+from server.app.config.settings import Settings
 
 settings = Settings()
 
-# Erstellen der Basis-Klasse für deklarative Modelle
+# Create the Base class for declarative models
 Base = declarative_base()
 
-# Konfiguration der Datenbankverbindung
-SQLALCHEMY_DATABASE_URL = settings.get("default").get("DATABASE_URL")
+# Configuration for async engine (for FastAPI)
+SQLALCHEMY_DATABASE_URL_ASYNC = settings.get("default").get("DATABASE_URL")
 
-# Engine-Konfiguration
+# Async engine settings
 engine_args = {
-    "echo": settings.get("default").get("DB_SQL_ECHO", 'False') == 'True',  # Konvertierung zu Boolean
+    "echo": settings.get("default").get("DB_SQL_ECHO", 'False') == 'True',
 }
 
-use_null_pool = settings.get("default").get("DB_USE_NULL_POOL", 'False') == 'True'  # Konvertierung zu Boolean
+use_null_pool = settings.get("default").get("DB_USE_NULL_POOL", 'False') == 'True'
 
 if use_null_pool:
     engine_args["poolclass"] = NullPool
@@ -28,18 +29,26 @@ else:
         "pool_recycle": int(settings.get("default").get("DB_POOL_RECYCLE", 1800)),
     })
 
-# Erstellen der Engine mit optimierten Einstellungen
-engine = create_async_engine(SQLALCHEMY_DATABASE_URL, **engine_args)
+# Asynchronous engine (for FastAPI)
+async_engine = create_async_engine(SQLALCHEMY_DATABASE_URL_ASYNC, **engine_args)
 
-# Erstellen des Session-Makers
+# Async session maker
 async_session_maker = sessionmaker(
-    engine,
+    async_engine,
     class_=AsyncSession,
     expire_on_commit=False,
     autocommit=False,
     autoflush=False
 )
 
+# Synchronous engine (for Alembic migrations)
+SQLALCHEMY_DATABASE_URL_SYNC = SQLALCHEMY_DATABASE_URL_ASYNC.replace("postgresql+asyncpg", "postgresql+psycopg2")
+sync_engine = create_engine(SQLALCHEMY_DATABASE_URL_SYNC)
+
+# Sync session maker for Alembic migrations
+sync_session_maker = sessionmaker(bind=sync_engine)
+
+# Async DB handling for FastAPI
 async def get_db():
     async with async_session_maker() as session:
         try:
@@ -48,12 +57,12 @@ async def get_db():
             await session.close()
 
 async def init_db():
-    async with engine.begin() as conn:
+    async with async_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 async def check_db_connection():
     try:
-        async with engine.connect() as conn:
+        async with async_engine.connect() as conn:
             await conn.execute("SELECT 1")
         return True
     except Exception as e:
@@ -61,6 +70,6 @@ async def check_db_connection():
         return False
 
 async def close_db_connection():
-    await engine.dispose()
+    await async_engine.dispose()
 
-__all__ = ["Base", "engine", "async_session_maker", "get_db", "init_db", "check_db_connection", "close_db_connection"]
+__all__ = ["Base", "async_engine", "sync_engine", "async_session_maker", "sync_session_maker", "get_db", "init_db", "check_db_connection", "close_db_connection"]

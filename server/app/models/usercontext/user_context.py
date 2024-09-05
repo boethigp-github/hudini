@@ -1,26 +1,30 @@
-from sqlalchemy import Column, Integer, String, DateTime, JSON
+import json
+from sqlalchemy import Column, BigInteger, DateTime, Text, ForeignKey
 from datetime import datetime
-from ...db.base import Base  # Import Base aus dem gemeinsamen Modul
-from sqlalchemy.dialects.postgresql import UUID
-import uuid
-class UserContextModel(Base):
-    __tablename__ = 'user_context'  # Tabellenname in der Datenbank
+from server.app.db.base import Base
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user = Column(Integer, nullable=False)  # Changed to bigint (Integer in SQLAlchemy)
-    thread_id = Column(Integer, nullable=False)
+class UserContextModel(Base):
+    __tablename__ = 'user_context'
+
+    id = Column(BigInteger, primary_key=True)
+    context_data = Column(Text, nullable=False)
+    user = Column(BigInteger, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
+    thread_id = Column(BigInteger, nullable=False)
     created = Column(DateTime, default=datetime.utcnow)
     updated = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    context_data = Column(JSON, nullable=True)  # JSON-Feld für zusätzliche Kontextdaten
+
+    def set_context_data(self, data):
+        self.context_data = json.dumps(data)
+
+    def get_context_data(self):
+        return json.loads(self.context_data)
 
     def to_dict(self):
         return {
             "id": self.id,
             "user": self.user,
             "thread_id": self.thread_id,
-            "created": self.created.isoformat(),
-            "updated": self.updated.isoformat(),
-            "context_data": self.context_data,
+            "created": self.created,
+            "updated": self.updated,
+            "context_data": self.get_context_data(),
         }
-
-    # Removed the Config class as it is not necessary for SQLAlchemy models

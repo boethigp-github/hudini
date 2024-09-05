@@ -4,6 +4,7 @@ import string
 import uuid
 import requests
 from server.app.models.usercontext.usercontext_post_request import UserContextPostRequestModel
+from server.app.models.usercontext.usercontext_response import ContextDataItem
 from server.app.config.settings import Settings
 from server.app.models.users.users_post_request import UserPostRequestModel
 
@@ -34,21 +35,19 @@ class TestUserContext(unittest.TestCase):
             cls.assertTrue(False, f"Failed to create test user: {response.text}")
         return response.json().get('id')
 
-    def create_user_context(self, thread_id, prompt_uuid, context_data):
+    def create_user_context(self, thread_id, context_data):
         """
-        Creates a user context with the provided thread_id, prompt_id, and context_data.
+        Creates a user context with the provided thread_id and context_data.
         Uses the test user ID created in setUpClass.
         """
         payload = UserContextPostRequestModel(
             user=self.test_user_id,
             thread_id=thread_id,
-            prompt_uuid=prompt_uuid,
             context_data=context_data
         )
 
         # Convert UUID to string for JSON serialization
         payload_dict = payload.dict()
-        payload_dict['prompt_uuid'] = str(payload_dict['prompt_uuid'])
 
         response = requests.post(f"{self.BASE_URL}/usercontext", json=payload_dict)
         if response.status_code != 200:
@@ -65,25 +64,28 @@ class TestUserContext(unittest.TestCase):
         self.assertEqual(delete_data['status'], "User context deleted successfully")
 
     def create_test_prompt(self):
-        create_payload = {
-            "prompt": "Test prompt",
-            "user": self.test_user_id,
-            "status": "IN_PROGRESS",
-            "uuid": str(uuid.uuid4())  # Generate a UUID for the prompt
-        }
-        create_response = requests.post(f"{self.BASE_URL}/prompts", json=create_payload)
-        if create_response.status_code != 201:
-            self.fail(f"Failed to create test prompt: {create_response.text}")
-        return create_response.json().get('uuid')
+        """
+        Creates a test prompt object. In this case, we will not interact with prompts directly
+        but rather with context data, which can be structured similarly.
+        """
+        return str(uuid.uuid4())  # Generate a UUID for the prompt as a placeholder
 
     def test_create_and_get_user_context(self):
         # Create a test prompt and get its UUID
         prompt_uuid = self.create_test_prompt()
         thread_id = 1  # Assume a valid thread ID for testing
-        context_data = [{"key": "value"}]  # Example context data
+        context_data = [
+            ContextDataItem(
+                prompt="Test prompt",
+                user=self.test_user_id,
+                status="IN_PROGRESS",
+                model="TestModel",
+                completion={"id": prompt_uuid, "choices": [{"index": 0, "message": {"content": "Test message", "role": "assistant"}}]}
+            ).dict()
+        ]
 
         # Create a user context with the generated prompt UUID
-        created_context = self.create_user_context(thread_id, prompt_uuid, context_data)
+        created_context = self.create_user_context(thread_id, context_data)
 
         # Retrieve user context by thread_id and user
         response = requests.get(f"{self.BASE_URL}/usercontext",
@@ -91,22 +93,26 @@ class TestUserContext(unittest.TestCase):
         print(f"Get User Context Response Status Code: {response.status_code}")
         print(f"Get User Context Response Body: {response.text}")
         self.assertEqual(response.status_code, 200)
-        contexts = response.json()
+        context = response.json()
 
         # Assert that the created user context is retrieved
-        self.assertTrue(any(context["user"] == created_context["user"] for context in contexts))
-
-        # Cleanup: Delete the user context and prompt
-        #self.delete_user_context(created_context["id"])
+        self.assertEqual(context["user"], created_context["user"])
 
     def test_delete_user_context(self):
         prompt_uuid = self.create_test_prompt()
-        # Generate valid prompt_id and thread_id
 
         thread_id = 1  # Assume a valid thread ID for testing
-        context_data = [{"key": "value"}]  # Example context data
+        context_data = [
+            ContextDataItem(
+                prompt="Test prompt",
+                user=self.test_user_id,
+                status="IN_PROGRESS",
+                model="TestModel",
+                completion={"id": prompt_uuid, "choices": [{"index": 0, "message": {"content": "Test message", "role": "assistant"}}]}
+            ).dict()
+        ]
 
-        created_context = self.create_user_context(thread_id, prompt_uuid, context_data)
+        created_context = self.create_user_context(thread_id, context_data)
 
         # Ensure the context is created
         response = requests.get(f"{self.BASE_URL}/usercontext",
@@ -114,8 +120,9 @@ class TestUserContext(unittest.TestCase):
         print(f"Get User Context Before Delete Status Code: {response.status_code}")
         print(f"Get User Context Before Delete Body: {response.text}")
         self.assertEqual(response.status_code, 200)
-        contexts = response.json()
-        self.assertTrue(any(context["id"] == created_context["id"] for context in contexts))
+        context = response.json()
+
+        self.assertEqual(context["id"], created_context["id"])
 
         # Delete the context
         self.delete_user_context(created_context["id"])
@@ -125,9 +132,7 @@ class TestUserContext(unittest.TestCase):
                                 params={"thread_id": thread_id, "user": self.test_user_id})
         print(f"Get User Context After Delete Status Code: {response.status_code}")
         print(f"Get User Context After Delete Body: {response.text}")
-        self.assertEqual(response.status_code, 200)
-        contexts = response.json()
-        self.assertFalse(any(context["id"] == created_context["id"] for context in contexts))
+        self.assertEqual(response.status_code, 404)
 
 if __name__ == '__main__':
     unittest.main()
