@@ -26,7 +26,7 @@
 
     <!-- Footer Layout -->
     <a-layout-footer :style="{marginTop:'-5px', padding:'5px'}">
-      <a-tabs default-active-key="1" class="chat-tabs">
+      <a-tabs default-active-key="1" class="chat-tabs" >
         <a-tab-pane key="1" :tab="t('model_selection')">
           <ModelSelection/>
           <a-form layout="vertical" class="form">
@@ -259,7 +259,7 @@ export default {
       if (userContextPostResponse.status === 200) {
         updateUserContextData(userContext);
       } else if (userContextPostResponse.status === 404) {
-        console.log('Info: usercontext empty');
+
       } else {
         message.error(t('failed_to_retrieve_user_context'));
         console.error(t('failed_to_retrieve_user_context'));
@@ -397,7 +397,6 @@ export default {
           );
 
 
-        console.log("111111111 userContext.value",  userContext.value);
 
       userContextList.value.push(userContext.value);
     }
@@ -481,4 +480,6 @@ export default {
 .textarea-container {
   clear: both;
 }
+
+
 </style>

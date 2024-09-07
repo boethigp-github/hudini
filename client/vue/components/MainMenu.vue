@@ -72,10 +72,7 @@ export default {
 </script>
 
 <style scoped>
-:where(.css-dev-only-do-not-override-19iuou).ant-menu-light {
-  color: rgba(0, 0, 0, 0.88);
-  background: #e9edf2;
-  font-weight: bold;
-  width: 88%;
+ .ant-menu{
+  background: none;
 }
 </style>

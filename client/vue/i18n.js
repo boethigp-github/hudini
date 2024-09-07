@@ -56,7 +56,8 @@ const messages = {
         prompt_tokens: 'Prompt Tokens',
         all_tokens: 'All Tokens',
         run_time: 'Run Time',
-        total_tokens: "Total Tokens"
+        total_tokens: "Total Tokens",
+        prompt_id: 'Prompt ID',
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -113,7 +114,8 @@ const messages = {
         prompt_tokens: 'Prompt-Token',
         all_tokens: 'Alle Token',
         run_time: 'Ausführungszeit',
-        total_tokens: "Alle Tokens"
+        total_tokens: "Alle Tokens",
+        prompt_id: 'Prompt-ID',
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -170,7 +172,8 @@ const messages = {
         prompt_tokens: 'Jetons de Prompt',
         all_tokens: 'Tous les Jetons',
         run_time: 'Temps d\'Exécution',
-        total_tokens: "Total des jetons"
+        total_tokens: "Total des jetons",
+        prompt_id: 'ID de l\'invite',
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
@@ -228,6 +231,7 @@ const messages = {
         all_tokens: 'Все Токены',
         run_time: 'Время Выполнения',
         total_tokens: "Всего токенов",
+        prompt_id: 'ID запроса',
 
     },
         zh: {
@@ -284,7 +288,7 @@ const messages = {
         prompt_tokens: '提示令牌',
         all_tokens: '所有令牌',
         run_time: '运行时间',
-        total_tokens: "代币总数"
+        total_tokens: "代币总数", prompt_id: '提示 ID',
     },
     // Add other languages as needed
 };

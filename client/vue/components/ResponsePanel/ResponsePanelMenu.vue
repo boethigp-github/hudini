@@ -79,5 +79,13 @@ export default {
 </script>
 
 <style scoped>
-/* Optional: Add specific styles for the submenu here */
+.ant-layout {
+    display: flex;
+    flex: auto;
+    flex-direction: column;
+    color: rgba(0, 0, 0, 0.88);
+    min-height: 0;
+    background: none;
+    border: 1px solid red;
+}
 </style>

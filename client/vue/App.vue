@@ -1,6 +1,8 @@
 <template>
     <div id="app">
+        <a-config-provider :theme="{ token: { colorPrimary: '#939393' } }">
         <ChatForm />
+        </a-config-provider>
     </div>
 </template>
 
