@@ -76,7 +76,9 @@ import {
   saveUserContext,
   stream
 } from './../services/api';
-import {v4 as uuidv4} from 'uuid';
+import {uuidv7} from 'uuidv7';
+
+
 import ChatMenu from './MainMenu.vue';
 import {PlusOutlined, SettingOutlined} from '@ant-design/icons-vue';
 import {UserContext} from '../models/UserContext.js';
@@ -102,7 +104,7 @@ export default {
     SettingOutlined,
   },
   setup() {
-    const uuid = uuidv4();
+
     const user = "5baab051-0c32-42cf-903d-035ec6912a91"; // Currently hardcoded user ID
     const thread_id = 1; // Currently hardcoded thread ID
 
@@ -111,7 +113,7 @@ export default {
      * @type {{models: *[], method_name: string, id: (`${string}-${string}-${string}-${string}-${string}`|*|string), prompt: string}}
      */
     const streamRequestModel = {
-      id: uuid,
+      id: null,
       prompt: '',
       models: [], // Pass the current model configuration
       method_name: 'fetch_completion',
@@ -142,8 +144,8 @@ export default {
      * @param status
      * @returns {UserContext.PromptPostRequestModel}
      */
-    const getPromptPostRequest = (uuid, user, prompt, status = 'INITIALIZED') => {
-      return new UserContext.PromptPostRequestModel(uuidv4(), prompt, user, status);
+    const getPromptPostRequest = (user, prompt, status = 'INITIALIZED') => {
+      return new UserContext.PromptPostRequestModel(uuidv7(), prompt, user, status);
     };
     const prompt = ref(UserContext.PromptPostRequestModel);
     const userContext = ref(UserContext.UserContextPostRequestModel);
@@ -297,7 +299,7 @@ export default {
       console.log("prepareUserContextForPosting: responses.value:", responses.value);
       console.log("prepareUserContextForPosting: userContext.value:", userContext.value);
 
-      userContext.value = new UserContext.UserContextPostRequestModel(promptPostResponse.uuid, promptPostResponse.user, thread_id, getUserContextPrompt(promptPostResponse))
+      userContext.value = new UserContext.UserContextPostRequestModel(promptPostResponse.user, thread_id, getUserContextPrompt(promptPostResponse))
 
       console.log("prepareUserContextForPosting: userContext.value after:", userContext.value);
     }
@@ -309,7 +311,7 @@ export default {
      */
     async function streamGeneration(promptPostRequest) {
 
-      console.log("22222222222", responses.value);
+
 
 
       for (const model of await modelsStore.getSelectedModelsWithMetaData()) {
@@ -379,7 +381,7 @@ export default {
      * Sends the prompt to the server and handles streaming responses.
      */
     const handleSubmit = async () => {
-      const promptPostRequest = getPromptPostRequest(uuidv4(), user, prompt.value.prompt.trim())
+      const promptPostRequest = getPromptPostRequest(user, prompt.value.prompt.trim())
       showLoader()
       streamGeneration(promptPostRequest).then(async () => {
         createPromptServerside(promptPostRequest).then(promptPostResponse => {

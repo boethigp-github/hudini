@@ -1,3 +1,5 @@
+import {uuidv7} from "uuidv7";
+
 export const UserContext = {
   Message: class {
     constructor(content, refusal = null, role) {
@@ -123,8 +125,8 @@ export const UserContext = {
   },
 
   UserContextPostRequestModel: class {
-    constructor(uuid,user, thread_id, user_context_prompt) {
-      this.uuid = uuid;
+    constructor(user, thread_id, user_context_prompt) {
+      this.uuid = uuidv7();
       this.user = user;
       this.thread_id = thread_id;
       this.prompt = user_context_prompt;

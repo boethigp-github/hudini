@@ -4,11 +4,7 @@ from sqlalchemy.dialects.postgresql import UUID as SQLUUID
 from server.app.db.base import Base
 from sqlalchemy.dialects.postgresql import JSONB
 from fastapi.encoders import jsonable_encoder
-import pytz
-from server.app.config.settings import Settings
-settings = Settings()
 
-app_timezone = pytz.timezone(settings.get("default").get("APP_TIMEZONE"))
 
 class UserContextModel(Base):
     __tablename__ = 'user_context'
@@ -18,8 +14,8 @@ class UserContextModel(Base):
     context_data = Column(JSONB, nullable=False)
     user = Column(SQLUUID, ForeignKey('users.uuid', ondelete='CASCADE'), nullable=False)
     thread_id = Column(BigInteger, nullable=False)
-    created = Column(DateTime, default=datetime.now(tz=app_timezone), nullable=False)
-    updated = Column(DateTime, default=datetime.now(tz=app_timezone),onupdate=lambda: datetime.now(tz=app_timezone))
+    created = Column(DateTime, default=datetime.now, nullable=False)
+    updated = Column(DateTime, default=datetime.now,onupdate=lambda: datetime.now)
 
     def set_context_data(self, data):
         """ Serialize context_data with jsonable_encoder to handle UUID and complex types """

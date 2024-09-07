@@ -4,7 +4,9 @@ from pydantic import BaseModel, Field
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
-
+import pytz
+from server.app.config.settings import Settings
+settings = Settings()
 class ContextDataItem(BaseModel):
     prompt_uuid: UUID
     user: Optional[UUID] = None
@@ -22,7 +24,8 @@ class UserContextPromptModel(BaseModel):
     uuid: UUID
     user: UUID
     status: Optional[str] = None
-    created: datetime = Field(default_factory=datetime.utcnow)
+    created: datetime = Field(default_factory=lambda: datetime.now(
+        tz=pytz.timezone(settings.get("default").get("APP_TIMEZONE"))))  # Add timezone-aware datetime
 
     class Config:
         from_attributes = True
