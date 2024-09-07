@@ -56,7 +56,7 @@ class Completion(BaseModel):
 
 
 class ContextDataItem(BaseModel):
-    prompt_uuid: UUID = Field(default_factory=uuid4)  # Renaming 'id' to 'prompt_uuid'
+    id: UUID = Field(default_factory=uuid4) 
     user: Optional[UUID] = None
     status: Optional[str] = None
     model: Optional[str] = None

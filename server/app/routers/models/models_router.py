@@ -32,7 +32,7 @@ async def get_models(cache=Depends(get_cache)):
         cached_models = cache.get("models_list")
         if cached_models:
             logger.debug("Cache hit: Returning cached models list")
-           # return cached_models  # The response model handles the serialization
+            return cached_models  # The response model handles the serialization
 
         # Retrieve models from OpenAI and potentially other sources
         openai_models = OpenAIClient(api_key=settings.get("default").get("API_KEY_OPEN_AI")).get_available_models()

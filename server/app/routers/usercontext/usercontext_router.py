@@ -63,19 +63,27 @@ async def get_user_contexts(user: str, thread_id: int, db: AsyncSession = Depend
     return UserContextResponseModel(**user_context.to_dict())
 
 
-@router.delete("/usercontext/{user_context_id}", tags=["usercontext"])
-async def delete_user_context(user_context_id: int, db: AsyncSession = Depends(get_db)):
+@router.delete("/usercontext/{thread_id}", tags=["usercontext"])
+async def delete_user_context(thread_id: int, db: AsyncSession = Depends(get_db)):
     try:
-        user_context = await db.get(UserContextModel, user_context_id)
+        # Delete all user_context records where thread_id matches
+        result = await db.execute(
+            select(UserContextModel).where(UserContextModel.thread_id == thread_id)
+        )
+        user_contexts = result.scalars().all()
 
-        if not user_context:
-            raise HTTPException(status_code=404, detail=f"User context with id {user_context_id} not found")
+        if not user_contexts:
+            raise HTTPException(status_code=404, detail=f"No user contexts found for thread_id {thread_id}")
 
-        await db.delete(user_context)
+        # Iterate and delete all matching user_contexts
+        for user_context in user_contexts:
+            await db.delete(user_context)
+
         await db.commit()
 
-        return {"status": "User context deleted successfully"}
+        return {"status": f"All user contexts with thread_id {thread_id} deleted successfully"}
 
     except Exception as e:
-        logger.error(f"Error occurred while deleting user context: {str(e)}")
-        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+        logger.error(f"Error occurred while deleting user contexts: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
+

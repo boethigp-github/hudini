@@ -26,7 +26,7 @@
                   <template #content>
                     <p>{{ $t('delete') }}</p>
                   </template>
-                  <icon-delete @click.stop="deletePrompt(prompt.id)" class="delete-icon" :title="$t('delete')"/>
+                  <icon-delete @click.stop="deletePrompt(prompt.uuid)" class="delete-icon" :title="$t('delete')"/>
                 </a-popover>
               </div>
             </div>

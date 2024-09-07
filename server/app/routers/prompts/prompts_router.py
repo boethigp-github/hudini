@@ -9,7 +9,7 @@ from server.app.config.settings import Settings
 from typing import List
 from server.app.models.prompts.prompt_post_response_model import PromptPostResponseModel
 from server.app.models.prompts.prompt_post_request_model import PromptPostRequestModel
-
+from uuid import UUID
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -71,9 +71,9 @@ async def create_prompt(prompt: PromptPostRequestModel, db: AsyncSession = Depen
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred {str(e)}")
 
 
-@router.delete("/prompts/{id}", tags=["prompts"])
-async def delete_prompt(id: int, db: AsyncSession = Depends(get_db)):
-    prompt = await db.get(Prompt, id)
+@router.delete("/prompts/{uuid}", tags=["prompts"])
+async def delete_prompt(uuid: UUID, db: AsyncSession = Depends(get_db)):
+    prompt = await db.get(Prompt, uuid)
     if prompt:
         await db.delete(prompt)
         await db.commit()

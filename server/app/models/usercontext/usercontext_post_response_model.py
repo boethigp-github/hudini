@@ -8,7 +8,7 @@ import pytz
 from server.app.config.settings import Settings
 settings = Settings()
 class ContextDataItem(BaseModel):
-    prompt_uuid: UUID
+    id: UUID
     user: Optional[UUID] = None
     status: Optional[str] = None
     model: Optional[str] = None

@@ -76,7 +76,7 @@ import {
   saveUserContext,
   stream
 } from './../services/api';
-import {uuidv7} from 'uuidv7';
+import {v4 as uuidv4} from 'uuid';
 
 
 import ChatMenu from './MainMenu.vue';
@@ -138,15 +138,15 @@ export default {
     /**
      * Requestmodel for saving prompts
      *
-     * @param uuid
      * @param user
      * @param prompt
      * @param status
      * @returns {UserContext.PromptPostRequestModel}
      */
-    const getPromptPostRequest = (user, prompt, status = 'INITIALIZED') => {
-      return new UserContext.PromptPostRequestModel(uuidv7(), prompt, user, status);
-    };
+   const getPromptPostRequest = (uuid,user, prompt, status = 'INITIALIZED') => {
+
+  return new UserContext.PromptPostRequestModel(uuid, prompt, user, status);
+};
     const prompt = ref(UserContext.PromptPostRequestModel);
     const userContext = ref(UserContext.UserContextPostRequestModel);
     const modelsStore = useModelsStore();
@@ -213,13 +213,13 @@ export default {
      */
     const deleteThreadEvent = async () => {
 
-      await deleteUserContext(userContext.value.id);
+      await deleteUserContext(userContext.value.thread_id);
       resetUserContext()
       setResponses([])
     };
     /**
      *Reruns prompt.
-     * Triggered by the rerun-prompr" event.
+     * Triggered by the rerun-prompt" event.
      */
     const rerunPrompt = async (event) => {
       prompt.value.prompt = event.detail.prompt;
@@ -295,13 +295,11 @@ export default {
      */
     const prepareUserContextForPosting = (promptPostResponse) => {
 
-      console.log("prepareUserContextForPosting:promptPostRequest:", promptPostResponse, responses.value);
-      console.log("prepareUserContextForPosting: responses.value:", responses.value);
-      console.log("prepareUserContextForPosting: userContext.value:", userContext.value);
 
-      userContext.value = new UserContext.UserContextPostRequestModel(promptPostResponse.user, thread_id, getUserContextPrompt(promptPostResponse))
+      console.log("prepareUserContextForPosting: promptPostResponse.uuid:", promptPostResponse.uuid);
 
-      console.log("prepareUserContextForPosting: userContext.value after:", userContext.value);
+      userContext.value = new UserContext.UserContextPostRequestModel(promptPostResponse.uuid, promptPostResponse.user, thread_id, getUserContextPrompt(promptPostResponse))
+
     }
 
 
@@ -381,7 +379,10 @@ export default {
      * Sends the prompt to the server and handles streaming responses.
      */
     const handleSubmit = async () => {
-      const promptPostRequest = getPromptPostRequest(user, prompt.value.prompt.trim())
+
+      console.log("handleSubmit: uuidv4()", uuidv4());
+
+      const promptPostRequest = getPromptPostRequest(uuidv4(), user, prompt.value.prompt.trim())
       showLoader()
       streamGeneration(promptPostRequest).then(async () => {
         createPromptServerside(promptPostRequest).then(promptPostResponse => {
