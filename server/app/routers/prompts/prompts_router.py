@@ -7,8 +7,8 @@ from server.app.models.prompts.prompts import Prompt
 from server.app.db.base import async_session_maker
 from server.app.config.settings import Settings
 from typing import List
-from server.app.models.prompts.prompts_post_request import PromptPostRequestModel
-from server.app.models.prompts.prompt_get_response import PromptGetResponseModel
+from server.app.models.prompts.prompt_post_response_model import PromptPostResponseModel
+from server.app.models.prompts.prompt_post_request_model import PromptPostRequestModel
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -22,17 +22,17 @@ async def get_db():
     async with async_session_maker() as session:
         yield session
 
-@router.get("/prompts", response_model=List[PromptGetResponseModel], tags=["prompts"])
+@router.get("/prompts", response_model=List[PromptPostResponseModel], tags=["prompts"])
 async def get_prompts(db: AsyncSession = Depends(get_db)):
     try:
-        result = await db.execute(select(Prompt).order_by(Prompt.created_at.desc()))
+        result = await db.execute(select(Prompt).order_by(Prompt.created.desc()))
         prompts = result.scalars().all()
         return prompts  # FastAPI will automatically convert SQLAlchemy models to Pydantic models
     except Exception as e:
         logger.error(f"Error retrieving prompts: {str(e)}")
-        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred {str(e)}")
 
-@router.post("/prompts", response_model=PromptGetResponseModel, status_code=status.HTTP_201_CREATED, tags=["prompts"])
+@router.post("/prompts", response_model=PromptPostResponseModel, status_code=status.HTTP_201_CREATED, tags=["prompts"])
 async def create_prompt(prompt: PromptPostRequestModel, db: AsyncSession = Depends(get_db)):
     try:
         # Log the incoming data
@@ -46,7 +46,7 @@ async def create_prompt(prompt: PromptPostRequestModel, db: AsyncSession = Depen
 
         if existing_prompt:
             logger.info(f"Prompt already exists: {existing_prompt}")
-            return PromptGetResponseModel.model_validate(existing_prompt)  # Updated for Pydantic v2
+            return PromptPostResponseModel.model_validate(existing_prompt)  # Updated for Pydantic v2
 
         # Log data to be saved
         logger.debug(f"Creating new prompt with data: {prompt.model_dump()}")
@@ -60,7 +60,7 @@ async def create_prompt(prompt: PromptPostRequestModel, db: AsyncSession = Depen
         # Log the newly created prompt
         logger.debug(f"Prompt created successfully: {new_prompt}")
 
-        return PromptGetResponseModel.model_validate(new_prompt)  # Updated for Pydantic v2
+        return PromptPostResponseModel.model_validate(new_prompt)  # Updated for Pydantic v2
 
     except ValidationError as validation_error:
         logger.error(f"Validation error while creating prompt: {validation_error}")

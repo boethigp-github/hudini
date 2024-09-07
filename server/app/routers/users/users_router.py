@@ -31,7 +31,7 @@ async def get_users(db: AsyncSession = Depends(get_db)):
         List[UsersGetResponseModel]: A list of users.
     """
     try:
-        result = await db.execute(select(User).order_by(User.created_at.desc()))
+        result = await db.execute(select(User).order_by(User.created.desc()))
         users = result.scalars().all()
         return users  # FastAPI will automatically convert SQLAlchemy models to Pydantic models
     except Exception as e:
@@ -78,7 +78,7 @@ async def create_user(user_data: UserPostRequestModel, db: AsyncSession = Depend
         user = User(
             username=user_data.username,
             email=user_data.email,
-            created_at=datetime.utcnow()  # Use datetime.utcnow() for the current UTC time
+            created=datetime.utcnow()  # Use datetime.utcnow() for the current UTC time
         )
         db.add(user)
         await db.commit()

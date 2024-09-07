@@ -67,19 +67,19 @@ import ArtifactsPanel from './ResponsePanel/ArtifactsPanels.vue';
 import ResponsePanel from './ResponsePanel.vue';
 import LanguageSwitch from './LanguageSwitch.vue';
 import ModelSelection from './ModelSelection.vue';
-import {message} from 'ant-design-vue';
+import {Button, Col, Form, Input, Layout, message, Row, TabPane, Tabs} from 'ant-design-vue';
 import {
-  stream,
   createPrompt,
-  saveUserContext,
+  deleteUserContext,
   fetchUserContext,
   processChunk,
-  deleteUserContext
+  saveUserContext,
+  stream
 } from './../services/api';
 import {v4 as uuidv4} from 'uuid';
 import ChatMenu from './MainMenu.vue';
-import {Tabs, TabPane, Button, Form, Input, Layout, Row, Col} from 'ant-design-vue';
 import {PlusOutlined, SettingOutlined} from '@ant-design/icons-vue';
+import {UserContext} from '../models/UserContext.js';
 
 export default {
   name: 'ChatForm',
@@ -103,19 +103,8 @@ export default {
   },
   setup() {
     const uuid = uuidv4();
-    const user = 1; // Currently hardcoded user ID
+    const user = "5baab051-0c32-42cf-903d-035ec6912a91"; // Currently hardcoded user ID
     const thread_id = 1; // Currently hardcoded thread ID
-
-    /**
-     * Prompt data model
-     * @type {{prompt: string, user: number, uuid: (`${string}-${string}-${string}-${string}-${string}`|*|string), status: string}}
-     */
-    const promptModel = {
-      prompt: '',
-      user: user,
-      status: 'PROMPT_SAVED',
-      uuid: uuid,
-    };
 
     /**
      * Stream request moel
@@ -128,19 +117,6 @@ export default {
       method_name: 'fetch_completion',
     };
 
-    /**
-     * UserContext model
-     * @type {{context_data: *[], thread_id: number, created: null, prompt_uuid: (`${string}-${string}-${string}-${string}-${string}`|*|string), id: null, user: number, updated: null}}
-     */
-    const userContextModel = {
-      id: null,
-      prompt_uuid: uuid,
-      user: user,
-      thread_id: thread_id,
-      context_data: [],
-      created: null,
-      updated: null,
-    };
 
     /**
      * Creates a stream request model
@@ -160,24 +136,21 @@ export default {
     /**
      * Requestmodel for saving prompts
      *
-     * @returns {{uuid, prompt, user: *, status}}
-     * @constructor
+     * @param uuid
+     * @param user
+     * @param prompt
+     * @param status
+     * @returns {UserContext.PromptPostRequestModel}
      */
-    const PromptPostRequestModel = (uuid, user, prompt, status = 'INITIALIZED') => {
-      promptModel.uuid = uuid;
-      promptModel.prompt = prompt;
-      promptModel.status = status;
-      promptModel.user = user;
-      return structuredClone(promptModel);
+    const getPromptPostRequest = (uuid, user, prompt, status = 'INITIALIZED') => {
+      return new UserContext.PromptPostRequestModel(uuidv4(), prompt, user, status);
     };
-
-    // Reactive references for handling various state
-    const buffer = ref('');
-    const prompt = ref(promptModel);
-    const responses = ref([]);
-    const userContext = ref(userContextModel);
-    const loading = ref(false);
+    const prompt = ref(UserContext.PromptPostRequestModel);
+    const userContext = ref(UserContext.UserContextPostRequestModel);
     const modelsStore = useModelsStore();
+    const buffer = ref('');
+    const responses = ref([]);
+    const loading = ref(false);
     const promptPanelUpdateTrigger = ref(0);
     const {t} = useI18n();
 
@@ -230,7 +203,7 @@ export default {
      * resets user context
      */
     const resetUserContext = () => {
-      userContext.value = userContextModel
+      userContext.value = new UserContext.UserContextPostRequestModel()
     }
     /**
      * Deletes the current thread by calling the API.
@@ -275,14 +248,14 @@ export default {
     /**
      * Callback function for handling the fetched user context.
      * Updates the responses and user context data.
-     * @param {Response} userContextResponse - The response from the user context fetch API.
+     * @param {Response} userContextPostResponse - The response from the user context fetch API.
      */
-    const fetchUserContextCallback = async (userContextResponse) => {
-      const userContext = await userContextResponse.json();
-      if (userContextResponse.status === 200) {
-        setResponses(userContext.context_data);
+    const fetchUserContextCallback = async (userContextPostResponse) => {
+      const userContext = await userContextPostResponse.json();
+      if (userContextPostResponse.status === 200) {
+        //setResponses(userContext.context_data);
         updateUserContextData(userContext);
-      } else if (userContextResponse.status === 404) {
+      } else if (userContextPostResponse.status === 404) {
         console.log('Info: usercontext empty');
       } else {
         message.error(t('failed_to_retrieve_user_context'));
@@ -294,26 +267,39 @@ export default {
      * Callback function for saving user context after response.
      * Calls the API to save the current user context.
      */
-    const saveUserContextServerside = (promptPostRequest) => {
-      const callback = async () => {
+    const saveUserContextServerside = (promptPostResponse) => {
+      const callback = async (UserContextPostResponseModel) => {
       } //@todo: calls pina usercontext storage
-      prepareUserContextForPosting(promptPostRequest);
+      prepareUserContextForPosting(promptPostResponse);
       saveUserContext(userContext.value, callback).catch((error) => {
         console.error('Error sending responses to /usercontext:', error);
       });
     };
 
-    const pushToResponseStack = (promptPostRequest) => {
-      responses.value.push(promptPostRequest);
+    /**
+     * Build userContext prompt
+     * @param promptPostResponse
+     * @returns {unknown}
+     */
+    const getUserContextPrompt = (promptPostResponse) => {
+      const user_context_prompt = structuredClone(promptPostResponse);
+      user_context_prompt.context_data = responses.value;
+      return user_context_prompt
     }
 
     /**
      * maps responses to context and sets uuid
-     * @param promptPostRequest
+     * @param promptPostResponse
      */
-    const prepareUserContextForPosting = (promptPostRequest) => {
-      userContext.value.context_data = responses.value
-      userContext.value.id = promptPostRequest.uuid
+    const prepareUserContextForPosting = (promptPostResponse) => {
+
+      console.log("prepareUserContextForPosting:promptPostRequest:", promptPostResponse, responses.value);
+      console.log("prepareUserContextForPosting: responses.value:", responses.value);
+      console.log("prepareUserContextForPosting: userContext.value:", userContext.value);
+
+      userContext.value = new UserContext.UserContextPostRequestModel(promptPostResponse.uuid, promptPostResponse.user, thread_id, getUserContextPrompt(promptPostResponse))
+
+      console.log("prepareUserContextForPosting: userContext.value after:", userContext.value);
     }
 
 
@@ -322,6 +308,10 @@ export default {
      * @returns {Promise<void>}
      */
     async function streamGeneration(promptPostRequest) {
+
+      console.log("22222222222", responses.value);
+
+
       for (const model of await modelsStore.getSelectedModelsWithMetaData()) {
         await stream(
             model.stream_url, // Use the stream URL from the selected model
@@ -366,7 +356,7 @@ export default {
      */
     const createPromptServerside = async (promptPostRequest) => {
       triggerPromptPanelUpdate()
-      await createPrompt(promptPostRequest);
+      return createPrompt(promptPostRequest);
     };
 
     /**
@@ -389,12 +379,11 @@ export default {
      * Sends the prompt to the server and handles streaming responses.
      */
     const handleSubmit = async () => {
-      const promptPostRequest = PromptPostRequestModel(uuidv4(), user, prompt.value.prompt.trim(), 'INITIALIZED')
+      const promptPostRequest = getPromptPostRequest(uuidv4(), user, prompt.value.prompt.trim())
       showLoader()
-      pushToResponseStack(promptPostRequest);
-      streamGeneration(promptPostRequest).then(() => {
-        createPromptServerside(promptPostRequest).then(() => {
-          saveUserContextServerside(promptPostRequest);
+      streamGeneration(promptPostRequest).then(async () => {
+        createPromptServerside(promptPostRequest).then(promptPostResponse => {
+          saveUserContextServerside(promptPostResponse);
           dispatchOnCompleteEvent()
         });
       });

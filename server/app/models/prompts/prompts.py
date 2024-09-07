@@ -7,19 +7,19 @@ from server.app.db.base import Base
 class Prompt(Base):
     __tablename__ = 'prompts'
 
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
     prompt = Column(Text, nullable=False)
-    user = Column(BigInteger, nullable=False)
-    status = Column(String(50), nullable=False)  # Verwende String anstelle von Enum
-    created_at = Column(DateTime, default=datetime.utcnow)
-    uuid = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
+    user =Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)
+    status = Column(String(50), nullable=False)  # Use String for flexibility
+    created = Column(DateTime, default=datetime.utcnow)
+    uuid = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4,  primary_key=True)
 
     def to_dict(self):
+        """Converts the model instance to a dictionary with correct formatting."""
         return {
-            "id": self.id,
             "prompt": self.prompt,
             "user": self.user,
-            "status": self.status,  # Kein .value nötig, da es ein String ist
-            "created_at": self.created_at.isoformat(),
+            "status": self.status,
+            # Convert created to a Unix timestamp
+            "created": int(self.created.timestamp()),
             "uuid": str(self.uuid)
         }

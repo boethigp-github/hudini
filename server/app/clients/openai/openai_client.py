@@ -49,8 +49,7 @@ class OpenAIClient:
             async def async_generator():
                 full_content = ""
                 async for chunk in stream:
-                    self.logger.debug(
-                        f"OpenAIClient::fetch_completion_stream chunk: {chunk}")
+
                     if chunk.choices[0].delta.content is not None:
                         content = chunk.choices[0].delta.content
                         full_content += content

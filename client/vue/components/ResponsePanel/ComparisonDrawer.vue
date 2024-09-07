@@ -171,7 +171,7 @@ export default defineComponent({
 
 
     const onStreamComplete = () => {
-      console.log("111111111111111111111111");
+      console.log("stream completed");
     }
 
     let drawerVisible = ref(false)

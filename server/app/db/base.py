@@ -12,6 +12,8 @@ Base = declarative_base()
 # Configuration for async engine (for FastAPI)
 SQLALCHEMY_DATABASE_URL_ASYNC = settings.get("default").get("DATABASE_URL")
 
+
+
 # Async engine settings
 engine_args = {
     "echo": settings.get("default").get("DB_SQL_ECHO", 'False') == 'True',

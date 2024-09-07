@@ -94,7 +94,7 @@ CREATE TABLE public.prompts (
     prompt text NOT NULL,
     status character varying(30),
     "user" bigint NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     uuid uuid DEFAULT public.uuid_generate_v4()
 );
 
@@ -157,7 +157,7 @@ CREATE TABLE public.users (
     id bigint NOT NULL,
     username character varying(50) NOT NULL,
     email character varying(100) NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    created timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     last_login timestamp without time zone
 );
 
@@ -214,7 +214,7 @@ COPY public.alembic_version (version_num) FROM stdin;
 -- Data for Name: prompts; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.prompts (id, prompt, status, "user", created_at, uuid) FROM stdin;
+COPY public.prompts (id, prompt, status, "user", created, uuid) FROM stdin;
 300	Write a brainfuck coe snippet	INITIALIZED	1	2024-09-04 18:31:39.68626	85a8e576-d6b9-411e-a5fe-205855b55397
 301	Erzäjle einen witz	INITIALIZED	1	2024-09-04 18:56:44.92969	8db2771f-6f1e-4f46-a5b1-d0e7ef3b8338
 302		INITIALIZED	1	2024-09-04 19:01:58.863123	0bec562a-88b2-4a74-8e48-9f1b62c852a4
@@ -245,7 +245,7 @@ COPY public.user_context (id, created, updated, context_data, thread_id, "user")
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.users (id, username, email, created_at, last_login) FROM stdin;
+COPY public.users (id, username, email, created, last_login) FROM stdin;
 1	john_doe	john@example.com	2024-08-17 15:40:56.660393	\N
 68	W077A3lq8M	oYcmYGTPUl@example.com	2024-09-01 17:35:26.688113	\N
 71	P4yMZvBpkb	xGmPKrmbOQ@example.com	2024-09-01 17:40:06.646773	\N

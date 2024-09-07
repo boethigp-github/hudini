@@ -1,18 +1,15 @@
 import logging
-import json
-from typing import List, Union
-from uuid import UUID, uuid4
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from server.app.models.usercontext.user_context import UserContextModel
-from server.app.models.usercontext.usercontext_post_request import UserContextPostRequestModel
-from server.app.models.usercontext.usercontext_response import UserContextResponseModel, ContextDataItem
+from server.app.models.usercontext.usercontext_post_request_model import UserContextPostRequestModel
+from server.app.models.usercontext.usercontext_post_response_model import UserContextResponseModel
 from server.app.db.base import async_session_maker
+from fastapi.encoders import jsonable_encoder
+from pydantic import ValidationError
 
-logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
 router = APIRouter()
 
 
@@ -21,84 +18,54 @@ async def get_db():
         yield session
 
 
-def serialize(context_data: List[ContextDataItem]) -> str:
-    return json.dumps([item.model_dump() for item in context_data])
+@router.post("/usercontext", tags=["usercontext"], response_model=UserContextResponseModel)
+async def save_user_context(user_context: UserContextPostRequestModel, db: AsyncSession = Depends(get_db)):
+    try:
+        logger.debug(f"Received request to save user context: {user_context}")
 
+        # Serialize with jsonable_encoder to handle complex data types like UUID
+        serialized_context_data = jsonable_encoder(user_context.dict())
 
-def deserialize(context_data: Union[str, List]) -> List[ContextDataItem]:
-    if isinstance(context_data, str):
-        data = json.loads(context_data)
-    else:
-        data = context_data
+        # Create a new UserContextModel and add it to the database
+        new_user_context = UserContextModel(
+            uuid=user_context.uuid,
+            user=user_context.user,
+            thread_id=user_context.thread_id,
+            context_data=serialized_context_data  # Serialized with jsonable_encoder
+        )
+        db.add(new_user_context)
+        await db.commit()
+        await db.refresh(new_user_context)
 
-    result = []
-    for item in data:
-        if isinstance(item, dict) and 'id' not in item:
-            item['id'] = str(uuid4())
-        result.append(ContextDataItem(**item))
-    return result
+        # Return the response
+        return UserContextResponseModel(**new_user_context.to_dict())
+
+    except ValidationError as e:
+        logger.error(f"Validation error: {e.errors()}")
+        raise HTTPException(status_code=422, detail={"errors": e.errors(), "message": "Validation failed"})
 
 
 @router.get("/usercontext", tags=["usercontext"], response_model=UserContextResponseModel)
-async def get_user_contexts(user: int, thread_id: int, db: AsyncSession = Depends(get_db)):
+async def get_user_contexts(user: str, thread_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
-        select(UserContextModel).where(
+        select(UserContextModel)
+        .where(
             UserContextModel.user == user,
             UserContextModel.thread_id == thread_id
         )
+        .order_by(UserContextModel.created.desc())
     )
     user_context = result.scalars().first()
 
     if not user_context:
         raise HTTPException(status_code=404, detail="No context found for the given user and thread_id")
 
-    context_dict = user_context.to_dict()
-    context_dict['context_data'] = deserialize(context_dict['context_data'])
-    return UserContextResponseModel.model_validate(context_dict)
-
-
-@router.post("/usercontext", tags=["usercontext"], response_model=UserContextResponseModel)
-async def save_user_context(user_context: UserContextPostRequestModel, db: AsyncSession = Depends(get_db)):
-    logger.debug(f"Received request to save user context: {user_context.model_dump()}")
-
-    serialized_context_data = serialize(user_context.context_data)
-
-    result = await db.execute(
-        select(UserContextModel).where(
-            UserContextModel.user == user_context.user,
-            UserContextModel.thread_id == user_context.thread_id
-        )
-    )
-    existing_user_context = result.scalars().first()
-
-    if existing_user_context:
-        logger.info(
-            f"Updating existing user context with user {user_context.user} and thread_id {user_context.thread_id}")
-        existing_user_context.context_data = serialized_context_data
-        await db.commit()
-        await db.refresh(existing_user_context)
-        context_dict = existing_user_context.to_dict()
-        context_dict['context_data'] = deserialize(context_dict['context_data'])
-        return UserContextResponseModel.model_validate(context_dict)
-    else:
-        logger.info(f"Creating new user context with user {user_context.user} and thread_id {user_context.thread_id}")
-        new_user_context = UserContextModel(
-            user=user_context.user,
-            thread_id=user_context.thread_id,
-            context_data=serialized_context_data
-        )
-        db.add(new_user_context)
-        await db.commit()
-        await db.refresh(new_user_context)
-        context_dict = new_user_context.to_dict()
-        context_dict['context_data'] = deserialize(context_dict['context_data'])
-        return UserContextResponseModel.model_validate(context_dict)
+    return UserContextResponseModel(**user_context.to_dict())
 
 
 @router.delete("/usercontext/{user_context_id}", tags=["usercontext"])
 async def delete_user_context(user_context_id: int, db: AsyncSession = Depends(get_db)):
     try:
-        logger.debug(f"delete_user_context and user_context_id {user_context_id}")
         user_context = await db.get(UserContextModel, user_context_id)
 
         if not user_context:

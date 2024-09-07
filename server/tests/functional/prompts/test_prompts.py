@@ -4,8 +4,8 @@ import random
 import string
 import uuid
 from server.app.config.settings import Settings
-from server.app.models.prompts.prompt_get_response import PromptGetResponseModel
-from server.app.models.prompts.prompts_post_request import PromptPostRequestModel
+from server.app.models.prompts.prompt_post_response_model import PromptPostResponseModel
+
 from server.app.models.users.users_post_request import UserPostRequestModel
 
 class TestPrompts(unittest.TestCase):
@@ -49,7 +49,8 @@ class TestPrompts(unittest.TestCase):
             cls.assertTrue(False, f"Unexpected response for user deletion: {delete_data}")
 
     def create_test_prompt(self):
-        create_payload = PromptPostRequestModel(
+        create_payload = PromptPostResponseModel(
+            id=0,
             prompt="Test prompt",
             user=self.TEST_USER_ID,
             status="IN_PROGRESS",
@@ -70,7 +71,7 @@ class TestPrompts(unittest.TestCase):
 
     def validate_prompt(self, prompt_data):
         try:
-            PromptGetResponseModel(**prompt_data)
+            PromptPostResponseModel(**prompt_data)
         except ValueError as e:
             self.fail(f"Response validation failed: {e}")
 
