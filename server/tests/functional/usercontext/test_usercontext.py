@@ -60,7 +60,26 @@ class TestUserContext(unittest.TestCase):
             prompt="Test prompt",
             user=self.test_user_uuid,  # Use test user's UUID
             status="IN_PROGRESS",
-            context_data=[]  # Empty context data for now
+            context_data=[  # Realistic context data
+                ContextDataItem(
+                    id=uuid.uuid4(),  # Generate a UUID for context item
+                    user=self.test_user_uuid,  # Use test user UUID
+                    status="COMPLETED",  # Example status
+                    model="TestModel",  # Example model
+                    completion={
+                        "id": str(uuid.uuid4()),  # Completion ID
+                        "choices": [
+                            {
+                                "index": 0,
+                                "message": {
+                                    "content": "Test completion message",
+                                    "role": "assistant"
+                                }
+                            }
+                        ]
+                    }
+                ).model_dump()  # Convert context data to dict
+            ]
         ).model_dump()  # Updated from dict()
 
     def create_user_context(self, thread_id, context_data, prompt_data):
