@@ -2,33 +2,40 @@
   <a-row>
     <a-col :span="23">
       <div id="response" class="response" ref="responseElement">
-        <div class="flex-container">
-          <template v-for="(response, index) in responses.slice().reverse()" :key="index">
-            <template v-if="response.prompt">
-              <div class="user-prompt-wrapper">
-                <a-card dense size="small" :id="`dialog_${response.prompt_id}`" class="dialog-card user-prompt-card">
-                  <UserPrompt
-                    :prompt="response"
-                    :isHighlighted="isHighlighted(response.prompt_id)"
-                    @mouseover="handleMouseOver"
-                    @mouseout="handleMouseOut"
-                  />
-                </a-card>
-              </div>
-            </template>
-            <a-card v-else-if="response.completion" dense size="small" :id="`dialog_${response.prompt_id}`" class="dialog-card">
-              <BotResponse
-                :response="response"
-                :isHighlighted="isHighlighted(response.prompt_id)"
-                :hasMultipleResponses="hasMultipleResponses(response.prompt_id)"
-                @mouseover="handleMouseOver"
+        <div>
+          <div v-for="(userContext, index) in userContextList" :key="userContext.uuid">
+            <!-- Render the prompt -->
+            <div v-if="userContext.uuid">
+              <UserPrompt
+                :userContext="userContext"
+                @mouseover="handleMouseOver(userContext.uuid)"
                 @mouseout="handleMouseOut"
               />
-            </a-card>
-          </template>
+            </div>
+
+            <div style="width: 100%" v-if="userContext?.prompt?.context_data">
+              <!-- Add a flexbox container -->
+              <div class="bot-response-container">
+                <!-- Render each BotResponse item using the flexbox layout -->
+                <div
+                  v-for="(contextDataItem, subIndex) in userContext.prompt.context_data"
+                  :key="contextDataItem.id"
+                  class="bot-response-item"
+                  :style="{ width: getWidth(subIndex, userContext.prompt.context_data.length) }"
+                >
+                  <BotResponse
+                    v-if="contextDataItem.completion"
+                    :contextDataItem="contextDataItem"
+                    @mouseover="handleMouseOver(contextDataItem.id)"
+                    @mouseout="handleMouseOut"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-      <ComparisonDrawer :plugins="plugins" :responses="responses" width="90%"/>
+      <ComparisonDrawer :plugins="plugins" :responses="[]" width="90%"/>
     </a-col>
 
     <a-col :span="1" class="nav-container">
@@ -39,7 +46,7 @@
 
 <script>
 import { nextTick, watch, ref, onMounted } from 'vue';
-import { Row, Col, Card } from 'ant-design-vue';
+import { Row, Col } from 'ant-design-vue';
 import './ResponsePanel/response_panel.css';
 import ResponsePanelMenu from './ResponsePanel/ResponsePanelMenu.vue';
 import { markdownPlugins } from './../stores/markdownPlugins.js';
@@ -55,11 +62,10 @@ export default {
     ComparisonDrawer,
     'a-row': Row,
     'a-col': Col,
-    'a-card': Card,
-    ResponsePanelMenu
+    ResponsePanelMenu,
   },
   props: {
-    responses: {
+    userContextList: {
       type: Array,
       required: true,
       default: () => [],
@@ -72,22 +78,11 @@ export default {
   },
   setup(props) {
     const responseElement = ref(null);
-    const highlightedPromptId = ref(null);
-
-    const hasMultipleResponses = (prompt_id) => {
-      return props.responses.filter(response => response.prompt_id === prompt_id).length > 1;
-    };
-
-    const isHighlighted = (prompt_id) => {
-      return prompt_id === highlightedPromptId.value;
-    };
 
     const handleMouseOver = (prompt_id) => {
-      highlightedPromptId.value = prompt_id;
     };
 
     const handleMouseOut = () => {
-      highlightedPromptId.value = null;
     };
 
     const scrollToBottom = () => {
@@ -98,8 +93,15 @@ export default {
       });
     };
 
+    const getWidth = (index, length) => {
+      if(length >=2){
+         return length % 2 !== 0 ? '32.5%' : '49.5%';
+      }
+      return "100%";
+    };
+
     watch(
-      () => props.responses,
+      () => props.userContextList,
       () => {
         scrollToBottom();
       },
@@ -115,42 +117,33 @@ export default {
       plugins: markdownPlugins,
       handleMouseOver,
       handleMouseOut,
-      isHighlighted,
       scrollToBottom,
-      hasMultipleResponses,
+      getWidth,
     };
   },
 };
 </script>
 
 <style scoped>
-.flex-container {
+/* Flexbox container for BotResponse items */
+.bot-response-container {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  flex-wrap: wrap; /* Ensure items wrap after 3 per row */
 }
 
-.dialog-card {
-  flex: 1 1 30%;
-  min-width: 30%;
-  max-width: 100%;
+.bot-response-item {
+  box-sizing: border-box; /* Ensure padding and margin do not affect width */
+  margin: 5px 5px 0 0
 }
 
-.user-prompt-wrapper {
-  width: 100%;
-  margin-bottom: 10px;
+.nav-container {
+  padding-left: 10px;
 }
 
-.user-prompt-card {
-  width: auto;
-  max-width: 70%;
-  margin-left: auto;
-}
-
+/* Stack items vertically for smaller screens */
 @media (max-width: 768px) {
-  .dialog-card, .user-prompt-card {
-    flex: 1 1 100%;
-    max-width: 100%;
+  .bot-response-item {
+    width: 100% !important; /* Stack items vertically on small screens */
   }
 }
 </style>

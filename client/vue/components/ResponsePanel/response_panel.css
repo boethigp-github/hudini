@@ -7,14 +7,14 @@
     max-height:73vh;
     overflow-y: auto; /* Ermöglicht vertikales Scrollen */
     font-family: 'Georgia', Tahoma, Geneva, Verdana, sans-serif;
-    background: none;
     border-radius: 10px;
-    background: white;
     display: flex;
     margin-right: 10px;
+    background: linear-gradient(to bottom, #e9edf2, #f3f3f3);
     padding:10px;
     flex-direction: column-reverse; /* Damit neuer Text unten erscheint */
 }
+
 
 .nav-container {
   background: white;
@@ -48,61 +48,18 @@
   align-self: flex-start;
 }
 
-.user-prompt {
-  margin-left: auto;
-  width: 60%;
-  max-width: 60% !important;
 
-}
 
-.user-content, .response-metadata {
-  max-width: 80%;
 
-}
 
-.response-metadata {
-  max-width: 100%;
-    border-bottom: 1px solid lightgray;
-}
-
-.user-content {
-  margin-left: auto;
-  display: flex;
-  justify-content: flex-end;
-  font-weight: bold;
-  color: #67950c;
-
-}
-
-.response-metadata {
-
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  color: #555;
-  font-size: 14px;
-}
-
-.user-icon, .bot-icon {
-  font-size: 24px;
-}
-
-.user-icon {
-  color: #67950c;
-}
-
-.bot-icon {
-  color: #ff7e00;
-}
-
-.prompt-text, .response-content {
+.response-content {
   font-size: 16px;
   line-height: 1.5;
+  width: 100%;
+
 }
 
-.prompt-text, :deep(.ant-list-item-meta-description) {
-  word-break: break-word;
-}
+
 
 .fade-in {
   animation: fadeIn 0.2s ease-in-out forwards;
@@ -119,17 +76,7 @@
   color: #777;
 }
 
-.model {
-  color: #444;
-  font-weight: 600;
-}
 
-.dialog-card {
-  margin-bottom: 16px;
-  background: white;
-  padding: 0;
-
-}
 
 .error-message {
   color: #ff4d4f;

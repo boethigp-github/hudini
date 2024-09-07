@@ -176,14 +176,7 @@ export default defineComponent({
   margin-top: 0;
 }
 
-.acollapse {
-  max-height: 100%; /* Make sure the collapse container fills the parent height */
-  overflow-y: auto; /* Ensure content inside the collapse panel is scrollable */
-}
 
-.acollapse-panel {
-  background: #fff9f9; /* Adjust the background color */
-}
 
 .panel-header {
   display: flex;

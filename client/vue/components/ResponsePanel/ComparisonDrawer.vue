@@ -213,7 +213,7 @@ export default defineComponent({
 </script>
 <style>
 .userpromptrow {
-  background: #e7e7e7 !important;
+
   font-weight: bold;
 }
 

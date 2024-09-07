@@ -69,11 +69,21 @@ export const UserContext = {
     }
   },
 
-  // Define UserContextPrompt based on your server model
+
   UserContextPrompt: class {
-    constructor(uuid, user, status, created, context_data) {
+    /**
+     * Creates UserContextPrompt
+     * @param uuid uuid
+     * @param user uuid
+     * @param prompt string
+     * @param status string
+     * @param created timestamp
+     * @param context_data array
+     */
+    constructor(uuid, user, prompt, status, created, context_data) {
       this.uuid = uuid;
       this.user = user;
+      this.prompt = prompt;
       this.status = status;
       this.created = created;
       this.context_data = context_data;  // Array of ContextDataItem

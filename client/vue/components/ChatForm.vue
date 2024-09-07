@@ -1,7 +1,6 @@
 <template>
-  <a-layout>
-    <!-- Header Layout -->
-    <a-layout-header :style="{background:'#e9edf2', padding:'0 5px 0 5px'}">
+  <a-layout >
+    <a-layout-header :style="{background:'#e9edf2',marginTop:'-5px', padding:'5px'}" >
       <div style="display: block;min-height: 10px;cursor: pointer" class="chat-header">
         <div class="header">
           <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="60"/>
@@ -14,19 +13,19 @@
     </a-layout-header>
 
     <!-- Main Content Layout -->
-    <a-layout :style="{background:'#e9edf2'}">
-      <a-layout-content :style="{background:'#e9edf2', marginRight:'8px', width:'500px'}">
-        <ResponsePanel :responses="responses" :loading="loading"/>
+    <a-layout >
+      <a-layout-content>
+        <ResponsePanel :userContextList="userContextList" :responses="responses" :loading="loading"/>
       </a-layout-content>
 
       <!-- Sidebar Layout -->
-      <a-layout-sider width="25%" theme="light" :style="{background:'#e9edf2', width:'90%'}" :collapsed="false">
+      <a-layout-sider width="25%" theme="light" :style="{width:'90%'}" :collapsed="false">
         <PromptPanel :key="promptPanelUpdateTrigger"/>
       </a-layout-sider>
     </a-layout>
 
     <!-- Footer Layout -->
-    <a-layout-footer :style="{background:'#e9edf2',marginTop:'-5px', padding:'5px'}">
+    <a-layout-footer :style="{marginTop:'-5px', padding:'5px'}">
       <a-tabs default-active-key="1" class="chat-tabs">
         <a-tab-pane key="1" :tab="t('model_selection')">
           <ModelSelection/>
@@ -138,17 +137,20 @@ export default {
     /**
      * Requestmodel for saving prompts
      *
+     * @param uuid
      * @param user
      * @param prompt
      * @param status
      * @returns {UserContext.PromptPostRequestModel}
      */
-   const getPromptPostRequest = (uuid,user, prompt, status = 'INITIALIZED') => {
+    const getPromptPostRequest = (uuid, user, prompt, status = 'INITIALIZED') => {
+      return new UserContext.PromptPostRequestModel(uuid, prompt, user, status);
+    };
 
-  return new UserContext.PromptPostRequestModel(uuid, prompt, user, status);
-};
+
     const prompt = ref(UserContext.PromptPostRequestModel);
     const userContext = ref(UserContext.UserContextPostRequestModel);
+    const userContextList = ref([UserContext.UserContextPostRequestModel]);
     const modelsStore = useModelsStore();
     const buffer = ref('');
     const responses = ref([]);
@@ -255,7 +257,6 @@ export default {
     const fetchUserContextCallback = async (userContextPostResponse) => {
       const userContext = await userContextPostResponse.json();
       if (userContextPostResponse.status === 200) {
-        //setResponses(userContext.context_data);
         updateUserContextData(userContext);
       } else if (userContextPostResponse.status === 404) {
         console.log('Info: usercontext empty');
@@ -298,8 +299,12 @@ export default {
 
       console.log("prepareUserContextForPosting: promptPostResponse.uuid:", promptPostResponse.uuid);
 
-      userContext.value = new UserContext.UserContextPostRequestModel(promptPostResponse.uuid, promptPostResponse.user, thread_id, getUserContextPrompt(promptPostResponse))
-
+      userContext.value = new UserContext.UserContextPostRequestModel(
+          promptPostResponse.uuid,
+          promptPostResponse.user,
+          thread_id,
+          getUserContextPrompt(promptPostResponse)
+      )
     }
 
 
@@ -308,15 +313,11 @@ export default {
      * @returns {Promise<void>}
      */
     async function streamGeneration(promptPostRequest) {
-
-
-
-
       for (const model of await modelsStore.getSelectedModelsWithMetaData()) {
         await stream(
             model.stream_url, // Use the stream URL from the selected model
             getStreamPostRequestModel(promptPostRequest, [model], "fetch_completion"),
-            processChunk,
+            (chunk, buffer, responses) => processChunk(chunk, buffer, responses, userContext, userContextList),
             buffer,
             responses,
             (error) => {
@@ -373,20 +374,45 @@ export default {
       loading.value = false
     }
 
+    /**
+     * Sets userContexts
+     *
+     * @param promptPostRequest
+     */
+    const initUserContexts = (promptPostRequest) => {
+          userContext.value = new UserContext.UserContextPostRequestModel
+          (
+              promptPostRequest.uuid,
+              promptPostRequest.user,
+              thread_id,
+              new UserContext.UserContextPrompt
+              (
+                  promptPostRequest.uuid,
+                  promptPostRequest.user,
+                  promptPostRequest.prompt,
+                  "INITIALIZED",
+                  null,
+                  []
+              ),
+          );
+
+
+        console.log("111111111 userContext.value",  userContext.value);
+
+      userContextList.value.push(userContext.value);
+    }
 
     /**
      * Handles the submission of the prompt.
      * Sends the prompt to the server and handles streaming responses.
      */
     const handleSubmit = async () => {
-
-      console.log("handleSubmit: uuidv4()", uuidv4());
-
       const promptPostRequest = getPromptPostRequest(uuidv4(), user, prompt.value.prompt.trim())
+      initUserContexts(promptPostRequest);
       showLoader()
       streamGeneration(promptPostRequest).then(async () => {
         createPromptServerside(promptPostRequest).then(promptPostResponse => {
-          saveUserContextServerside(promptPostResponse);
+          //saveUserContextServerside(promptPostResponse);
           dispatchOnCompleteEvent()
         });
       });
@@ -402,6 +428,7 @@ export default {
       responses,
       loading,
       modelsStore,
+      userContextList
     };
   },
 };

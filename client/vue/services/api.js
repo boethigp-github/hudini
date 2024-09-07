@@ -136,8 +136,10 @@ export const fetchUserContext = (user, threadId) => {
     }
 };
 
-export  const processChunk = (chunk, buffer, responses) => {
+export  const processChunk = (chunk, buffer, responses, userContext, userContextList) => {
       buffer.value += chunk; // Add chunk to buffer
+
+
 
 
       let boundary;
@@ -166,6 +168,12 @@ export  const processChunk = (chunk, buffer, responses) => {
           } else {
             responses.value.push(responseModel);
           }
+
+
+
+        userContext.value.prompt.context_data = responses.value;
+
+
         } catch (error) {
           console.log("Error parsing JSON chunk:", error, jsonString);
         }
