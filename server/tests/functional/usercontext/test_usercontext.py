@@ -6,10 +6,9 @@ import requests
 from fastapi.encoders import jsonable_encoder
 from datetime import datetime
 from server.app.models.usercontext.usercontext_post_request_model import UserContextPostRequestModel, ContextDataItem
-from server.app.models.prompts.prompt_post_response_model import PromptPostResponseModel
+from server.app.models.usercontext.usercontext_post_request_model import UserContextPrompt
 from server.app.config.settings import Settings
 from server.app.models.users.users_post_request import UserPostRequestModel
-
 
 class TestUserContext(unittest.TestCase):
     @classmethod
@@ -18,8 +17,21 @@ class TestUserContext(unittest.TestCase):
         cls.settings = Settings()
         cls.BASE_URL = cls.settings.get("default").get("SERVER_URL")
 
-        # Create a test user and store the ID
-        cls.test_user_id = cls.create_test_user()
+        # Get the first user UUID or create a test user
+        cls.test_user_uuid = cls.get_first_user_uuid()
+
+    @classmethod
+    def get_first_user_uuid(cls):
+        """Fetch the first user from the database or create a new test user."""
+        response = requests.get(f"{cls.BASE_URL}/users")
+        if response.status_code != 200:
+            raise AssertionError(f"Failed to fetch users: {response.text}")
+
+        users = response.json()
+        if users:
+            return str(users[0]['uuid'])  # Use the UUID of the first user as a string
+        else:
+            return cls.create_test_user()
 
     @classmethod
     def generate_random_string(cls, length=10):
@@ -27,44 +39,45 @@ class TestUserContext(unittest.TestCase):
 
     @classmethod
     def create_test_user(cls):
+        """Create a test user if none exists."""
         username = cls.generate_random_string()
         email = f"{cls.generate_random_string()}@example.com"
         create_payload = UserPostRequestModel(
             username=username,
             email=email
         )
-        response = requests.post(f"{cls.BASE_URL}/users", json=create_payload.dict())
+        response = requests.post(f"{cls.BASE_URL}/users", json=create_payload.model_dump())  # Updated from dict()
         if response.status_code != 201:
-            cls.assertTrue(False, f"Failed to create test user: {response.text}")
-        return response.json().get('id')
+            raise AssertionError(f"Failed to create test user: {response.text}")
+        return response.json().get('uuid')
 
     def create_test_prompt_data(self):
         """
-        Creates test data for the prompt object using PromptHttpModel.
+        Creates test data for the prompt object using UserContextPrompt.
         """
-        return PromptPostResponseModel(
-            id=1,
+        return UserContextPrompt(
+            uuid=str(uuid.uuid4()),  # Convert UUID to string
             prompt="Test prompt",
-            user=self.test_user_id,
+            user=self.test_user_uuid,  # Use test user's UUID
             status="IN_PROGRESS",
-            created=int(datetime.utcnow().timestamp()),  # Correct handling of timestamp
-            uuid=uuid.uuid4()
-        ).dict()
+            context_data=[]  # Empty context data for now
+        ).model_dump()  # Updated from dict()
 
     def create_user_context(self, thread_id, context_data, prompt_data):
         """
         Creates a user context with the provided thread_id, context_data, and prompt_data.
-        Uses the test user ID created in setUpClass.
+        Uses the test user UUID created in setUpClass.
         """
         payload = UserContextPostRequestModel(
-            user=self.test_user_id,
+            uuid=str(uuid.uuid4()),  # Generate a new UUID for the context
+            user=self.test_user_uuid,  # Use the test user UUID
             thread_id=thread_id,
-            prompt=PromptPostResponseModel(**prompt_data),
-            context_data=context_data
+            prompt=UserContextPrompt(**prompt_data),  # Prompt data passed correctly as UserContextPrompt
+            context_data=context_data  # Add the context data
         )
 
-        # Use jsonable_encoder to ensure proper encoding of UUIDs
-        payload_dict = jsonable_encoder(payload.dict())
+        # Ensure proper encoding of UUIDs using jsonable_encoder
+        payload_dict = jsonable_encoder(payload.model_dump())  # Updated from dict()
 
         response = requests.post(f"{self.BASE_URL}/usercontext", json=payload_dict)
         if response.status_code != 200:
@@ -76,14 +89,16 @@ class TestUserContext(unittest.TestCase):
         # Create test prompt data
         prompt_data = self.create_test_prompt_data()
 
+        # Context and thread setup
         thread_id = 1
         context_data = [
             ContextDataItem(
-                user=self.test_user_id,
+                id=uuid.uuid4(),  # Generate a new UUID for the context item
+                user=self.test_user_uuid,  # UUID for the user
                 status="IN_PROGRESS",
                 model="TestModel",
                 completion={"id": str(uuid.uuid4()), "choices": [{"index": 0, "message": {"content": "Test message", "role": "assistant"}}]}
-            ).dict()
+            ).model_dump()  # Updated from dict()
         ]
 
         # Log and validate the user context creation process
@@ -91,13 +106,13 @@ class TestUserContext(unittest.TestCase):
             created_context = self.create_user_context(thread_id, context_data, prompt_data)
 
             # Retrieve user context by thread_id and user
-            response = requests.get(f"{self.BASE_URL}/usercontext", params={"thread_id": thread_id, "user": self.test_user_id})
+            response = requests.get(f"{self.BASE_URL}/usercontext", params={"thread_id": thread_id, "user": self.test_user_uuid})
             self.assertEqual(response.status_code, 200)
             context = response.json()
 
             # Validate that the context data and prompt are correct
             self.assertEqual(context["user"], created_context["user"])
-            self.assertEqual(context["prompt"]["id"], prompt_data["id"])
+            self.assertEqual(context["prompt"]["uuid"], prompt_data["uuid"])
 
         except AssertionError as e:
             print(f"Unexpected status code: {e}")
