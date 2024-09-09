@@ -27,7 +27,7 @@
 import { ref, defineComponent, onMounted } from "vue";
 import { useI18n } from 'vue-i18n';
 import { message, Collapse, Button } from "ant-design-vue";
-import { CopyOutlined, DeleteFilled } from "@ant-design/icons-vue";
+
 import { Card } from 'ant-design-vue';
 export default defineComponent({
     components: {

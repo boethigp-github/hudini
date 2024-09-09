@@ -1,31 +1,22 @@
 <template>
-  <!-- Category Selection -->
-  <a-form-item  style="min-width:100%;max-width: 30%!important;float:left">
-    <a-select
-        style="min-width: 30%!important;float:left; margin-right: 5px"
-        v-model="selectedCategory"
-        :placeholder="$t('select_category_placeholder', 'Select a category')"
-        @change="filterModels"
-    >
-      <a-select-option v-for="category in availableCategories" :key="category" :value="category">
-        {{ category }}
-      </a-select-option>
+     <v-combobox
+         class="select-category"
+          v-model="selectedCategory"
+          :items="availableCategories"
+          :label="$t('select_category_placeholder', 'Select a category')"
+          clearable
+         @update:modelValue="filterModels"
+        ></v-combobox>
+      <v-combobox
+          v-model="modelsStore.selectedModels"
+          :items="filteredModels.map(item=>item.id)"
+          :label="$t('select_model_placeholder', 'Select one or more models')"
+          chips
+          multiple
+          clearable
+           @update:modelValue="updateModels"
+        ></v-combobox>
 
-    </a-select>
-    <a-select
-        style="min-width: 65%!important;float:right "
-        :value="modelsStore.selectedModels"
-        mode="multiple"
-        :placeholder="$t('select_model_placeholder', 'Select one or more models')"
-        @change="updateModels"
-    >
-      <a-select-opt-group :label="$t('models', 'Models')">
-        <a-select-option v-for="model in filteredModels" :key="model.id" :value="model.id">
-          {{ model.category }} - {{ model.platform }} - {{ model.id }}
-        </a-select-option>
-      </a-select-opt-group>
-    </a-select>
-  </a-form-item>
 </template>
 
 <script>
@@ -106,6 +97,15 @@ export default defineComponent({
       await loadModels()
     })
 
+         const select = ref( ['Vuetify', 'Programming']);
+        const items = ref([
+          'Programming',
+          'Design',
+          'Vue',
+          'Vuetify',
+        ]);
+
+
     return {
       modelsStore,
       localModels,
@@ -115,7 +115,15 @@ export default defineComponent({
       availableCategories,
       filterModels,
       updateModels,
+
     }
   },
 })
 </script>
+
+<style scoped>
+.select-category{
+  margin-right: 5px;
+  min-width: 50%;
+}
+</style>

@@ -1,60 +1,61 @@
 <template>
-  <a-layout >
-    <a-layout-header :style="{background:'#e9edf2',marginTop:'-5px', padding:'5px'}" >
-      <div style="display: block;min-height: 10px;cursor: pointer" class="chat-header">
-        <div class="header">
-          <img src="../assets/hidini2.webp" alt="Hudini Logo" class="logo" height="60"/>
-          <ChatMenu/>
-          <div class="language-switch-container">
+
+  <v-layout ref="app">
+ <v-app-bar class="v-app-bar " name="app-bar" density="compact">
+      <v-container fluid>
+        <v-row align="center" no-gutters>
+          <v-col class="theme-switch-container" cols="auto">
+            <ThemeSwitch/>
+          </v-col>
+          <v-spacer></v-spacer>
+          <v-col class="language-switch-container" cols="auto">
             <LanguageSwitch/>
-          </div>
-        </div>
-      </div>
-    </a-layout-header>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-app-bar>
 
-    <!-- Main Content Layout -->
-    <a-layout >
-      <a-layout-content>
-        <ResponsePanel :userContextList="userContextList" :responses="responses" :loading="loading"/>
-      </a-layout-content>
-
-      <!-- Sidebar Layout -->
-      <a-layout-sider width="25%" theme="light" :style="{width:'90%'}" :collapsed="false">
+    <v-navigation-drawer location="end" name="drawer" permanent>
+      <div class="d-flex justify-center align-top h-100">
         <PromptPanel :key="promptPanelUpdateTrigger"/>
-      </a-layout-sider>
-    </a-layout>
+      </div>
+    </v-navigation-drawer>
 
-    <!-- Footer Layout -->
-    <a-layout-footer :style="{marginTop:'-5px', padding:'5px'}">
-      <a-tabs default-active-key="1" class="chat-tabs" >
-        <a-tab-pane key="1" :tab="t('model_selection')">
+    <v-main>
+      <v-row>
+        <v-col :cols="11">
+          <ResponsePanel :userContextList="userContextList" :loading="loading"/>
+        </v-col>
+        <v-col :cols="1">
+          <ResponsePanelMenu/>
+        </v-col>
+      </v-row>
+    </v-main>
+
+    <v-footer name="footer" app>
+      <v-container>
+        <v-row>
           <ModelSelection/>
-          <a-form layout="vertical" class="form">
-            <a-form-item class="textarea-container">
-              <div class="prompt-input-wrapper">
-                <a-textarea
-                    spellcheck="false"
-                    v-model:value="prompt.prompt"
-                    :rows="2"
-                    :placeholder="t('enter_prompt')"
-                    @keydown="handleKeydown"
-                    class="prompt_input"
-                    :disabled="loading"
-                />
-                <a-button
-                    type="primary"
-                    @click="handleSubmit"
-                    :loading="loading"
-                    class="send-button">
-                  {{ t('send_button') }}
-                </a-button>
-              </div>
-            </a-form-item>
-          </a-form>
-        </a-tab-pane>
-      </a-tabs>
-    </a-layout-footer>
-  </a-layout>
+        </v-row>
+        <v-row>
+          <v-col cols="12" md="12" style="margin: 0;padding: 0">
+            <v-form v-model="valid">
+              <v-textarea
+                  v-model="prompt.prompt"
+                  :label="t('enter_prompt')"
+                  rows="2"
+                  :disabled="loading"
+                  :spellcheck="false"
+                  @keydown="handleKeydown"
+              ></v-textarea>
+            </v-form>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-footer>
+  </v-layout>
+
+  <ComparisonDrawer :responses="[]" width="90%"/>
 </template>
 
 <script>
@@ -62,11 +63,12 @@ import {onBeforeUnmount, onMounted, ref, watch} from 'vue';
 import {useI18n} from 'vue-i18n';
 import {useModelsStore} from './../stores/models';
 import PromptPanel from './PromptPanel.vue';
-import ArtifactsPanel from './ResponsePanel/ArtifactsPanels.vue';
 import ResponsePanel from './ResponsePanel.vue';
 import LanguageSwitch from './LanguageSwitch.vue';
 import ModelSelection from './ModelSelection.vue';
-import {Button, Col, Form, Input, Layout, message, Row, TabPane, Tabs} from 'ant-design-vue';
+import ComparisonDrawer from './ResponsePanel/ComparisonDrawer.vue';
+import ThemeSwitch from './ThemeSwitch.vue';
+
 import {
   createPrompt,
   deleteUserContext,
@@ -75,32 +77,23 @@ import {
   saveUserContext,
   stream
 } from './../services/api';
+import {useTheme} from 'vuetify'
 import {v4 as uuidv4} from 'uuid';
-
-
 import ChatMenu from './MainMenu.vue';
-import {PlusOutlined, SettingOutlined} from '@ant-design/icons-vue';
 import {UserContext} from '../models/UserContext.js';
+import ResponsePanelMenu from "@/vue/components/ResponsePanel/ResponsePanelMenu.vue";
 
 export default {
   name: 'ChatForm',
   components: {
+    ResponsePanelMenu,
     PromptPanel,
     ResponsePanel,
     LanguageSwitch,
     ModelSelection,
     ChatMenu,
-    Tabs,
-    TabPane,
-    Button,
-    Form,
-    Input,
-    Layout,
-    Row,
-    Col,
-    ArtifactsPanel,
-    PlusOutlined,
-    SettingOutlined,
+    ComparisonDrawer,
+    ThemeSwitch
   },
   setup() {
 
@@ -153,10 +146,11 @@ export default {
     const userContextList = ref([UserContext.UserContextPostRequestModel]);
     const modelsStore = useModelsStore();
     const buffer = ref('');
-    const responses = ref([]);
+
     const loading = ref(false);
     const promptPanelUpdateTrigger = ref(0);
     const {t} = useI18n();
+    const valid = ref(false)
 
     // Watcher to reset prompt input after loading completes
     watch(loading, (newValue) => {
@@ -217,7 +211,7 @@ export default {
 
       await deleteUserContext(userContext.value.thread_id);
       resetUserContext()
-      setResponses([])
+
     };
     /**
      *Reruns prompt.
@@ -235,13 +229,7 @@ export default {
       const event = new CustomEvent("stream-complete", {});
       window.dispatchEvent(event);
     }
-    /**
-     * Sets the responses data.
-     * @param {Array} value - The new responses to set.
-     */
-    const setResponses = (value) => {
-      responses.value = value;
-    };
+
 
     /**
      * Triggers prompt panel update
@@ -286,7 +274,7 @@ export default {
      */
     const getUserContextPrompt = (promptPostResponse) => {
       const user_context_prompt = structuredClone(promptPostResponse);
-      user_context_prompt.context_data = responses.value;
+
       return user_context_prompt
     }
 
@@ -317,15 +305,10 @@ export default {
         await stream(
             model.stream_url, // Use the stream URL from the selected model
             getStreamPostRequestModel(promptPostRequest, [model], "fetch_completion"),
-            (chunk, buffer, responses) => processChunk(chunk, buffer, responses, userContext, userContextList),
+            (chunk, buffer) => processChunk(chunk, buffer, userContext, userContextList),
             buffer,
-            responses,
             (error) => {
               console.error('Stream error:', error);
-              responses.value.push({
-                status: 'error',
-                token: t('server_connection_error'),
-              });
               hideLoader()
             },
             () => {
@@ -380,23 +363,21 @@ export default {
      * @param promptPostRequest
      */
     const initUserContexts = (promptPostRequest) => {
-          userContext.value = new UserContext.UserContextPostRequestModel
+      userContext.value = new UserContext.UserContextPostRequestModel
+      (
+          promptPostRequest.uuid,
+          promptPostRequest.user,
+          thread_id,
+          new UserContext.UserContextPrompt
           (
               promptPostRequest.uuid,
               promptPostRequest.user,
-              thread_id,
-              new UserContext.UserContextPrompt
-              (
-                  promptPostRequest.uuid,
-                  promptPostRequest.user,
-                  promptPostRequest.prompt,
-                  "INITIALIZED",
-                  null,
-                  []
-              ),
-          );
-
-
+              promptPostRequest.prompt,
+              "INITIALIZED",
+              null,
+              []
+          ),
+      );
 
       userContextList.value.push(userContext.value);
     }
@@ -424,61 +405,32 @@ export default {
       t,
       userContext,
       prompt,
-      responses,
       loading,
       modelsStore,
-      userContextList
+      userContextList,
+      valid,
     };
   },
 };
 </script>
 
-<style scoped>
-.header {
+<style>
+
+
+
+.v-app-bar {
+  max-height: 48px;
+  padding-top:3px;
+}
+
+.theme-switch-container,
+.language-switch-container {
   display: flex;
   align-items: center;
 }
 
-.header .logo {
-  margin-right: 10px;
-}
-
-.language-switch-container {
-  width: 100%;
-}
-
-.prompt-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-}
-
-.prompt_input {
-  margin-top: 2px;
-  padding-right: 100px;
-  width: 100%;
-  padding-bottom: 5px;
-  overflow: hidden;
-  font-size: 14px;
-  font-family: 'Georgia', Tahoma, Geneva, Verdana, sans-serif;
-  border: none;
-  color: #292929;
-  font-weight: bold;
-}
-
-.send-button, .send-button:hover {
-  position: absolute;
-  right: 10px;
-  top: 12px;
-  background: darkgrey;
-}
-
-.send-button:hover {
-  background: #1f2611;
-}
-
-.textarea-container {
-  clear: both;
+.theme-switch-container{
+  margin-top: 15px;
 }
 
 

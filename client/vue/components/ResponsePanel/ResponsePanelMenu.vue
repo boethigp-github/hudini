@@ -1,44 +1,29 @@
 <template>
-  <a-menu
-    title="comparison"
-    size="small"
-    id="response_panel_action"
-    :inlineCollapsed="true"
-    v-model:openKeys="openKeys"
-    v-model:selectedKeys="selectedKeys"
-  >
-    <a-menu-item size="small" :title="$t('comparison_view', 'Comparison view')" key="sub1" @click="openComparison">
-      <template #icon>
-        <TableOutlined />
-      </template>
-    </a-menu-item>
-
-    <a-menu-item size="small" :title="$t('delete_thread', 'Delete thread')" key="delete_thread" @click="confirmDeleteThread">
-      <template #icon>
-        <DeleteOutlined />
-      </template>
-    </a-menu-item>
-  </a-menu>
+  <v-container class="panel-menu">
+    <v-row>
+      <v-btn class="panel-menu-button" icon="mdi-select-compare" :title="$t('comparison_view', 'Comparison view')" key="sub1"
+             @click="openComparison"></v-btn>
+    </v-row>
+    <v-row>
+      <v-btn   class="panel-menu-button" icon="mdi-delete-circle" :title="$t('delete_thread', 'Delete thread')" key="delete_thread"
+             @click="confirmDeleteThread"></v-btn>
+    </v-row>
+  </v-container>
 </template>
 
 <script>
-import { ref } from 'vue';
-import { TableOutlined, DeleteOutlined } from '@ant-design/icons-vue';
-import { Menu, Modal } from 'ant-design-vue';
-import { useI18n } from 'vue-i18n';
+import {ref} from 'vue';
+
+import {useI18n} from 'vue-i18n';
+
 export default {
   name: 'SubMenu',
   components: {
-    TableOutlined,
-    DeleteOutlined,
-    'a-menu': Menu,
-    'a-sub-menu': Menu.SubMenu,
-    'a-menu-item': Menu.Item,
   },
   setup() {
     const openKeys = ref(['sub1']);
     const selectedKeys = ref(['1']);
-    const { t } = useI18n();
+    const {t} = useI18n();
 
     const openComparison = () => {
       const event = new CustomEvent('comparison-open', {});
@@ -79,13 +64,9 @@ export default {
 </script>
 
 <style scoped>
-.ant-layout {
-    display: flex;
-    flex: auto;
-    flex-direction: column;
-    color: rgba(0, 0, 0, 0.88);
-    min-height: 0;
-    background: none;
-    border: 1px solid red;
+.panel-menu-button{
+  margin: 5px;
 }
+
+
 </style>

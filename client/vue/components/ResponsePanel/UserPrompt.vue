@@ -2,24 +2,21 @@
   <div :class="['user-prompt', 'fade-in']">
     <div class="prompt-id">{{ $t('prompt_id', 'ID') }}: {{ promptUuid }}</div>
     <div class="prompt-tokens">
-      {{ $t('prompt_tokens', 'Prompt Tokens') }}: <span style="color: #c5c5c5">{{ promptTokens }}</span>
+      {{ $t('prompt_tokens', 'Prompt Tokens') }}: <span >{{ promptTokens }}</span>
     </div>
     <div class="prompt-text">{{ promptText }}
-      <user-outlined class="user-icon"/>
+           <v-btn  class="panel-menu-button" icon="mdi-account" :title="$t('open_account', 'Open Account')" key="open_account"></v-btn>
     </div>
   </div>
 </template>
 
 <script>
-import { UserOutlined } from '@ant-design/icons-vue';
-import { List } from 'ant-design-vue';
+
 
 export default {
   name: 'UserPrompt',
   components: {
-    UserOutlined,
-    'a-list-item': List.Item,
-    'a-list-item-meta': List.Item.Meta,
+
   },
   props: {
     userContext: {
@@ -52,7 +49,6 @@ export default {
   width: 100%;
   display: block;
   margin-top: 5px;
-  color: #fff;
   text-shadow: 1px 1px 0.5px rgba(0, 0, 0, 0.3);
 }
 
@@ -68,7 +64,7 @@ export default {
 .prompt-text {
   width: 100%;
   word-break: break-word;
-  color: #67950c;
+
   font-weight: bold;
   margin-top: 10px;
 }
@@ -76,7 +72,7 @@ export default {
 .prompt-id {
   width: 100%;
   font-size: 11px;
-  color: #fff;
+
   text-shadow: 1px 1px 0.5px rgba(0, 0, 0, 0.3);
 }
 
@@ -86,8 +82,7 @@ export default {
   margin-top: 15px;
   width: 60%;
   max-width: 60% !important;
-  background: linear-gradient(to bottom, #d9d9d9,  #f3f3f3);
-  border:1px solid #dddddd;
+
   border-radius: 12px;
   padding: 10px;
   text-align: right;
@@ -95,7 +90,7 @@ export default {
 }
 
 .user-icon {
-  color: #67950c;
+  color: #1b610b;
   font-size: 20px;
 }
 </style>

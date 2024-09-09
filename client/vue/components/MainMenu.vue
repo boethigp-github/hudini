@@ -36,19 +36,12 @@
 
 <script>
 import { useI18n } from 'vue-i18n';
-import { Menu } from 'ant-design-vue';
-import { DatabaseOutlined, FormOutlined, SettingOutlined, EditOutlined } from '@ant-design/icons-vue';
+
 
 export default {
   name: 'ChatMenu',
   components: {
-    'a-menu': Menu,
-    'a-menu-item': Menu.Item,
-    'a-sub-menu': Menu.SubMenu,
-    'database-outlined': DatabaseOutlined,
-    'form-outlined': FormOutlined,
-    'setting-outlined': SettingOutlined,
-    'edit-outlined': EditOutlined,
+
   },
   setup() {
     const { t } = useI18n();

@@ -1,3 +1,5 @@
+import {UserContext} from "@/vue/models/UserContext.js";
+
 const API_BASE_URL = import.meta.env.SERVER_URL || 'http://localhost:8000';
 
 /**
@@ -12,31 +14,31 @@ const API_BASE_URL = import.meta.env.SERVER_URL || 'http://localhost:8000';
  * @returns {Promise<void>}
  */
 export const stream = async (stream_url, generationRequest, onChunk, buffer, responses, onError, onComplete) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}${stream_url}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(generationRequest),
-    });
+    try {
+        const response = await fetch(`${API_BASE_URL}${stream_url}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(generationRequest),
+        });
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) {
-        onComplete();
-        break;
-      }
-      const chunk = decoder.decode(value);
-      onChunk(chunk,buffer,responses);
+        while (true) {
+            const {done, value} = await reader.read();
+            if (done) {
+                onComplete();
+                break;
+            }
+            const chunk = decoder.decode(value);
+            onChunk(chunk, buffer, responses);
+        }
+    } catch (error) {
+        console.error('Error in stream:', error);
+        onError(error);
     }
-  } catch (error) {
-    console.error('Error in stream:', error);
-    onError(error);
-  }
 };
 
 
@@ -90,7 +92,7 @@ export const createPrompt = async (promptRequest) => {
  * @param callback
  * @returns {Promise<void>} A promise that resolves when the request is complete.
  */
-export const saveUserContext = async (structuredResponse, callback=null) => {
+export const saveUserContext = async (structuredResponse, callback = null) => {
     try {
         const response = await fetch(`${API_BASE_URL}/usercontext`, {
             method: 'POST',
@@ -100,7 +102,7 @@ export const saveUserContext = async (structuredResponse, callback=null) => {
             body: JSON.stringify(structuredResponse), // Directly send the structured response
         });
 
-        if(callback){
+        if (callback) {
             return callback(response);
         }
 
@@ -136,49 +138,49 @@ export const fetchUserContext = (user, threadId) => {
     }
 };
 
-export  const processChunk = (chunk, buffer, responses, userContext, userContextList) => {
-      buffer.value += chunk; // Add chunk to buffer
+const cloneUserContext = (userContext) => {
+    const userContextPostRequestModel = new UserContext.UserContextPostRequestModel()
+    userContextPostRequestModel.uuid = userContext.value.uuid
+    userContextPostRequestModel.prompt = userContext.value.prompt
+    userContextPostRequestModel.thread_id = userContext.value.thread_id
+    userContextPostRequestModel.user = userContext.value.user
+    return userContextPostRequestModel
+}
 
 
-
-
-      let boundary;
-      while ((boundary = buffer.value.indexOf('}\n' + '{')) !== -1) {  // Find boundary between JSON objects
-
-
+export const processChunk = (chunk, buffer, userContext, userContextList) => {
+    buffer.value += chunk; // Add chunk to buffer
+    let boundary;
+    while ((boundary = buffer.value.indexOf('}\n' + '{')) !== -1) {  // Find boundary between JSON objects
         const jsonString = buffer.value.slice(0, boundary + 1);
         buffer.value = buffer.value.slice(boundary + 1);
-
-
         let responseModel;
         try {
-          responseModel = JSON.parse(jsonString);
+            responseModel = JSON.parse(jsonString);
+            const responseIndex = responses.value.findIndex(
+                r => r.id === responseModel.id && r.model === responseModel.model
+            );
+            if (responseIndex !== -1) {
+                responses.value[responseIndex] = {
+                    ...responses.value[responseIndex],
+                    completion: responseModel.completion,
+                };
+            } else {
+                responses.value.push(responseModel);
+            }
 
+            const userContextClone = cloneUserContext(userContext);
 
+            userContextClone.prompt.context_data=responses.value
 
-          const responseIndex = responses.value.findIndex(
-              r => r.id === responseModel.id && r.model === responseModel.model
-          );
+            console.log("userContextClone", userContextClone);
 
-          if (responseIndex !== -1) {
-            responses.value[responseIndex] = {
-              ...responses.value[responseIndex],
-              completion: responseModel.completion,
-            };
-          } else {
-            responses.value.push(responseModel);
-          }
-
-
-
-        userContext.value.prompt.context_data = responses.value;
-
-
+            //userContext.value.prompt.context_data = ;
         } catch (error) {
-          console.log("Error parsing JSON chunk:", error, jsonString);
+            console.log("Error parsing JSON chunk:", error, jsonString);
         }
-      }
-    };
+    }
+};
 /**
  * Deletes a user context by thread ID.
  * @param {number} threadId - The ID of the thread.

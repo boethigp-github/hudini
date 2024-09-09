@@ -1,16 +1,54 @@
-import { createApp } from 'vue';
+import {createApp} from 'vue';
 import App from './App.vue';
-import Antd from 'ant-design-vue';
-
-import 'ant-design-vue/dist/reset.css'; // Correct import for Ant Design Vue styles
+import 'vuetify/styles'
+import {createVuetify} from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
 import './assets/chat-styles.css';
+import '@mdi/font/css/materialdesignicons.css'
+import {aliases, mdi} from 'vuetify/iconsets/mdi'
+import colors from 'vuetify/lib/util/colors';
+
+const myAllBlackTheme = {
+  dark: true,
+  colors: {
+    background: "#000000",
+    surface: "#0d171b",
+    primary: "#990000",  // Set your desired primary color here
+    "primary-darken-1": "#770000",
+    secondary: "#990000",
+    "secondary-darken-1": "#770000",
+    error: "#FF5252",
+    info: "#2196F3",
+    success: "#4CAF50",
+    warning: "#FFC107",
+  },
+}
+
+const vuetify = createVuetify({
+  components,
+  directives,
+  theme: {
+    defaultTheme: "myAllBlackTheme",
+    themes: {
+      myAllBlackTheme,
+    },
+  },
+  icons: {
+    defaultSet: 'mdi',
+    aliases,
+    sets: {
+      mdi,
+    },
+  },
+})
 
 import i18n from './i18n.js';
-import { createPinia } from 'pinia'
+import {createPinia} from 'pinia'
+
 const app = createApp(App);
 
-
 app.use(createPinia())
-app.use(Antd);
+app.use(vuetify);
 app.use(i18n);
 app.mount('#app');

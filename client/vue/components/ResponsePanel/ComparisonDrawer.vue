@@ -28,7 +28,7 @@
               v-else-if="column.dataIndex === 'content' && record.completion?.choices[0]?.message?.content"
               style="margin-top:11px"
               :breaks="true"
-              :plugins="plugins"
+              :plugins="markdownPlugins"
               :source="record.completion?.choices[0].message.content"
           />
           <!-- Statistic -->
@@ -79,21 +79,17 @@
 
 <script>
 import {defineComponent, onBeforeUnmount, onMounted, ref} from 'vue';
-import {Drawer, Table, List, Statistic} from 'ant-design-vue';
+
 import Markdown from 'vue3-markdown-it';
 import {useI18n} from 'vue-i18n';
-import {RobotOutlined, UserOutlined} from '@ant-design/icons-vue';
 
+import {markdownPlugins} from './../../stores/markdownPlugins.js';
+import 'highlight.js/styles/googlecode.css';
+import './../ResponsePanel/Highlite.css';
 export default defineComponent({
   name: 'ComparisonDrawer',
   components: {
-    UserOutlined,
-    RobotOutlined,
-    'a-drawer': Drawer,
-    'a-table': Table,
-    'a-list': List,
-    'a-statistic': Statistic,
-    'VueMarkdownIT': Markdown,
+
   },
   props: {
     responses: {
@@ -101,11 +97,7 @@ export default defineComponent({
       required: true,
       default: () => [],
     },
-    plugins: {
-      type: Array,
-      required: true,
-      default: () => [],
-    },
+
     width: {
       type: String,
       required: false,
@@ -199,7 +191,7 @@ export default defineComponent({
 
     return {
       columns,
-      plugins: props.plugins,
+      markdownPlugins,
       closeDrawer,
       drawerVisible,
       getRowClass,

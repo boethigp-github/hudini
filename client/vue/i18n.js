@@ -58,6 +58,8 @@ const messages = {
         run_time: 'Run Time',
         total_tokens: "Total Tokens",
         prompt_id: 'Prompt ID',
+        dark_mode: 'Dark Mode',
+        search_prompts: 'Search prompts',
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -116,6 +118,8 @@ const messages = {
         run_time: 'Ausführungszeit',
         total_tokens: "Alle Tokens",
         prompt_id: 'Prompt-ID',
+        dark_mode: 'Dunkelmodus',
+        search_prompts: 'Prompts durchsuchen',
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -174,6 +178,8 @@ const messages = {
         run_time: 'Temps d\'Exécution',
         total_tokens: "Total des jetons",
         prompt_id: 'ID de l\'invite',
+        dark_mode: 'Mode Sombre',
+        search_prompts: 'Rechercher des prompts',
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
@@ -232,6 +238,8 @@ const messages = {
         run_time: 'Время Выполнения',
         total_tokens: "Всего токенов",
         prompt_id: 'ID запроса',
+        dark_mode: 'Тёмный режим',
+        search_prompts: 'Поиск подсказок',
 
     },
         zh: {
@@ -289,6 +297,8 @@ const messages = {
         all_tokens: '所有令牌',
         run_time: '运行时间',
         total_tokens: "代币总数", prompt_id: '提示 ID',
+        dark_mode: '暗黑模式',
+        search_prompts: '搜索提示',
     },
     // Add other languages as needed
 };

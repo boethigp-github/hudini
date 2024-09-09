@@ -1,187 +1,196 @@
 <template>
-  <a-card size="small" class="previous-prompt-card" :title="$t('previous_prompts')">
-    <div class="prompt-panel">
-      <a-collapse v-model:activeKey="activeKey" accordion>
-        <a-collapse-panel v-for="prompt in previousPrompts" :key="prompt.id">
-          <template #header>
-            <div class="panel-header">
-              <span class="timestamp">{{ formatTimestamp(prompt.created_at) }}</span>
-              <div class="header-actions">
-                <!-- Rerun icon added here -->
-                <a-popover trigger="hover" placement="bottomLeft">
-                  <template #content>
-                    <p>{{ $t('rerun_prompt', 'Rerun Prompt') }}</p>
-                  </template>
-                  <icon-rerun @click.stop="rerunPrompt(prompt)" class="rerun-icon"
-                              :title="$t('rerun_prompt', 'Rerun Prompt')"/>
-                </a-popover>
-                <a-popover trigger="hover"  placement="bottomLeft">
-                  <template #content>
-                    <p>{{ $t('copy_clipboard', 'Copy to clipboard') }}</p>
-                  </template>
-                  <icon-copy @click.stop="copyToClipboard(prompt.prompt)" class="copy-icon"
-                             :title="$t('copy_clipboard', 'Copy to clipboard')"/>
-                </a-popover>
-                <a-popover trigger="hover"  placement="bottomLeft">
-                  <template #content>
-                    <p>{{ $t('delete') }}</p>
-                  </template>
-                  <icon-delete @click.stop="deletePrompt(prompt.uuid)" class="delete-icon" :title="$t('delete')"/>
-                </a-popover>
+  <v-card class="previous-prompt-card" dense>
+    <v-card-title class="text-primary">
+      {{ $t('previous_prompts') }} ({{ filteredPrompts.length }})
+    </v-card-title>
+    <v-card-text>
+      <v-text-field
+        v-model="searchQuery"
+        :label="$t('search_prompts')"
+        prepend-inner-icon="mdi-magnify"
+        variant="outlined"
+        density="compact"
+        hide-details
+        class="mb-4"
+      ></v-text-field>
+    </v-card-text>
+    <v-expansion-panels variant="accordion" v-model="activeKey">
+      <v-virtual-scroll
+        class="prompt-panel"
+        height="50vh"
+        :items="filteredPrompts"
+      >
+        <template v-slot:default="{ item }">
+          <v-expansion-panel :key="item.id">
+            <template v-slot:title>
+              <div class="panel-content">
+                <div class="panel-header">
+                  <span class="title">{{ getTitle(item) }}</span>
+                  <span class="timestamp" v-if="item.created_at">{{ formatTimestamp(item.created_at) }}</span>
+                </div>
+                <div class="header-actions">
+                  <v-tooltip location="bottom">
+                    <template v-slot:activator="{ props }">
+                      <v-btn icon="mdi-refresh" size="x-small" v-bind="props" @click.stop="rerunPrompt(item)">
+                        <v-icon>mdi-refresh</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>{{ $t('rerun_prompt', 'Rerun Prompt') }}</span>
+                  </v-tooltip>
+                  <v-tooltip location="bottom">
+                    <template v-slot:activator="{ props }">
+                      <v-btn icon="mdi-content-copy" size="x-small" v-bind="props" @click.stop="copyToClipboard(item.prompt)">
+                        <v-icon>mdi-content-copy</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>{{ $t('copy_clipboard', 'Copy to clipboard') }}</span>
+                  </v-tooltip>
+                  <v-tooltip location="bottom">
+                    <template v-slot:activator="{ props }">
+                      <v-btn icon="mdi-delete" size="x-small" v-bind="props" @click.stop="deletePrompt(item.uuid)">
+                        <v-icon>mdi-delete</v-icon>
+                      </v-btn>
+                    </template>
+                    <span>{{ $t('delete') }}</span>
+                  </v-tooltip>
+                </div>
               </div>
-            </div>
-            <span class="title">{{ getTitle(prompt) }}</span>
-          </template>
-          <div class="prompt-content">
-            {{ prompt.prompt }}
-          </div>
-        </a-collapse-panel>
-      </a-collapse>
-    </div>
-  </a-card>
+            </template>
+            <v-expansion-panel-text>
+              {{ item.prompt }}
+            </v-expansion-panel-text>
+          </v-expansion-panel>
+        </template>
+      </v-virtual-scroll>
+    </v-expansion-panels>
+  </v-card>
 </template>
 
-<script>
-import {ref, defineComponent, onMounted} from "vue";
-import {useI18n} from 'vue-i18n';
-import {message, Collapse, Button} from "ant-design-vue";
-import {CopyOutlined, DeleteFilled, RedoOutlined} from "@ant-design/icons-vue";
-import {Card} from 'ant-design-vue';
+<script setup>
+import { ref, onMounted, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 
-export default defineComponent({
-  components: {
-    IconCopy: CopyOutlined,
-    IconDelete: DeleteFilled,
-    IconRerun: RedoOutlined, // New Rerun Icon
-    ACollapse: Collapse,
-    ACollapsePanel: Collapse.Panel,
-    AButton: Button,
-    'a-card': Card,
-  },
-  setup() {
-    const {t} = useI18n();
-    const previousPrompts = ref([]);
-    const serverUrl = import.meta.env.SERVER_URL;
+const { t } = useI18n();
+const previousPrompts = ref([]);
+const serverUrl = import.meta.env.SERVER_URL;
+const searchQuery = ref('');
 
-    if (!serverUrl) {
-      console.error("SERVER_URL not set. Check Env. All envs", import.meta.env);
-    }
+if (!serverUrl) {
+  console.error("SERVER_URL not set. Check Env. All envs", import.meta.env);
+}
 
-    const activeKey = ref([]);
+const activeKey = ref([]);
 
-    const copyToClipboard = (text) => {
-      navigator.clipboard
-          .writeText(text)
-          .then(() => {
-            message.success(t('copied_to_clipboard'));
-          })
-          .catch((error) => {
-            message.error(t('failed_to_copy'));
-            console.error("Copy failed:", error);
-          });
-    };
+const filteredPrompts = computed(() => {
+  if (!searchQuery.value) return previousPrompts.value;
+  return previousPrompts.value.filter(prompt =>
+    getTitle(prompt).toLowerCase().includes(searchQuery.value.toLowerCase())
+  );
+});
 
-    const loadPrompts = () => {
-      fetch(`${serverUrl}/prompts`)
-          .then(res => {
-            if (!res.ok) {
-              throw new Error("Failed to load prompts");
-            }
-            return res.json();
-          })
-          .then(data => {
-            previousPrompts.value = data;
-          })
-          .catch(error => {
-            console.error("Error loading prompts:", error);
-            message.error(t('failed_to_prompts'));
-          });
-    };
-
-    const deletePrompt = (id) => {
-      fetch(`${serverUrl}/prompts/${id}`, {
-        method: "DELETE",
-      })
-          .then(res => {
-            if (res.ok) {
-              loadPrompts();  // Reload the prompts after deletion
-              message.success(t('prompt_deleted'));
-            } else {
-              throw new Error("Failed to delete prompt");
-            }
-          })
-          .catch(error => {
-            console.error("Error deleting prompt", error);
-          });
-    };
-
-    const rerunPrompt = (prompt) => {
-      const event = new CustomEvent('rerun-prompt', {
-        detail: prompt,
-      });
-      window.dispatchEvent(event);
-    };
-
-    const getTitle = (prompt) => {
-      if (!prompt.prompt) return;
-      let title = prompt.prompt.substring(0, 200);
-      if (title.length >= 200) {
-        title += "...";
-      }
-      return title;
-    };
-
-    const formatTimestamp = (timestamp) => {
-      const date = new Date(timestamp);
-      const day = String(date.getDate()).padStart(2, "0");
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const year = date.getFullYear();
-      const hours = String(date.getHours()).padStart(2, "0");
-      const minutes = String(date.getMinutes()).padStart(2, "0");
-      const seconds = String(date.getSeconds()).padStart(2, "0");
-
-      return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
-    };
-
-    onMounted(() => {
-      loadPrompts(); // Load prompts when the component is mounted
+const copyToClipboard = (text) => {
+  navigator.clipboard
+    .writeText(text)
+    .then(() => {
+      // Replace with Vuetify snackbar or notification system
+      console.log(t('copied_to_clipboard'));
+    })
+    .catch((error) => {
+      // Replace with Vuetify snackbar or notification system
+      console.error(t('failed_to_copy'));
+      console.error("Copy failed:", error);
     });
+};
 
-    return {
-      t,
-      copyToClipboard,
-      previousPrompts,
-      activeKey,
-      deletePrompt,
-      rerunPrompt, // Expose rerunPrompt function
-      getTitle,
-      formatTimestamp,
-      loadPrompts, // Return loadPrompts to allow reloading
-    };
+const loadPrompts = () => {
+  fetch(`${serverUrl}/prompts`)
+    .then(res => {
+      if (!res.ok) {
+        throw new Error("Failed to load prompts");
+      }
+      return res.json();
+    })
+    .then(data => {
+      previousPrompts.value = data;
+    })
+    .catch(error => {
+      console.error("Error loading prompts:", error);
+      // Replace with Vuetify snackbar or notification system
+      console.error(t('failed_to_prompts'));
+    });
+};
+
+const deletePrompt = (id) => {
+  fetch(`${serverUrl}/prompts/${id}`, {
+    method: "DELETE",
+  })
+    .then(res => {
+      if (res.ok) {
+        loadPrompts();  // Reload the prompts after deletion
+        // Replace with Vuetify snackbar or notification system
+        console.log(t('prompt_deleted'));
+      } else {
+        throw new Error("Failed to delete prompt");
+      }
+    })
+    .catch(error => {
+      console.error("Error deleting prompt", error);
+    });
+};
+
+const rerunPrompt = (prompt) => {
+  const event = new CustomEvent('rerun-prompt', {
+    detail: prompt,
+  });
+  window.dispatchEvent(event);
+};
+
+const getTitle = (prompt) => {
+  if (!prompt.prompt) return '';
+  let title = prompt.prompt.substring(0, 200);
+  if (title.length >= 200) {
+    title += "...";
   }
+  return title;
+};
+
+const formatTimestamp = (timestamp) => {
+  const date = new Date(timestamp);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+
+  return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
+};
+
+onMounted(() => {
+  loadPrompts(); // Load prompts when the component is mounted
 });
 </script>
 
 <style scoped>
 .prompt-panel {
   height: auto;
-  max-height: 66.5vh;
-  min-height: 66.5vh;
+  max-height: 50vh;
+  min-height: 50vh;
   overflow-y: auto;
   width: 100%;
 }
 
-.previous-prompt-card {
-  width: 100% !important;
-  margin-top: 0;
+.panel-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
 }
-
-
 
 .panel-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  width: 100%;
 }
 
 .timestamp {
@@ -190,49 +199,19 @@ export default defineComponent({
 }
 
 .header-actions {
+  gap: 5px;
+  margin-top: 8px;
+  display: none;
+  transition: opacity 0.3s ease;
+}
+
+.title {
+  font-weight: bold;
+  flex-grow: 1;
+}
+
+/* Show buttons on hover */
+.v-expansion-panel-title:hover .header-actions {
   display: flex;
-  gap: 10px;
-}
-
-.copy-icon, .rerun-icon, .delete-icon {
-  cursor: pointer;
-  font-size: 16px;
-  color: #999;
-  margin-right: -5px;
-  margin-top: -13px;
-}
-
-.delete-icon {
-  color: orange;
-}
-
-.rerun-icon {
-  color: darkolivegreen;
-}
-
-.copy-icon:hover, .rerun-icon:hover, .delete-icon:hover {
-  color: #0e4980 !important;
-}
-
-
-.rerun-icon:hover, .copy-icon:hover, .delete-icon:hover {
-  color: #999;
-}
-
-
-.prompt-content {
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
-
-/* Previous Prompts */
-.previous-prompts {
-  background: none;
-  padding: 0;
-  border-radius: 10px;
-  width: 40%;
-  max-width: 100% !important;
-  height: 89vh;
-  align-items: center; /* Optional: Center vertically */
 }
 </style>
