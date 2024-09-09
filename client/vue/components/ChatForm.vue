@@ -412,7 +412,7 @@ export default {
       showLoader()
       streamGeneration(promptPostRequest).then(async () => {
         createPromptServerside(promptPostRequest).then(promptPostResponse => {
-          //saveUserContextServerside(promptPostResponse);
+          saveUserContextServerside(promptPostResponse);
           dispatchOnCompleteEvent()
         });
       });

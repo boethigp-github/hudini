@@ -80,12 +80,13 @@ export default {
   margin-left: auto;
   margin-bottom: 10px;
   margin-top: 15px;
+  font-size: 11px;
+  text-align: left;
   width: 60%;
   max-width: 60% !important;
 
   border-radius: 12px;
   padding: 10px;
-  text-align: right;
 
 }
 
