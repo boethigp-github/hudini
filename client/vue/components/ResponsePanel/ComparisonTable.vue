@@ -5,8 +5,7 @@
       :headers="headers"
       :items="processedData"
       item-value="uuid"
-      class="comparison-table"
-    >
+      class="comparison-table">
       <template v-slot:item.completionContent="{ item }">
         <template v-if="item.isPrompt">
         {{ item.content }}
@@ -57,7 +56,7 @@ export default {
 
     const headers = [
       { title: t('model'), align: 'start', key: 'model', width: '15%' },
-      { title: t('completion_content'), align: 'start', key: 'completionContent', width: '52%' },
+      { title: t('completion_content'), align: 'start', key: 'completionContent', width: '50%' },
       { title: t('prompt_tokens'), align: 'end', key: 'promptTokens', width: '10%' },
       { title: t('completion_tokens'), align: 'end', key: 'completionTokens', width: '10%' },
       { title: t('total_tokens'), align: 'end', key: 'totalTokens', width: '10%' },

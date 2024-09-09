@@ -1,8 +1,6 @@
 <template>
   <v-container class="panel-menu">
     <v-row>
-
-      11: {{isComparisonOpen}}
       <v-btn
         class="panel-menu-button"
         :icon="isComparisonOpen ? 'mdi-close' : 'mdi-select-compare'"

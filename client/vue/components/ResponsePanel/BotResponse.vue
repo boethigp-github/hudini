@@ -121,7 +121,6 @@ export default {
 }
 
 .bot-response {
-
   padding: 10px;
   text-align: left;
   font-size: 14px;
