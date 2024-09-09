@@ -157,27 +157,43 @@ export const processChunk = (chunk, buffer, userContext, userContextList) => {
         let responseModel;
         try {
             responseModel = JSON.parse(jsonString);
-            const responseIndex = responses.value.findIndex(
-                r => r.id === responseModel.id && r.model === responseModel.model
+
+
+            // Find the correct UserContext in the list
+            const userContextIndex = userContextList.value.findIndex(
+                uc => uc?.prompt?.uuid === responseModel.id
             );
-            if (responseIndex !== -1) {
-                responses.value[responseIndex] = {
-                    ...responses.value[responseIndex],
-                    completion: responseModel.completion,
-                };
+
+            if (userContextIndex !== -1) {
+                const currentUserContext = userContextList.value[userContextIndex];
+
+                // Find the context_data entry for this model and id
+                let contextDataIndex = currentUserContext.prompt.context_data.findIndex(
+                    cd => cd.id === responseModel.id && cd.model === responseModel.model
+                );
+
+                if (contextDataIndex === -1) {
+                    // If not found, create a new entry
+                    currentUserContext.prompt.context_data.push({
+                        id: responseModel.id,
+                        model: responseModel.model,
+                        completion: responseModel.completion
+                    });
+                } else {
+                    // If found, update the existing entry
+                    currentUserContext.prompt.context_data[contextDataIndex] = {
+                        ...currentUserContext.prompt.context_data[contextDataIndex],
+                        completion: responseModel.completion
+                    };
+                }
+
+                // Update the userContextList
+                userContextList.value[userContextIndex] = currentUserContext;
             } else {
-                responses.value.push(responseModel);
+                console.error("UserContext not found for id:", responseModel.id);
             }
-
-            const userContextClone = cloneUserContext(userContext);
-
-            userContextClone.prompt.context_data=responses.value
-
-            console.log("userContextClone", userContextClone);
-
-            //userContext.value.prompt.context_data = ;
         } catch (error) {
-            console.log("Error parsing JSON chunk:", error, jsonString);
+            console.error("Error parsing JSON chunk:", error, jsonString);
         }
     }
 };

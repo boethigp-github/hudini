@@ -60,6 +60,7 @@ const messages = {
         prompt_id: 'Prompt ID',
         dark_mode: 'Dark Mode',
         search_prompts: 'Search prompts',
+        open_account: 'Open Account',
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -120,6 +121,7 @@ const messages = {
         prompt_id: 'Prompt-ID',
         dark_mode: 'Dunkelmodus',
         search_prompts: 'Prompts durchsuchen',
+        open_account: 'Konto eröffnen',
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -180,6 +182,7 @@ const messages = {
         prompt_id: 'ID de l\'invite',
         dark_mode: 'Mode Sombre',
         search_prompts: 'Rechercher des prompts',
+        open_account: 'Ouvrir un compte',
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
@@ -240,6 +243,7 @@ const messages = {
         prompt_id: 'ID запроса',
         dark_mode: 'Тёмный режим',
         search_prompts: 'Поиск подсказок',
+        open_account: 'Открыть счет',
 
     },
         zh: {
@@ -299,6 +303,7 @@ const messages = {
         total_tokens: "代币总数", prompt_id: '提示 ID',
         dark_mode: '暗黑模式',
         search_prompts: '搜索提示',
+        open_account: '开立账户',
     },
     // Add other languages as needed
 };

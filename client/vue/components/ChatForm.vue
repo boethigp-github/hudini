@@ -302,7 +302,7 @@ export default {
      */
     async function streamGeneration(promptPostRequest) {
       for (const model of await modelsStore.getSelectedModelsWithMetaData()) {
-        await stream(
+         stream(
             model.stream_url, // Use the stream URL from the selected model
             getStreamPostRequestModel(promptPostRequest, [model], "fetch_completion"),
             (chunk, buffer) => processChunk(chunk, buffer, userContext, userContextList),
@@ -313,6 +313,9 @@ export default {
             },
             () => {
               hideLoader()
+            },
+            ()=>{
+                  hideLoader();
             }
         );
       }
