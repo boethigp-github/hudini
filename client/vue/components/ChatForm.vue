@@ -1,7 +1,7 @@
 <template>
 
   <v-layout ref="app">
- <v-app-bar class="v-app-bar " name="app-bar" density="compact">
+    <v-app-bar class="v-app-bar " name="app-bar" density="compact">
       <v-container fluid>
         <v-row align="center" no-gutters>
           <v-col class="theme-switch-container" cols="auto">
@@ -17,14 +17,15 @@
 
     <v-navigation-drawer location="end" name="drawer" permanent>
       <div class="d-flex justify-center align-top h-100">
-        <PromptPanel :key="promptPanelUpdateTrigger"/>
+        <PromptPanel  :key="promptPanelUpdateTrigger"/>
       </div>
     </v-navigation-drawer>
 
     <v-main>
       <v-row>
         <v-col :cols="11">
-          <ResponsePanel :userContextList="userContextList" :loading="loading"/>
+          <ResponsePanel v-if="!isComparisonViewVisible" :userContextList="userContextList" :loading="loading"/>
+          <ComparisonDrawer v-if="isComparisonViewVisible" :userContextList="userContextList"/>
         </v-col>
         <v-col :cols="1">
           <ResponsePanelMenu/>
@@ -55,7 +56,7 @@
     </v-footer>
   </v-layout>
 
-  <ComparisonDrawer :responses="[]" width="90%"/>
+
 </template>
 
 <script>
@@ -140,17 +141,16 @@ export default {
       return new UserContext.PromptPostRequestModel(uuid, prompt, user, status);
     };
 
-
     const prompt = ref(UserContext.PromptPostRequestModel);
     const userContext = ref(UserContext.UserContextPostRequestModel);
-    const userContextList = ref([UserContext.UserContextPostRequestModel]);
+    const userContextList = ref([]);
     const modelsStore = useModelsStore();
     const buffer = ref('');
-
     const loading = ref(false);
     const promptPanelUpdateTrigger = ref(0);
     const {t} = useI18n();
     const valid = ref(false)
+    const isComparisonViewVisible = ref(false)
 
     // Watcher to reset prompt input after loading completes
     watch(loading, (newValue) => {
@@ -186,6 +186,8 @@ export default {
     onMounted(() => {
       window.addEventListener('delete-thread', deleteThreadEvent);
       window.addEventListener('rerun-prompt', rerunPrompt);
+      window.addEventListener('comparison-open', showComparisonView);
+      window.addEventListener('comparison-close', hideComparisonView);
     });
 
     /**
@@ -195,7 +197,24 @@ export default {
     onBeforeUnmount(() => {
       window.removeEventListener('delete-thread', deleteThreadEvent);
       window.removeEventListener('rerun-prompt', rerunPrompt);
+      window.removeEventListener('comparison-open', showComparisonView);
+      window.removeEventListener('comparison-close', hideComparisonView);
     });
+
+    /**
+     * Show comparison view
+     */
+    const showComparisonView = () => {
+      isComparisonViewVisible.value = true
+    }
+
+    /**
+     * Hide comparsion view
+     */
+    const hideComparisonView = () => {
+      isComparisonViewVisible.value = false
+    }
+
 
     /**
      * resets user context
@@ -302,7 +321,7 @@ export default {
      */
     async function streamGeneration(promptPostRequest) {
       for (const model of await modelsStore.getSelectedModelsWithMetaData()) {
-         stream(
+        stream(
             model.stream_url, // Use the stream URL from the selected model
             getStreamPostRequestModel(promptPostRequest, [model], "fetch_completion"),
             (chunk, buffer) => processChunk(chunk, buffer, userContext, userContextList),
@@ -314,8 +333,8 @@ export default {
             () => {
               hideLoader()
             },
-            ()=>{
-                  hideLoader();
+            () => {
+              hideLoader();
             }
         );
       }
@@ -412,6 +431,7 @@ export default {
       modelsStore,
       userContextList,
       valid,
+      isComparisonViewVisible
     };
   },
 };
@@ -420,10 +440,9 @@ export default {
 <style>
 
 
-
 .v-app-bar {
   max-height: 48px;
-  padding-top:3px;
+  padding-top: 3px;
 }
 
 .theme-switch-container,
@@ -432,7 +451,7 @@ export default {
   align-items: center;
 }
 
-.theme-switch-container{
+.theme-switch-container {
   margin-top: 15px;
 }
 

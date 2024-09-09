@@ -2,28 +2,28 @@
   <div id="response" class="response" ref="responseElement">
     <div v-if="userContextList.length" class="response-content">
       <v-card
-        v-for="item in userContextList"
-        :key="item.uuid"
-        dense
-        class="response-item"
+          v-for="item in userContextList"
+          :key="item.uuid"
+          dense
+          class="response-item"
       >
         <UserPrompt
-          :userContext="item"
-          @mouseover="handleMouseOver(item.uuid)"
-          @mouseout="handleMouseOut"
+            :userContext="item"
+            @mouseover="handleMouseOver(item.uuid)"
+            @mouseout="handleMouseOut"
         />
         <v-card
-          v-if="item?.prompt?.context_data"
-          v-for="contextDataItem in item.prompt.context_data"
-          :class="'user-prompt-item_'+contextDataItem.id"
-          :key="contextDataItem.id"
+            v-if="item?.prompt?.context_data"
+            v-for="contextDataItem in item.prompt.context_data"
+            :class="'user-prompt-item_'+contextDataItem.id"
+            :key="contextDataItem.id"
         >
           <BotResponse
-            class="bot-response-item"
-            v-if="contextDataItem.completion"
-            :contextDataItem="contextDataItem"
-            @mouseover="handleMouseOver(contextDataItem.id)"
-            @mouseout="handleMouseOut"
+              class="bot-response-item"
+              v-if="contextDataItem.completion"
+              :contextDataItem="contextDataItem"
+              @mouseover="handleMouseOver(contextDataItem.id)"
+              @mouseout="handleMouseOut"
           />
         </v-card>
       </v-card>
@@ -32,10 +32,10 @@
 </template>
 
 <script>
-import { nextTick, watch, ref, onMounted } from 'vue';
+import {nextTick, watch, ref, onMounted} from 'vue';
 import './ResponsePanel/response_panel.css';
 import ResponsePanelMenu from './ResponsePanel/ResponsePanelMenu.vue';
-import { markdownPlugins } from './../stores/markdownPlugins.js';
+import {markdownPlugins} from './../stores/markdownPlugins.js';
 import 'highlight.js/styles/googlecode.css';
 import './ResponsePanel/Highlite.css';
 import UserPrompt from './ResponsePanel/UserPrompt.vue';

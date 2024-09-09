@@ -1,215 +1,147 @@
 <template>
-  <a-drawer
-      :title="$t('model_comparison', 'model comparison')"
-      placement="right"
-      :visible="drawerVisible"
-      @close="closeDrawer"
-      :width="width">
-    <div v-if="responses.length > 0">
-      <a-table
-          bordered
-          size="small"
-          :dataSource="responses"
-          :columns="columns"
-          rowKey="model"
-          :pagination="false"
-          :rowClassName="getRowClass">
-        <template v-slot:bodyCell="{ record, column, index }">
-          <!-- Userprompt Spalte 1-->
-          <div v-if="record.prompt && column.dataIndex==='model'">
-            {{ $t("user_prompt") }}
-          </div>
-          <!-- Userprompt Spalte prompt-->
-          <div v-else-if="record.prompt && column.dataIndex==='content'">
-            {{ record.prompt }}
-          </div>
-          <!-- Modelcontent-->
-          <VueMarkdownIT
-              v-else-if="column.dataIndex === 'content' && record.completion?.choices[0]?.message?.content"
-              style="margin-top:11px"
+  <v-card-title>{{ $t('model_comparison', 'Model Comparison') }}</v-card-title>
+  <v-card-text v-if="processedData.length">
+    <v-data-table-virtual
+      :headers="headers"
+      :items="processedData"
+      item-value="uuid"
+      class="comparison-table"
+    >
+      <template v-slot:item.completionContent="{ item }">
+        <template v-if="item.isPrompt">
+        {{ item.content }}
+        </template>
+        <template v-else>
+          <div class="completion-content">
+            <Markdown
+              class="bot-answer-md"
               :breaks="true"
               :plugins="markdownPlugins"
-              :source="record.completion?.choices[0].message.content"
-          />
-          <!-- Statistic -->
-          <div v-else-if="column.dataIndex === 'statistics'">
-            <a-list
-                v-if="record?.completion?.usage"
-                :dataSource="[record.completion.usage]"
-                :bordered="false"
-                size="small"
-            >
-              <template #renderItem="{ item }">
-                <a-list-item size="small">
-                  <a-list-item-meta>
-                    <template #title>
-                      <a-statistic
-                          :title="$t('completion_tokens', 'Completion Tokens')"
-                          :value="item.completion_tokens"
-                      />
-                      <a-statistic
-                          :title="$t('prompt_tokens', 'Prompt Tokens')"
-                          :value="item.prompt_tokens"
-                      />
-                      <a-statistic
-                          :title="$t('all_tokens', 'All Tokens')"
-                          :value="item.total_tokens"
-                      />
-                      <a-statistic
-                          :title="$t('run_time', 'Run Time')"
-                          :value="formatDuration(item.started, item.ended)"
-                      />
-                    </template>
-                  </a-list-item-meta>
-                </a-list-item>
-              </template>
-            </a-list>
-          </div>
-          <div v-else-if="column.dataIndex==='model'">
-            {{ record[column.dataIndex] }}
+              :source="item.content"
+            />
           </div>
         </template>
-      </a-table>
-    </div>
-    <div v-else>
-      {{ $t('no_data_to_compare', 'No data to compare.') }}
-    </div>
-  </a-drawer>
+      </template>
+    </v-data-table-virtual>
+  </v-card-text>
+  <v-card-text v-else>
+    {{ $t('no_data_to_compare', 'No data to compare.') }}
+  </v-card-text>
 </template>
 
 <script>
-import {defineComponent, onBeforeUnmount, onMounted, ref} from 'vue';
-
-import Markdown from 'vue3-markdown-it';
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
 import {useI18n} from 'vue-i18n';
-
+import Markdown from 'vue3-markdown-it';
 import {markdownPlugins} from './../../stores/markdownPlugins.js';
-import 'highlight.js/styles/googlecode.css';
-import './../ResponsePanel/Highlite.css';
-export default defineComponent({
+
+export default {
   name: 'ComparisonDrawer',
   components: {
-
+    Markdown
   },
   props: {
-    responses: {
+    userContextList: {
       type: Array,
       required: true,
       default: () => [],
     },
-
     width: {
-      type: String,
-      required: false,
-      default: '500px',
+      type: [Number, String],
+      default: 500,
     },
   },
   setup(props) {
-    const {t} = useI18n();
-    const closeDrawer = () => {
-      const event = new CustomEvent('comparison-close', {});
-      window.dispatchEvent(event);
-    }
-    const searchTerms = ref({
-      model: '',
-      content: '',
-      timestamp: '',
-      error: ''
+    const { t } = useI18n();
+    const drawerVisible = ref(false);
+
+    const headers = [
+      { title: t('model'), align: 'start', key: 'model', width: '15%' },
+      { title: t('completion_content'), align: 'start', key: 'completionContent', width: '52%' },
+      { title: t('prompt_tokens'), align: 'end', key: 'promptTokens', width: '10%' },
+      { title: t('completion_tokens'), align: 'end', key: 'completionTokens', width: '10%' },
+      { title: t('total_tokens'), align: 'end', key: 'totalTokens', width: '10%' },
+      { title: t('run_time') + " in ms", align: 'end', key: 'runTime', width: '5%' },
+    ];
+
+    const processedData = computed(() => {
+      return props.userContextList.flatMap(item => {
+        const promptRow = {
+          isPrompt: true,
+          model: t('user_prompt', 'UserPrompt'),
+          content: item.prompt.prompt,
+          uuid: `prompt-${item.uuid}`,
+          promptTokens: '-',
+          completionTokens: '-',
+          totalTokens: '-',
+          runTime: '-'
+        };
+        const responseRows = (item.prompt.context_data || []).map(data => ({
+          isPrompt: false,
+          model: data.model,
+          content: data.completion?.choices[0]?.message?.content || '',
+          promptTokens: data.completion?.usage?.prompt_tokens || 0,
+          completionTokens: data.completion?.usage?.completion_tokens || 0,
+          totalTokens: data.completion?.usage?.total_tokens || 0,
+          runTime: formatDuration(data.completion?.usage?.started, data.completion?.usage?.ended),
+          uuid: data.id,
+        }));
+        return [promptRow, ...responseRows];
+      });
     });
 
-    const filterData = () => {
-      // Filtering logic handled by computed property
-    };
+const formatDuration = (start, end) => {
+  if (!start || !end) return '';
+  return end - start;
+};
 
-    const closeComparison = () => {
+    const closeDrawer = () => {
       drawerVisible.value = false;
-    };
-
-    const openComparison = () => {
-      drawerVisible.value = true;
-    };
-
-    const getRowClass = (record, index) => {
-      return record.prompt ? 'userpromptrow' : 'compare-row';
-    };
-
-    const formatTimestamp = (timestamp) => {
-      if (!timestamp) return '';
-      const date = new Date(timestamp); // Convert milliseconds to Date object
-      return date.toLocaleString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      }); // Format as readable date-time string with seconds
-    };
-
-    const formatDuration = (start, end) => {
-      const duration = end - start;
-      const seconds = ((duration % 60000)).toFixed(0);
-      return `${seconds} ms`;
+      window.dispatchEvent(new CustomEvent('comparison-close'));
     };
 
     onMounted(() => {
-      window.addEventListener('comparison-close', closeComparison);
-      window.addEventListener('comparison-open', openComparison);
-      window.addEventListener('stream-complete', onStreamComplete);
+      window.addEventListener('comparison-open', () => drawerVisible.value = true);
+      window.addEventListener('comparison-close', () => drawerVisible.value = false);
     });
 
     onBeforeUnmount(() => {
-      window.removeEventListener('comparison-close', closeComparison);
-      window.removeEventListener('comparison-open', openComparison);
-      window.addEventListener('stream-complete', onStreamComplete);
+      window.removeEventListener('comparison-open', () => drawerVisible.value = true);
+      window.removeEventListener('comparison-close', () => drawerVisible.value = false);
     });
 
-
-    const onStreamComplete = () => {
-      console.log("stream completed");
-    }
-
-    let drawerVisible = ref(false)
-
-    const columns = ref([
-      {
-        title: t('model'),
-        dataIndex: 'model',
-        key: 'model',
-        width: 300,
-      },
-      {
-        title: t('content'),
-        dataIndex: 'content',
-        key: 'content',
-      },
-      {
-        title: t('statistics', 'Statistics'),
-        dataIndex: 'statistics',
-        key: 'statistics',
-        width: 220,
-      },
-
-    ]);
-
     return {
-      columns,
-      markdownPlugins,
-      closeDrawer,
       drawerVisible,
-      getRowClass,
-      searchTerms,
-      filterData,
-      formatTimestamp,
-      formatDuration
+      headers,
+      processedData,
+      closeDrawer,
+      markdownPlugins,
     };
   },
-});
+};
 </script>
-<style>
-.userpromptrow {
 
-  font-weight: bold;
+<style scoped>
+.comparison-table :deep(td) {
+  vertical-align: top !important;
 }
 
-.compare-row {
-  vertical-align: top !important;
+.completion-content, .user-prompt {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.bot-answer-md {
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+.user-prompt {
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 </style>
