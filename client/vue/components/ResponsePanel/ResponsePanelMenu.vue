@@ -1,6 +1,8 @@
 <template>
   <v-container class="panel-menu">
     <v-row>
+
+      11: {{isComparisonOpen}}
       <v-btn
         class="panel-menu-button"
         :icon="isComparisonOpen ? 'mdi-close' : 'mdi-select-compare'"
@@ -23,30 +25,28 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 export default {
   name: 'SubMenu',
   setup() {
-    const openKeys = ref(['sub1']);
-    const selectedKeys = ref(['1']);
     const isComparisonOpen = ref(false);
-    const {t} = useI18n();
-
+    const { t } = useI18n();
     const toggleComparison = () => {
       isComparisonOpen.value = !isComparisonOpen.value;
       const eventName = isComparisonOpen.value ? 'comparison-open' : 'comparison-close';
+      localStorage.setItem('isComparisonOpen', JSON.stringify( isComparisonOpen.value));
       const event = new CustomEvent(eventName, {});
       window.dispatchEvent(event);
     };
 
+    // Delete Thread Function
     const deleteThread = () => {
-      const event = new CustomEvent('delete-thread', {
-        detail: {},
-      });
+      const event = new CustomEvent('delete-thread', { detail: {} });
       window.dispatchEvent(event);
     };
+
 
     const confirmDeleteThread = () => {
       Modal.confirm({
@@ -64,9 +64,20 @@ export default {
       });
     };
 
+    // Load state from local storage on mount and throw corresponding event
+    onMounted(() => {
+      const savedState = JSON.parse(localStorage.getItem('isComparisonOpen'));
+      if (savedState !== null) {
+        setTimeout(()=>{
+        const eventName = savedState ? 'comparison-open' : 'comparison-close';
+        const event = new CustomEvent(eventName, {});
+        window.dispatchEvent(event);
+        isComparisonOpen.value = savedState
+        })
+      }
+    });
+
     return {
-      openKeys,
-      selectedKeys,
       isComparisonOpen,
       toggleComparison,
       confirmDeleteThread,

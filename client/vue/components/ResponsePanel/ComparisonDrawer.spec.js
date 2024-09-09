@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, it, expect, vi } from 'vitest';
-import ComparisonDrawer from './ComparisonDrawer.vue';
+import ComparisonDrawer from './ComparisonTable.vue';
 import { createI18n } from 'vue-i18n';
 
 
@@ -18,7 +18,7 @@ const i18n = createI18n({
     messages,
 });
 
-describe('ComparisonDrawer.vue', () => {
+describe('ComparisonTable.vue', () => {
 
     const plugins = [];  // Add any plugins needed for Markdown rendering
 

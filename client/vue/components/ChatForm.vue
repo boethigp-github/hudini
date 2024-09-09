@@ -14,13 +14,11 @@
         </v-row>
       </v-container>
     </v-app-bar>
-
     <v-navigation-drawer location="end" name="drawer" permanent>
       <div class="d-flex justify-center align-top h-100">
         <PromptPanel  :key="promptPanelUpdateTrigger"/>
       </div>
     </v-navigation-drawer>
-
     <v-main>
       <v-row>
         <v-col :cols="11">
@@ -67,7 +65,7 @@ import PromptPanel from './PromptPanel.vue';
 import ResponsePanel from './ResponsePanel.vue';
 import LanguageSwitch from './LanguageSwitch.vue';
 import ModelSelection from './ModelSelection.vue';
-import ComparisonDrawer from './ResponsePanel/ComparisonDrawer.vue';
+import ComparisonDrawer from './ResponsePanel/ComparisonTable.vue';
 import ThemeSwitch from './ThemeSwitch.vue';
 
 import {
