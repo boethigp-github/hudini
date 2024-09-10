@@ -1,4 +1,5 @@
 <template>
+
   <v-card-title>{{ $t('model_comparison', 'Model Comparison') }}</v-card-title>
   <v-card-text v-if="processedData.length">
     <v-data-table
@@ -56,6 +57,9 @@ export default {
   setup(props) {
     const { t } = useI18n();
     const drawerVisible = ref(false);
+
+
+
 
 const headers = [
   {
@@ -159,6 +163,7 @@ const formatDuration = (start, end) => {
       closeDrawer,
       markdownPlugins,
       getRowProps
+
     };
   },
 };

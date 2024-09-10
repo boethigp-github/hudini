@@ -20,6 +20,16 @@
       ></v-btn>
     </v-row>
 
+    <v-row>
+      <v-btn
+          class="panel-menu-button"
+          icon="mdi-microsoft-excel"
+          :title="$t('export_to_excel', 'Export to excel')"
+          key="delete_thread"
+          @click="exportToExcel"
+      ></v-btn>
+    </v-row>
+
     <v-dialog v-model="deleteDialog" max-width="600px">
       <v-card>
         <v-card-title>{{
@@ -34,6 +44,8 @@
             }}
           </v-btn>
           <v-btn color="red-darken-1" @click="confirmDelete">{{ $t('delete_thread_ok_text', 'Yes, delete it') }}</v-btn>
+
+
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -63,6 +75,13 @@ export default {
       isComparisonOpen.value = !isComparisonOpen.value;
       const eventName = isComparisonOpen.value ? 'comparison-open' : 'comparison-close';
       localStorage.setItem('isComparisonOpen', JSON.stringify(isComparisonOpen.value));
+      const event = new CustomEvent(eventName, {});
+      window.dispatchEvent(event);
+    };
+
+    const exportToExcel = () => {
+      isComparisonOpen.value = !isComparisonOpen.value;
+      const eventName =  'usercontext-export-excel'
       const event = new CustomEvent(eventName, {});
       window.dispatchEvent(event);
     };
@@ -101,6 +120,7 @@ export default {
       openDeleteDialog,
       cancelDelete,
       confirmDelete,
+      exportToExcel
     };
   },
 };

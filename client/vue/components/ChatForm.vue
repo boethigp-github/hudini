@@ -320,6 +320,7 @@ export default {
       window.addEventListener('rerun-prompt', rerunPrompt);
       window.addEventListener('comparison-open', showComparisonView);
       window.addEventListener('comparison-close', hideComparisonView);
+      window.addEventListener('usercontext-export-excel', exportToExcel);
     });
 
     onBeforeUnmount(() => {
@@ -327,8 +328,47 @@ export default {
       window.removeEventListener('rerun-prompt', rerunPrompt);
       window.removeEventListener('comparison-open', showComparisonView);
       window.removeEventListener('comparison-close', hideComparisonView);
+      window.removeEventListener('usercontext-export-excel', exportToExcel);
     });
 
+
+    const exportToExcel = async () => {
+      try {
+        // Extract user and thread_id from the userContextList props
+        const user = userContextList.value[0]?.prompt.user;
+        const thread_id = userContextList.value[0]?.thread_id;
+
+        if (!user || !thread_id) {
+          throw new Error("User or Thread ID not available.");
+        }
+
+        // Build the URL with user and thread_id query parameters
+        const response = await fetch(`http://localhost/usercontext/export/excel?user=${user}&thread_id=${thread_id}`, {
+          method: 'GET',
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to export: ${response.statusText}`);
+        }
+
+        // Get the response as a Blob (binary large object)
+        const blob = await response.blob();
+
+        // Create a link element to download the file
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'user_context_export.xlsx'); // Set the file name
+        document.body.appendChild(link);
+        link.click();
+
+        // Clean up after the download
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Error exporting to Excel:', error);
+      }
+    };
 
     const deleteThreadEvent = async (event) => {
       try {

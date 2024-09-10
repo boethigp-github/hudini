@@ -67,6 +67,7 @@ const messages = {
         delete_thread_confirmation: 'Are you sure you want to delete this thread?',
         cancel: 'Cancel',
         failed_to_delete_thread: 'Failed to delete thread',
+        export_to_excel: "Export to Excel"
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -134,6 +135,7 @@ const messages = {
         delete_thread_confirmation: 'Sind Sie sicher, dass Sie diesen Thread löschen möchten?',
         cancel: 'Abbrechen',
         failed_to_delete_thread: 'Fehler beim Löschen des Threads',
+        export_to_excel: "Für Excel exportieren"
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -201,6 +203,7 @@ const messages = {
         delete_thread_confirmation: 'Êtes-vous sûr de vouloir supprimer ce fil de discussion ?',
         cancel: 'Annuler',
         failed_to_delete_thread: 'Échec de la suppression du fil de discussion',
+        export_to_excel: "Exporter vers Excel"
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
@@ -268,6 +271,7 @@ const messages = {
         delete_thread_confirmation: 'Вы уверены, что хотите удалить этот поток?',
         cancel: 'Отмена',
         failed_to_delete_thread: 'Не удалось удалить поток',
+        export_to_excel: "Экспорт в Excel"
 
     },
         zh: {
@@ -334,6 +338,7 @@ const messages = {
         delete_thread_confirmation: '您确定要删除此线程吗？',
         cancel: '取消',
         failed_to_delete_thread: '删除线程失败',
+        export_to_excel: "导出到 Excel"
     },
     // Add other languages as needed
 };
