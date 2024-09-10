@@ -82,56 +82,64 @@ class TestUserContext(unittest.TestCase):
             ]
         ).model_dump()  # Updated from dict()
 
-    def create_user_context(self, thread_id, context_data, prompt_data):
+    def create_user_context(self, thread_id, context_data_list, prompt_data_list):
         """
-        Creates a user context with the provided thread_id, context_data, and prompt_data.
+        Creates multiple user contexts with the provided thread_id, context_data, and prompt_data.
         Uses the test user UUID created in setUpClass.
         """
-        payload = UserContextPostRequestModel(
-            uuid=str(uuid.uuid4()),  # Generate a new UUID for the context
-            user=self.test_user_uuid,  # Use the test user UUID
-            thread_id=thread_id,
-            prompt=UserContextPrompt(**prompt_data),  # Prompt data passed correctly as UserContextPrompt
-            context_data=context_data  # Add the context data
-        )
+        user_contexts = []
+        for prompt_data, context_data in zip(prompt_data_list, context_data_list):
+            payload = UserContextPostRequestModel(
+                uuid=str(uuid.uuid4()),  # Generate a new UUID for the context
+                user=self.test_user_uuid,  # Use the test user UUID
+                thread_id=thread_id,
+                prompt=UserContextPrompt(**prompt_data),  # Prompt data passed correctly as UserContextPrompt
+                context_data=context_data  # Add the context data
+            )
+            user_contexts.append(payload.model_dump())  # Updated from dict()
 
         # Ensure proper encoding of UUIDs using jsonable_encoder
-        payload_dict = jsonable_encoder(payload.model_dump())  # Updated from dict()
+        payload_list = jsonable_encoder(user_contexts)
 
-        response = requests.post(f"{self.BASE_URL}/usercontext", json=payload_dict)
+        response = requests.post(f"{self.BASE_URL}/usercontext", json=payload_list)
         if response.status_code != 200:
             print(f"Create User Context Response: {response.text}")  # Debugging output
         self.assertEqual(response.status_code, 200)
         return response.json()
 
-    def test_create_and_get_user_context(self):
+    def test_create_and_get_user_contexts(self):
         # Create test prompt data
-        prompt_data = self.create_test_prompt_data()
+        prompt_data_list = [self.create_test_prompt_data() for _ in range(2)]  # Create two sets of prompt data
 
         # Context and thread setup
         thread_id = 1
-        context_data = [
-            ContextDataItem(
-                id=uuid.uuid4(),  # Generate a new UUID for the context item
-                user=self.test_user_uuid,  # UUID for the user
-                status="IN_PROGRESS",
-                model="TestModel",
-                completion={"id": str(uuid.uuid4()), "choices": [{"index": 0, "message": {"content": "Test message", "role": "assistant"}}]}
-            ).model_dump()  # Updated from dict()
+        context_data_list = [
+            [
+                ContextDataItem(
+                    id=uuid.uuid4(),  # Generate a new UUID for the context item
+                    user=self.test_user_uuid,  # UUID for the user
+                    status="IN_PROGRESS",
+                    model="TestModel",
+                    completion={"id": str(uuid.uuid4()),
+                                "choices": [{"index": 0, "message": {"content": "Test message", "role": "assistant"}}]}
+                ).model_dump()  # Updated from dict()
+            ] for _ in range(2)  # Create context data for two different user contexts
         ]
 
         # Log and validate the user context creation process
         try:
-            created_context = self.create_user_context(thread_id, context_data, prompt_data)
+            created_contexts = self.create_user_context(thread_id, context_data_list, prompt_data_list)
 
-            # Retrieve user context by thread_id and user
-            response = requests.get(f"{self.BASE_URL}/usercontext", params={"thread_id": thread_id, "user": self.test_user_uuid})
+            # Retrieve user contexts by thread_id and user
+            response = requests.get(f"{self.BASE_URL}/usercontext",
+                                    params={"thread_id": thread_id, "user": self.test_user_uuid})
             self.assertEqual(response.status_code, 200)
-            context = response.json()
+            contexts = response.json()
 
-            # Validate that the context data and prompt are correct
-            self.assertEqual(context["user"], created_context["user"])
-            self.assertEqual(context["prompt"]["uuid"], prompt_data["uuid"])
+            # Validate that the context data and prompt are correct for multiple contexts
+            for idx, context in enumerate(contexts):
+                self.assertEqual(context["user"], created_contexts[idx]["user"])
+                self.assertEqual(context["prompt"]["uuid"], prompt_data_list[idx]["uuid"])
 
         except AssertionError as e:
             print(f"Unexpected status code: {e}")
