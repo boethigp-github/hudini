@@ -52,28 +52,17 @@
       </v-container>
     </v-footer>
 
-    <v-dialog v-model="deleteDialog" max-width="300px">
-      <v-card>
-        <v-card-title>{{ t('confirm_delete') }}</v-card-title>
-        <v-card-text>{{ t('delete_thread_confirmation') }}</v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="blue-darken-1"  @click="deleteDialog = false">{{ t('cancel') }}</v-btn>
-          <v-btn color="blue-darken-1" @click="confirmDeleteThread">{{ t('delete') }}</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
 
     <v-snackbar
-      v-model="snackbar.show"
-      :color="snackbar.color"
-      :timeout="snackbar.timeout"
+        v-model="snackbar.show"
+        :color="snackbar.color"
+        :timeout="snackbar.timeout"
     >
       {{ snackbar.text }}
       <template v-slot:actions>
         <v-btn
-          color="white"
-          @click="snackbar.show = false">
+            color="white"
+            @click="snackbar.show = false">
         </v-btn>
       </template>
     </v-snackbar>
@@ -81,9 +70,9 @@
 </template>
 
 <script>
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useModelsStore } from './../stores/models';
+import {onBeforeUnmount, onMounted, ref, watch, reactive} from 'vue';
+import {useI18n} from 'vue-i18n';
+import {useModelsStore} from './../stores/models';
 import PromptPanel from './PromptPanel.vue';
 import ResponsePanel from './ResponsePanel.vue';
 import LanguageSwitch from './LanguageSwitch.vue';
@@ -91,7 +80,8 @@ import ModelSelection from './ModelSelection.vue';
 import ComparisonDrawer from './ResponsePanel/ComparisonTable.vue';
 import ThemeSwitch from './ThemeSwitch.vue';
 import ResponsePanelMenu from "@/vue/components/ResponsePanel/ResponsePanelMenu.vue";
-
+import _ from 'lodash'
+import {toRaw} from 'vue';
 import {
   createPrompt,
   deleteUserContext,
@@ -100,8 +90,8 @@ import {
   saveUserContext,
   stream
 } from './../services/api';
-import { v4 as uuidv4 } from 'uuid';
-import { UserContext } from '../models/UserContext.js';
+import {v4 as uuidv4} from 'uuid';
+import {UserContext} from '../models/UserContext.js';
 
 export default {
   name: 'ChatForm',
@@ -126,22 +116,23 @@ export default {
     };
 
     const getStreamPostRequestModel = (promptPostRequest, models, method_name = 'fetch_completion') => {
-      const { uuid: id, prompt } = promptPostRequest;
-      return { ...streamRequestModel, id, prompt, models, method_name };
+      const {uuid: id, prompt} = promptPostRequest;
+      return {...streamRequestModel, id, prompt, models, method_name};
     };
 
     const getPromptPostRequest = (uuid, user, prompt, status = 'INITIALIZED') => {
       return new UserContext.PromptPostRequestModel(uuid, prompt, user, status);
     };
 
+
     const prompt = ref(UserContext.PromptPostRequestModel);
-    const userContext = ref(UserContext.UserContextPostRequestModel);
+    const userContext = ref(null);
     const userContextList = ref([]);
     const modelsStore = useModelsStore();
     const buffer = ref('');
     const loading = ref(false);
     const promptPanelUpdateTrigger = ref(0);
-    const { t } = useI18n();
+    const {t} = useI18n();
     const valid = ref(false);
     const isComparisonViewVisible = ref(false);
     const deleteDialog = ref(false);
@@ -165,8 +156,8 @@ export default {
       }
     });
 
-    const updateUserContextData = (value) => {
-      userContext.value = value;
+    const updateUserContextList = (value) => {
+      userContextList.value = value;
     };
 
     const handleKeydown = (event) => {
@@ -192,17 +183,6 @@ export default {
       deleteDialog.value = true;
     };
 
-    const confirmDeleteThread = async () => {
-      deleteDialog.value = false;
-      try {
-        await deleteUserContext(userContext.value.thread_id);
-        resetUserContext();
-        showMessage(t('thread_deleted_successfully'), 'success');
-      } catch (error) {
-        showMessage(t('failed_to_delete_thread'), 'error');
-        console.error('Error deleting thread:', error);
-      }
-    };
 
     const rerunPrompt = async (event) => {
       prompt.value.prompt = event.detail.prompt;
@@ -222,7 +202,7 @@ export default {
       try {
         const userContextData = await userContextPostResponse.json();
         if (userContextPostResponse.status === 200) {
-          updateUserContextData(userContextData);
+          updateUserContextList(userContextData);
         } else if (userContextPostResponse.status === 404) {
           // Handle 404 if needed
         } else {
@@ -239,24 +219,12 @@ export default {
       const callback = async (UserContextPostResponseModel) => {
         // Handle the response if needed
       };
-      prepareUserContextForPosting(promptPostResponse);
-      saveUserContext(userContext.value, callback).catch((error) => {
+
+
+      saveUserContext(JSON.stringify(userContextList.value), callback).catch((error) => {
         showMessage(t('error_saving_user_context'), 'error');
         console.error('Error sending responses to /usercontext:', error);
       });
-    };
-
-    const getUserContextPrompt = (promptPostResponse) => {
-      return structuredClone(promptPostResponse);
-    };
-
-    const prepareUserContextForPosting = (promptPostResponse) => {
-      userContext.value = new UserContext.UserContextPostRequestModel(
-          promptPostResponse.uuid,
-          promptPostResponse.user,
-          thread_id,
-          getUserContextPrompt(promptPostResponse)
-      );
     };
 
     async function streamGeneration(promptPostRequest) {
@@ -275,6 +243,13 @@ export default {
               hideLoader();
             },
             () => {
+              createPromptServerside(promptPostRequest).then(() => {
+                setTimeout(() => {
+                  saveUserContextServerside();
+                  dispatchOnCompleteEvent();
+                }, 200)
+              });
+
               hideLoader();
             }
         );
@@ -305,22 +280,23 @@ export default {
       loading.value = false;
     };
 
+
     const initUserContexts = (promptPostRequest) => {
-      userContext.value = new UserContext.UserContextPostRequestModel(
+      const userContextValue = structuredClone(new UserContext.UserContextPostRequestModel(
           promptPostRequest.uuid,
           promptPostRequest.user,
           thread_id,
-          new UserContext.UserContextPrompt(
+          structuredClone(new UserContext.UserContextPrompt(
               promptPostRequest.uuid,
               promptPostRequest.user,
               promptPostRequest.prompt,
               "INITIALIZED",
-              null,
+              Math.floor(Date.now() / 1000),
               []
-          )
-      );
+          ))
+      ));
 
-      userContextList.value.push(userContext.value);
+      userContextList.value.push(userContextValue);
     };
 
     const handleSubmit = async () => {
@@ -329,9 +305,8 @@ export default {
       showLoader();
       try {
         await streamGeneration(promptPostRequest);
-        const promptPostResponse = await createPromptServerside(promptPostRequest);
-        saveUserContextServerside(promptPostResponse);
-        dispatchOnCompleteEvent();
+
+
       } catch (error) {
         showMessage(t('error_submitting_prompt'), 'error');
         console.error('Error submitting prompt:', error);
@@ -355,11 +330,8 @@ export default {
     });
 
 
-
     const deleteThreadEvent = async (event) => {
       try {
-
-
         await deleteUserContext(event.detail.thread_id);
         resetUserContext();
         showMessage(t('thread_deleted_successfully'), 'success');
@@ -384,7 +356,7 @@ export default {
       showMessage,
       deleteDialog,
       showDeleteConfirmation,
-      confirmDeleteThread
+
     };
   },
 };

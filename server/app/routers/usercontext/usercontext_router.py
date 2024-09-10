@@ -7,8 +7,8 @@ from server.app.models.usercontext.usercontext_post_request_model import UserCon
 from server.app.models.usercontext.usercontext_post_response_model import UserContextResponseModel
 from server.app.db.base import async_session_maker
 from fastapi.encoders import jsonable_encoder
-from pydantic import ValidationError
-
+from datetime import datetime
+from typing import List
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
@@ -18,34 +18,64 @@ async def get_db():
         yield session
 
 
-@router.post("/usercontext", tags=["usercontext"], response_model=UserContextResponseModel)
-async def save_user_context(user_context: UserContextPostRequestModel, db: AsyncSession = Depends(get_db)):
+from pydantic import ValidationError
+
+from pydantic import ValidationError
+
+@router.post("/usercontext", tags=["usercontext"], response_model=List[UserContextResponseModel])
+async def save_user_context(user_contexts: List[UserContextPostRequestModel], db: AsyncSession = Depends(get_db)):
     try:
-        logger.debug(f"Received request to save user context: {user_context}")
+        logger.debug(f"Received request to save user contexts: {user_contexts}")
 
-        # Serialize with jsonable_encoder to handle complex data types like UUID
-        serialized_context_data = jsonable_encoder(user_context.dict())
+        saved_contexts = []
+        for user_context in user_contexts:
+            # Check if context_data is empty
+            if not user_context.prompt.context_data:
+                raise HTTPException(status_code=400, detail="Context data must not be empty")
 
-        # Create a new UserContextModel and add it to the database
-        new_user_context = UserContextModel(
-            uuid=user_context.uuid,
-            user=user_context.user,
-            thread_id=user_context.thread_id,
-            context_data=serialized_context_data  # Serialized with jsonable_encoder
-        )
-        db.add(new_user_context)
-        await db.commit()
-        await db.refresh(new_user_context)
+            # Check if the record already exists
+            existing_context = await db.get(UserContextModel, user_context.uuid)
 
-        # Return the response
-        return UserContextResponseModel(**new_user_context.to_dict())
+            if existing_context:
+                # Update existing record
+                existing_context.user = user_context.user
+                existing_context.thread_id = user_context.thread_id
+                existing_context.context_data = jsonable_encoder(user_context.dict())
+                existing_context.updated = datetime.now()  # Correct usage of datetime
+                new_user_context = existing_context
+            else:
+                # Create new record
+                new_user_context = UserContextModel(
+                    uuid=user_context.uuid,
+                    user=user_context.user,
+                    thread_id=user_context.thread_id,
+                    context_data=jsonable_encoder(user_context.dict()),
+                    updated=datetime.now()  # Correct usage of datetime
+                )
+                db.add(new_user_context)
+
+            await db.commit()
+            await db.refresh(new_user_context)
+
+            saved_contexts.append(UserContextResponseModel(**new_user_context.to_dict()))
+
+        return saved_contexts
 
     except ValidationError as e:
         logger.error(f"Validation error: {e.errors()}")
+        await db.rollback()
         raise HTTPException(status_code=422, detail={"errors": e.errors(), "message": "Validation failed"})
+    except HTTPException as e:
+        logger.error(f"HTTP error: {str(e)}")
+        await db.rollback()
+        raise
+    except Exception as e:
+        logger.error(f"Error saving user context: {str(e)}")
+        await db.rollback()
+        raise HTTPException(status_code=500, detail=f"An error occurred while saving the user context: {str(e)}")
 
 
-@router.get("/usercontext", tags=["usercontext"], response_model=UserContextResponseModel)
+@router.get("/usercontext", tags=["usercontext"], response_model=List[UserContextResponseModel])
 async def get_user_contexts(user: str, thread_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
         select(UserContextModel)
@@ -53,14 +83,14 @@ async def get_user_contexts(user: str, thread_id: int, db: AsyncSession = Depend
             UserContextModel.user == user,
             UserContextModel.thread_id == thread_id
         )
-        .order_by(UserContextModel.created.desc())
+        .order_by(UserContextModel.created.asc())
     )
-    user_context = result.scalars().first()
+    user_contexts = result.scalars().all()
 
-    if not user_context:
-        raise HTTPException(status_code=404, detail="No context found for the given user and thread_id")
+    if not user_contexts:
+        raise HTTPException(status_code=404, detail="No contexts found for the given user and thread_id")
 
-    return UserContextResponseModel(**user_context.to_dict())
+    return [UserContextResponseModel(**context.to_dict()) for context in user_contexts]
 
 
 @router.delete("/usercontext/{thread_id}", tags=["usercontext"])

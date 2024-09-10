@@ -88,18 +88,21 @@ export const createPrompt = async (promptRequest) => {
 
 /**
  * Sends the collected responses to the /usercontext endpoint.
- * @param {object} structuredResponse - Array of response objects to send.
+ * @param {object} userContextList - Array of response objects to send.
  * @param callback
  * @returns {Promise<void>} A promise that resolves when the request is complete.
  */
-export const saveUserContext = async (structuredResponse, callback = null) => {
+export const saveUserContext = async (userContextList, callback = null) => {
     try {
+
+
+
         const response = await fetch(`${API_BASE_URL}/usercontext`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(structuredResponse), // Directly send the structured response
+            body: userContextList, // Directly send the structured response
         });
 
         if (callback) {
@@ -158,37 +161,24 @@ export const processChunk = (chunk, buffer, userContext, userContextList) => {
         try {
             responseModel = JSON.parse(jsonString);
 
-
             // Find the correct UserContext in the list
             const userContextIndex = userContextList.value.findIndex(
                 uc => uc?.prompt?.uuid === responseModel.id
             );
 
             if (userContextIndex !== -1) {
-                const currentUserContext = userContextList.value[userContextIndex];
-
                 // Find the context_data entry for this model and id
-                let contextDataIndex = currentUserContext.prompt.context_data.findIndex(
+                let contextDataIndex = userContextList.value[userContextIndex].prompt.context_data.findIndex(
                     cd => cd.id === responseModel.id && cd.model === responseModel.model
                 );
 
                 if (contextDataIndex === -1) {
                     // If not found, create a new entry
-                    currentUserContext.prompt.context_data.push({
-                        id: responseModel.id,
-                        model: responseModel.model,
-                        completion: responseModel.completion
-                    });
+                    userContextList.value[userContextIndex].prompt.context_data.push(responseModel);
                 } else {
                     // If found, update the existing entry
-                    currentUserContext.prompt.context_data[contextDataIndex] = {
-                        ...currentUserContext.prompt.context_data[contextDataIndex],
-                        completion: responseModel.completion
-                    };
+                    userContextList.value[userContextIndex].prompt.context_data[contextDataIndex].completion = responseModel.completion;
                 }
-
-                // Update the userContextList
-                userContextList.value[userContextIndex] = currentUserContext;
             } else {
                 console.error("UserContext not found for id:", responseModel.id);
             }
