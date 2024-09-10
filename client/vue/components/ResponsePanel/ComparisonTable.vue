@@ -1,10 +1,13 @@
 <template>
   <v-card-title>{{ $t('model_comparison', 'Model Comparison') }}</v-card-title>
   <v-card-text v-if="processedData.length">
-    <v-data-table-virtual
+    <v-data-table
       :headers="headers"
       :items="processedData"
       item-value="uuid"
+      fixed-header
+      height="61vh"
+      :row-props="getRowProps"
       class="comparison-table">
       <template v-slot:item.completionContent="{ item }">
         <template v-if="item.isPrompt">
@@ -21,7 +24,7 @@
           </div>
         </template>
       </template>
-    </v-data-table-virtual>
+    </v-data-table>
   </v-card-text>
   <v-card-text v-else>
     {{ $t('no_data_to_compare', 'No data to compare.') }}
@@ -60,45 +63,49 @@ const headers = [
     align: 'start',
     key: 'model',
     width: '15%',
-    headerProps: { class: 'text-primary' }
+    
   },
   {
     title: t('completion_content', 'Completion Content'),
     align: 'start',
     key: 'completionContent',
     width: '50%',
-    headerProps: { class: 'text-primary' }
+    
   },
   {
     title: t('prompt_tokens'),
     align: 'end',
     key: 'promptTokens',
     width: '10%',
-    headerProps: { class: 'text-primary' }
+    
   },
   {
     title: t('completion_tokens'),
     align: 'end',
     key: 'completionTokens',
     width: '10%',
-    headerProps: { class: 'text-primary' }
+    
   },
   {
     title: t('total_tokens'),
     align: 'end',
     key: 'totalTokens',
     width: '10%',
-    headerProps: { class: 'text-primary' }
+    
   },
   {
     title: t('run_time') + " in ms",
     align: 'end',
     key: 'runTime',
     width: '5%',
-    headerProps: { class: 'text-primary' }
+    
   },
 ];
-
+    const getRowProps = (item) => {
+      return {
+        class: item.item.isPrompt ? 'user-prompt-row text-primary' : 'completion-row'
+      };
+    };
     const processedData = computed(() => {
       return props.userContextList.flatMap(item => {
         const promptRow = {
@@ -151,6 +158,7 @@ const formatDuration = (start, end) => {
       processedData,
       closeDrawer,
       markdownPlugins,
+      getRowProps
     };
   },
 };
@@ -171,13 +179,11 @@ const formatDuration = (start, end) => {
   font-size: 14px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
-
-.user-prompt {
-  background-color: rgba(0, 0, 0, 0.05);
-  font-size: 16px;
-  padding: 8px;
-  border-radius: 4px;
-  color:red;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+/* Use :deep selector to apply styles to dynamically generated rows */
+/* Gradient background for user prompt rows */
+:deep(.user-prompt-row td) {
+  background: linear-gradient(180deg, #1e1e1e, #333333) !important; /* Dark grey to light grey gradient from top to bottom */
+  font-weight: bold;
 }
+
 </style>
