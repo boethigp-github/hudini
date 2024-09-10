@@ -61,6 +61,8 @@ const messages = {
         dark_mode: 'Dark Mode',
         search_prompts: 'Search prompts',
         open_account: 'Open Account',
+        completion_content: 'Completion Content',
+        close_comparison: 'Close Comparison',
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -122,6 +124,8 @@ const messages = {
         dark_mode: 'Dunkelmodus',
         search_prompts: 'Prompts durchsuchen',
         open_account: 'Konto eröffnen',
+        completion_content: 'Inhalt',
+        close_comparison: 'Vergleich schließen',
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -183,6 +187,8 @@ const messages = {
         dark_mode: 'Mode Sombre',
         search_prompts: 'Rechercher des prompts',
         open_account: 'Ouvrir un compte',
+        completion_content: 'Contenu de Complétion',
+        close_comparison: 'Fermer la Comparaison',
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
@@ -244,6 +250,8 @@ const messages = {
         dark_mode: 'Тёмный режим',
         search_prompts: 'Поиск подсказок',
         open_account: 'Открыть счет',
+        completion_content: 'Содержание Завершения',
+        close_comparison: 'Закрыть Сравнение',
 
     },
         zh: {
@@ -304,6 +312,8 @@ const messages = {
         dark_mode: '暗黑模式',
         search_prompts: '搜索提示',
         open_account: '开立账户',
+        completion_content: '完成内容',
+        close_comparison: '关闭比较',
     },
     // Add other languages as needed
 };

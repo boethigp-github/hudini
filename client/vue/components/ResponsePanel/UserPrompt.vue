@@ -1,5 +1,5 @@
 <template>
-  <div :class="['user-prompt', 'fade-in']">
+  <div :class="['user-prompt', 'fade-in','text-primary']">
     <div class="prompt-id">{{ $t('prompt_id', 'ID') }}: {{ promptUuid }}</div>
     <div class="prompt-tokens">
       {{ $t('prompt_tokens', 'Prompt Tokens') }}: <span >{{ promptTokens }}</span>
@@ -80,14 +80,11 @@ export default {
   margin-left: auto;
   margin-bottom: 10px;
   margin-top: 15px;
-  font-size: 11px;
-  text-align: left;
-  width: 60%;
-  max-width: 60% !important;
-
+  text-align: right;
+  width: 100%;
+  max-width: 100% !important;
   border-radius: 12px;
   padding: 10px;
-
 }
 
 .user-icon {

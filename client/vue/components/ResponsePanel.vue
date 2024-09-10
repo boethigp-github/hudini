@@ -15,7 +15,7 @@
         <v-card
             v-if="item?.prompt?.context_data"
             v-for="contextDataItem in item.prompt.context_data"
-            :class="'user-prompt-item_'+contextDataItem.id"
+            class="user-prompt-item"
             :key="contextDataItem.id"
         >
           <BotResponse
@@ -64,11 +64,11 @@ export default {
     const responseElement = ref(null);
 
     const handleMouseOver = (id) => {
-      console.log('Mouse over:', id);
+
     };
 
     const handleMouseOut = () => {
-      console.log('Mouse out');
+
     };
 
     const scrollToBottom = () => {
@@ -76,24 +76,20 @@ export default {
         setTimeout(() => {
           if (responseElement.value) {
             responseElement.value.scrollTop = responseElement.value.scrollHeight;
-            console.log("Scrolled to bottom", responseElement.value.scrollTop, responseElement.value.scrollHeight);
           }
         }, 100); // Small delay to ensure content is rendered
       });
     };
 
     watch(() => props.userContextList.length, (newLength, oldLength) => {
-      console.log(`userContextList length changed from ${oldLength} to ${newLength}`);
       scrollToBottom();
     });
 
     watch(() => props.userContextList, () => {
-      console.log('userContextList changed');
       scrollToBottom();
     }, {deep: true});
 
     onMounted(() => {
-      console.log('Component mounted');
       scrollToBottom();
     });
 
@@ -114,6 +110,8 @@ export default {
   overflow-y: auto;
   scroll-behavior: smooth;
 }
+
+
 
 .response-content {
   display: flex;

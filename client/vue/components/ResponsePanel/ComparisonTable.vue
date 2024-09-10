@@ -8,7 +8,7 @@
       class="comparison-table">
       <template v-slot:item.completionContent="{ item }">
         <template v-if="item.isPrompt">
-        {{ item.content }}
+          {{ item.content }}
         </template>
         <template v-else>
           <div class="completion-content">
@@ -54,14 +54,50 @@ export default {
     const { t } = useI18n();
     const drawerVisible = ref(false);
 
-    const headers = [
-      { title: t('model'), align: 'start', key: 'model', width: '15%' },
-      { title: t('completion_content'), align: 'start', key: 'completionContent', width: '50%' },
-      { title: t('prompt_tokens'), align: 'end', key: 'promptTokens', width: '10%' },
-      { title: t('completion_tokens'), align: 'end', key: 'completionTokens', width: '10%' },
-      { title: t('total_tokens'), align: 'end', key: 'totalTokens', width: '10%' },
-      { title: t('run_time') + " in ms", align: 'end', key: 'runTime', width: '5%' },
-    ];
+const headers = [
+  {
+    title: t('model'),
+    align: 'start',
+    key: 'model',
+    width: '15%',
+    headerProps: { class: 'text-primary' }
+  },
+  {
+    title: t('completion_content', 'Completion Content'),
+    align: 'start',
+    key: 'completionContent',
+    width: '50%',
+    headerProps: { class: 'text-primary' }
+  },
+  {
+    title: t('prompt_tokens'),
+    align: 'end',
+    key: 'promptTokens',
+    width: '10%',
+    headerProps: { class: 'text-primary' }
+  },
+  {
+    title: t('completion_tokens'),
+    align: 'end',
+    key: 'completionTokens',
+    width: '10%',
+    headerProps: { class: 'text-primary' }
+  },
+  {
+    title: t('total_tokens'),
+    align: 'end',
+    key: 'totalTokens',
+    width: '10%',
+    headerProps: { class: 'text-primary' }
+  },
+  {
+    title: t('run_time') + " in ms",
+    align: 'end',
+    key: 'runTime',
+    width: '5%',
+    headerProps: { class: 'text-primary' }
+  },
+];
 
     const processedData = computed(() => {
       return props.userContextList.flatMap(item => {
@@ -138,9 +174,10 @@ const formatDuration = (start, end) => {
 
 .user-prompt {
   background-color: rgba(0, 0, 0, 0.05);
+  font-size: 16px;
   padding: 8px;
   border-radius: 4px;
-  font-size: 14px;
+  color:red;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 </style>

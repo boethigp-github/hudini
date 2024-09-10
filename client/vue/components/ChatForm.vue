@@ -300,10 +300,6 @@ export default {
      * @param promptPostResponse
      */
     const prepareUserContextForPosting = (promptPostResponse) => {
-
-
-      console.log("prepareUserContextForPosting: promptPostResponse.uuid:", promptPostResponse.uuid);
-
       userContext.value = new UserContext.UserContextPostRequestModel(
           promptPostResponse.uuid,
           promptPostResponse.user,
