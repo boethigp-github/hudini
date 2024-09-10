@@ -63,6 +63,10 @@ const messages = {
         open_account: 'Open Account',
         completion_content: 'Completion Content',
         close_comparison: 'Close Comparison',
+        confirm_delete: 'Confirm Delete',
+        delete_thread_confirmation: 'Are you sure you want to delete this thread?',
+        cancel: 'Cancel',
+        failed_to_delete_thread: 'Failed to delete thread',
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -126,6 +130,10 @@ const messages = {
         open_account: 'Konto eröffnen',
         completion_content: 'Inhalt',
         close_comparison: 'Vergleich schließen',
+        confirm_delete: 'Löschen bestätigen',
+        delete_thread_confirmation: 'Sind Sie sicher, dass Sie diesen Thread löschen möchten?',
+        cancel: 'Abbrechen',
+        failed_to_delete_thread: 'Fehler beim Löschen des Threads',
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -189,6 +197,10 @@ const messages = {
         open_account: 'Ouvrir un compte',
         completion_content: 'Contenu de Complétion',
         close_comparison: 'Fermer la Comparaison',
+        confirm_delete: 'Confirmer la suppression',
+        delete_thread_confirmation: 'Êtes-vous sûr de vouloir supprimer ce fil de discussion ?',
+        cancel: 'Annuler',
+        failed_to_delete_thread: 'Échec de la suppression du fil de discussion',
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
@@ -252,6 +264,10 @@ const messages = {
         open_account: 'Открыть счет',
         completion_content: 'Содержание Завершения',
         close_comparison: 'Закрыть Сравнение',
+        confirm_delete: 'Подтвердить удаление',
+        delete_thread_confirmation: 'Вы уверены, что хотите удалить этот поток?',
+        cancel: 'Отмена',
+        failed_to_delete_thread: 'Не удалось удалить поток',
 
     },
         zh: {
@@ -314,6 +330,10 @@ const messages = {
         open_account: '开立账户',
         completion_content: '完成内容',
         close_comparison: '关闭比较',
+        confirm_delete: '确认删除',
+        delete_thread_confirmation: '您确定要删除此线程吗？',
+        cancel: '取消',
+        failed_to_delete_thread: '删除线程失败',
     },
     // Add other languages as needed
 };

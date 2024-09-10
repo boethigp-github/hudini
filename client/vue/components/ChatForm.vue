@@ -1,7 +1,6 @@
 <template>
-
   <v-layout ref="app">
-    <v-app-bar class="v-app-bar " name="app-bar" density="compact">
+    <v-app-bar class="v-app-bar" name="app-bar" density="compact">
       <v-container fluid>
         <v-row align="center" no-gutters>
           <v-col class="theme-switch-container" cols="auto">
@@ -16,7 +15,7 @@
     </v-app-bar>
     <v-navigation-drawer location="end" name="drawer" permanent>
       <div class="d-flex justify-center align-top h-100">
-        <PromptPanel  :key="promptPanelUpdateTrigger"/>
+        <PromptPanel :key="promptPanelUpdateTrigger"/>
       </div>
     </v-navigation-drawer>
     <v-main>
@@ -26,7 +25,7 @@
           <ComparisonDrawer v-if="isComparisonViewVisible" :userContextList="userContextList"/>
         </v-col>
         <v-col :cols="1">
-          <ResponsePanelMenu/>
+          <ResponsePanelMenu :userContextList="userContextList" @delete-thread="showDeleteConfirmation"/>
         </v-col>
       </v-row>
     </v-main>
@@ -52,21 +51,46 @@
         </v-row>
       </v-container>
     </v-footer>
+
+    <v-dialog v-model="deleteDialog" max-width="300px">
+      <v-card>
+        <v-card-title>{{ t('confirm_delete') }}</v-card-title>
+        <v-card-text>{{ t('delete_thread_confirmation') }}</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue-darken-1"  @click="deleteDialog = false">{{ t('cancel') }}</v-btn>
+          <v-btn color="blue-darken-1" @click="confirmDeleteThread">{{ t('delete') }}</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      :timeout="snackbar.timeout"
+    >
+      {{ snackbar.text }}
+      <template v-slot:actions>
+        <v-btn
+          color="white"
+          @click="snackbar.show = false">
+        </v-btn>
+      </template>
+    </v-snackbar>
   </v-layout>
-
-
 </template>
 
 <script>
-import {onBeforeUnmount, onMounted, ref, watch} from 'vue';
-import {useI18n} from 'vue-i18n';
-import {useModelsStore} from './../stores/models';
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useModelsStore } from './../stores/models';
 import PromptPanel from './PromptPanel.vue';
 import ResponsePanel from './ResponsePanel.vue';
 import LanguageSwitch from './LanguageSwitch.vue';
 import ModelSelection from './ModelSelection.vue';
 import ComparisonDrawer from './ResponsePanel/ComparisonTable.vue';
 import ThemeSwitch from './ThemeSwitch.vue';
+import ResponsePanelMenu from "@/vue/components/ResponsePanel/ResponsePanelMenu.vue";
 
 import {
   createPrompt,
@@ -76,11 +100,8 @@ import {
   saveUserContext,
   stream
 } from './../services/api';
-import {useTheme} from 'vuetify'
-import {v4 as uuidv4} from 'uuid';
-import ChatMenu from './MainMenu.vue';
-import {UserContext} from '../models/UserContext.js';
-import ResponsePanelMenu from "@/vue/components/ResponsePanel/ResponsePanelMenu.vue";
+import { v4 as uuidv4 } from 'uuid';
+import { UserContext } from '../models/UserContext.js';
 
 export default {
   name: 'ChatForm',
@@ -90,51 +111,25 @@ export default {
     ResponsePanel,
     LanguageSwitch,
     ModelSelection,
-    ChatMenu,
     ComparisonDrawer,
     ThemeSwitch
   },
   setup() {
+    const user = "5baab051-0c32-42cf-903d-035ec6912a91";
+    const thread_id = 1;
 
-    const user = "5baab051-0c32-42cf-903d-035ec6912a91"; // Currently hardcoded user ID
-    const thread_id = 1; // Currently hardcoded thread ID
-
-    /**
-     * Stream request moel
-     * @type {{models: *[], method_name: string, id: (`${string}-${string}-${string}-${string}-${string}`|*|string), prompt: string}}
-     */
     const streamRequestModel = {
       id: null,
       prompt: '',
-      models: [], // Pass the current model configuration
+      models: [],
       method_name: 'fetch_completion',
     };
 
-
-    /**
-     * Creates a stream request model
-     *
-     * @param promptPostRequest
-     * @param models
-     * @param method_name
-     * @returns {{models: *[], method_name: string, id: (`${string}-${string}-${string}-${string}-${string}`|*|string), prompt: *}}
-     * @constructor
-     */
     const getStreamPostRequestModel = (promptPostRequest, models, method_name = 'fetch_completion') => {
-      const {uuid: id, prompt} = promptPostRequest
-
-      return {...streamRequestModel, id, prompt, models, method_name};
+      const { uuid: id, prompt } = promptPostRequest;
+      return { ...streamRequestModel, id, prompt, models, method_name };
     };
 
-    /**
-     * Requestmodel for saving prompts
-     *
-     * @param uuid
-     * @param user
-     * @param prompt
-     * @param status
-     * @returns {UserContext.PromptPostRequestModel}
-     */
     const getPromptPostRequest = (uuid, user, prompt, status = 'INITIALIZED') => {
       return new UserContext.PromptPostRequestModel(uuid, prompt, user, status);
     };
@@ -146,30 +141,34 @@ export default {
     const buffer = ref('');
     const loading = ref(false);
     const promptPanelUpdateTrigger = ref(0);
-    const {t} = useI18n();
-    const valid = ref(false)
-    const isComparisonViewVisible = ref(false)
+    const { t } = useI18n();
+    const valid = ref(false);
+    const isComparisonViewVisible = ref(false);
+    const deleteDialog = ref(false);
 
-    // Watcher to reset prompt input after loading completes
+    const snackbar = ref({
+      show: false,
+      text: '',
+      color: 'info',
+      timeout: 3000
+    });
+
+    const showMessage = (text, color = 'info') => {
+      snackbar.value.show = true;
+      snackbar.value.text = text;
+      snackbar.value.color = color;
+    };
+
     watch(loading, (newValue) => {
       if (!newValue) {
         prompt.value.prompt = '';
       }
     });
 
-    /**
-     * Updates the user context data with the provided value.
-     * @param {Object} value - The new user context data.
-     */
     const updateUserContextData = (value) => {
       userContext.value = value;
     };
 
-    /**
-     * Handles the keydown event for the prompt input.
-     * Submits the prompt when the Enter key is pressed without Shift.
-     * @param {Event} event - The keydown event.
-     */
     const handleKeydown = (event) => {
       if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
@@ -177,155 +176,103 @@ export default {
       }
     };
 
-    /**
-     * Mount lifecycle hook to set up event listeners.
-     * Registers a listener for the "delete-thread" event.
-     */
-    onMounted(() => {
-      window.addEventListener('delete-thread', deleteThreadEvent);
-      window.addEventListener('rerun-prompt', rerunPrompt);
-      window.addEventListener('comparison-open', showComparisonView);
-      window.addEventListener('comparison-close', hideComparisonView);
-    });
-
-    /**
-     * Before unmount lifecycle hook to clean up event listeners.
-     * Removes the listener for the "delete-thread" event.
-     */
-    onBeforeUnmount(() => {
-      window.removeEventListener('delete-thread', deleteThreadEvent);
-      window.removeEventListener('rerun-prompt', rerunPrompt);
-      window.removeEventListener('comparison-open', showComparisonView);
-      window.removeEventListener('comparison-close', hideComparisonView);
-    });
-
-    /**
-     * Show comparison view
-     */
     const showComparisonView = () => {
-      isComparisonViewVisible.value = true
-    }
+      isComparisonViewVisible.value = true;
+    };
 
-    /**
-     * Hide comparsion view
-     */
     const hideComparisonView = () => {
-      isComparisonViewVisible.value = false
-    }
+      isComparisonViewVisible.value = false;
+    };
 
-
-    /**
-     * resets user context
-     */
     const resetUserContext = () => {
-      userContext.value = new UserContext.UserContextPostRequestModel()
-    }
-    /**
-     * Deletes the current thread by calling the API.
-     * Triggered by the "delete-thread" event.
-     */
-    const deleteThreadEvent = async () => {
-
-      await deleteUserContext(userContext.value.thread_id);
-      resetUserContext()
-
-    };
-    /**
-     *Reruns prompt.
-     * Triggered by the rerun-prompt" event.
-     */
-    const rerunPrompt = async (event) => {
-      prompt.value.prompt = event.detail.prompt;
-      handleSubmit().then()
+      userContext.value = new UserContext.UserContextPostRequestModel();
     };
 
-    /**
-     * on stream complete
-     */
-    const dispatchOnCompleteEvent = () => {
-      const event = new CustomEvent("stream-complete", {});
-      window.dispatchEvent(event);
-    }
+    const showDeleteConfirmation = () => {
+      deleteDialog.value = true;
+    };
 
-
-    /**
-     * Triggers prompt panel update
-     */
-    const triggerPromptPanelUpdate = () => {
-      promptPanelUpdateTrigger.value++;
-    }
-    /**
-     * Callback function for handling the fetched user context.
-     * Updates the responses and user context data.
-     * @param {Response} userContextPostResponse - The response from the user context fetch API.
-     */
-    const fetchUserContextCallback = async (userContextPostResponse) => {
-      const userContext = await userContextPostResponse.json();
-      if (userContextPostResponse.status === 200) {
-        updateUserContextData(userContext);
-      } else if (userContextPostResponse.status === 404) {
-
-      } else {
-        message.error(t('failed_to_retrieve_user_context'));
-        console.error(t('failed_to_retrieve_user_context'));
+    const confirmDeleteThread = async () => {
+      deleteDialog.value = false;
+      try {
+        await deleteUserContext(userContext.value.thread_id);
+        resetUserContext();
+        showMessage(t('thread_deleted_successfully'), 'success');
+      } catch (error) {
+        showMessage(t('failed_to_delete_thread'), 'error');
+        console.error('Error deleting thread:', error);
       }
     };
 
-    /**
-     * Callback function for saving user context after response.
-     * Calls the API to save the current user context.
-     */
+    const rerunPrompt = async (event) => {
+      prompt.value.prompt = event.detail.prompt;
+      handleSubmit();
+    };
+
+    const dispatchOnCompleteEvent = () => {
+      const event = new CustomEvent("stream-complete", {});
+      window.dispatchEvent(event);
+    };
+
+    const triggerPromptPanelUpdate = () => {
+      promptPanelUpdateTrigger.value++;
+    };
+
+    const fetchUserContextCallback = async (userContextPostResponse) => {
+      try {
+        const userContextData = await userContextPostResponse.json();
+        if (userContextPostResponse.status === 200) {
+          updateUserContextData(userContextData);
+        } else if (userContextPostResponse.status === 404) {
+          // Handle 404 if needed
+        } else {
+          showMessage(t('failed_to_retrieve_user_context'), 'error');
+          console.error(t('failed_to_retrieve_user_context'));
+        }
+      } catch (error) {
+        showMessage(t('error_processing_user_context'), 'error');
+        console.error('Error processing user context:', error);
+      }
+    };
+
     const saveUserContextServerside = (promptPostResponse) => {
       const callback = async (UserContextPostResponseModel) => {
-      } //@todo: calls pina usercontext storage
+        // Handle the response if needed
+      };
       prepareUserContextForPosting(promptPostResponse);
       saveUserContext(userContext.value, callback).catch((error) => {
+        showMessage(t('error_saving_user_context'), 'error');
         console.error('Error sending responses to /usercontext:', error);
       });
     };
 
-    /**
-     * Build userContext prompt
-     * @param promptPostResponse
-     * @returns {unknown}
-     */
     const getUserContextPrompt = (promptPostResponse) => {
-      const user_context_prompt = structuredClone(promptPostResponse);
+      return structuredClone(promptPostResponse);
+    };
 
-      return user_context_prompt
-    }
-
-    /**
-     * maps responses to context and sets uuid
-     * @param promptPostResponse
-     */
     const prepareUserContextForPosting = (promptPostResponse) => {
       userContext.value = new UserContext.UserContextPostRequestModel(
           promptPostResponse.uuid,
           promptPostResponse.user,
           thread_id,
           getUserContextPrompt(promptPostResponse)
-      )
-    }
+      );
+    };
 
-
-    /**
-     * Wired stuff
-     * @returns {Promise<void>}
-     */
     async function streamGeneration(promptPostRequest) {
       for (const model of await modelsStore.getSelectedModelsWithMetaData()) {
         stream(
-            model.stream_url, // Use the stream URL from the selected model
+            model.stream_url,
             getStreamPostRequestModel(promptPostRequest, [model], "fetch_completion"),
             (chunk, buffer) => processChunk(chunk, buffer, userContext, userContextList),
             buffer,
             (error) => {
               console.error('Stream error:', error);
-              hideLoader()
+              showMessage(t('stream_error'), 'error');
+              hideLoader();
             },
             () => {
-              hideLoader()
+              hideLoader();
             },
             () => {
               hideLoader();
@@ -334,86 +281,93 @@ export default {
       }
     }
 
-    /**
-     * Fetches the user context from the server.
-     * Handles loading state and triggers an update when complete.
-     */
     fetchUserContext(user, thread_id)
         .then(fetchUserContextCallback)
         .catch((error) => {
-          message.error(t('failed_to_retrieve_user_context'));
+          showMessage(t('failed_to_retrieve_user_context'), 'error');
           console.error('Error retrieving user context:', error);
         })
         .finally(() => {
           hideLoader();
-          triggerPromptPanelUpdate()
+          triggerPromptPanelUpdate();
         });
 
-    /**
-     * Creates a prompt on the server side.
-     * Sends the current prompt data to the server.
-     * @param promptPostRequest
-     */
     const createPromptServerside = async (promptPostRequest) => {
-      triggerPromptPanelUpdate()
+      triggerPromptPanelUpdate();
       return createPrompt(promptPostRequest);
     };
 
-    /**
-     * Show loader
-     */
     const showLoader = () => {
-      loading.value = true
-    }
+      loading.value = true;
+    };
 
-    /**
-     * Hides loader
-     */
     const hideLoader = () => {
-      loading.value = false
-    }
+      loading.value = false;
+    };
 
-    /**
-     * Sets userContexts
-     *
-     * @param promptPostRequest
-     */
     const initUserContexts = (promptPostRequest) => {
-      userContext.value = new UserContext.UserContextPostRequestModel
-      (
+      userContext.value = new UserContext.UserContextPostRequestModel(
           promptPostRequest.uuid,
           promptPostRequest.user,
           thread_id,
-          new UserContext.UserContextPrompt
-          (
+          new UserContext.UserContextPrompt(
               promptPostRequest.uuid,
               promptPostRequest.user,
               promptPostRequest.prompt,
               "INITIALIZED",
               null,
               []
-          ),
+          )
       );
 
       userContextList.value.push(userContext.value);
-    }
-
-    /**
-     * Handles the submission of the prompt.
-     * Sends the prompt to the server and handles streaming responses.
-     */
-    const handleSubmit = async () => {
-      const promptPostRequest = getPromptPostRequest(uuidv4(), user, prompt.value.prompt.trim())
-      initUserContexts(promptPostRequest);
-      showLoader()
-      streamGeneration(promptPostRequest).then(async () => {
-        createPromptServerside(promptPostRequest).then(promptPostResponse => {
-          saveUserContextServerside(promptPostResponse);
-          dispatchOnCompleteEvent()
-        });
-      });
     };
 
+    const handleSubmit = async () => {
+      const promptPostRequest = getPromptPostRequest(uuidv4(), user, prompt.value.prompt.trim());
+      initUserContexts(promptPostRequest);
+      showLoader();
+      try {
+        await streamGeneration(promptPostRequest);
+        const promptPostResponse = await createPromptServerside(promptPostRequest);
+        saveUserContextServerside(promptPostResponse);
+        dispatchOnCompleteEvent();
+      } catch (error) {
+        showMessage(t('error_submitting_prompt'), 'error');
+        console.error('Error submitting prompt:', error);
+      } finally {
+        hideLoader();
+      }
+    };
+
+    onMounted(() => {
+      window.addEventListener('delete-thread', deleteThreadEvent);
+      window.addEventListener('rerun-prompt', rerunPrompt);
+      window.addEventListener('comparison-open', showComparisonView);
+      window.addEventListener('comparison-close', hideComparisonView);
+    });
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('delete-thread', deleteThreadEvent);
+      window.removeEventListener('rerun-prompt', rerunPrompt);
+      window.removeEventListener('comparison-open', showComparisonView);
+      window.removeEventListener('comparison-close', hideComparisonView);
+    });
+
+
+
+    const deleteThreadEvent = async (event) => {
+      try {
+
+
+        await deleteUserContext(event.detail.thread_id);
+        resetUserContext();
+        showMessage(t('thread_deleted_successfully'), 'success');
+      } catch (error) {
+        showMessage(t('failed_to_delete_thread'), 'error');
+        console.error('Error deleting thread:', error);
+      }
+    };
     return {
       handleKeydown,
       handleSubmit,
@@ -425,15 +379,18 @@ export default {
       modelsStore,
       userContextList,
       valid,
-      isComparisonViewVisible
+      isComparisonViewVisible,
+      snackbar,
+      showMessage,
+      deleteDialog,
+      showDeleteConfirmation,
+      confirmDeleteThread
     };
   },
 };
 </script>
 
 <style>
-
-
 .v-app-bar {
   max-height: 48px;
   padding-top: 3px;
@@ -448,6 +405,4 @@ export default {
 .theme-switch-container {
   margin-top: 15px;
 }
-
-
 </style>
