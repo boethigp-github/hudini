@@ -144,5 +144,82 @@ class TestUserContext(unittest.TestCase):
         except AssertionError as e:
             print(f"Unexpected status code: {e}")
 
+    def test_export_user_context_to_excel(self):
+        # Test case for exporting user context to Excel
+        thread_id = 1
+
+        # Create test user context first
+        prompt_data_list = [self.create_test_prompt_data() for _ in range(1)]  # Create a single prompt
+        context_data_list = [
+            [
+                ContextDataItem(
+                    id=uuid.uuid4(),
+                    user=self.test_user_uuid,
+                    status="IN_PROGRESS",
+                    model="TestModel",
+                    completion={"id": str(uuid.uuid4()),
+                                "choices": [{"index": 0, "message": {"content": "Test message", "role": "assistant"}}]}
+                ).model_dump()
+            ]
+        ]
+
+        # Create the user context
+        created_context = self.create_user_context(thread_id, context_data_list, prompt_data_list)
+
+        try:
+            # Ensure the user context has been created in the database before proceeding
+            # Retry fetching the context until it's available or timeout (retry mechanism)
+            for _ in range(5):  # Retry up to 5 times
+                response = requests.get(f"{self.BASE_URL}/usercontext",
+                                        params={"thread_id": thread_id, "user": self.test_user_uuid})
+                if response.status_code == 200 and len(response.json()) > 0:
+                    break  # Data is now available
+                else:
+                    time.sleep(1)  # Wait a second before retrying
+
+            # Perform the Excel export after ensuring the data is available
+            export_response = requests.get(f"{self.BASE_URL}/usercontext/export/excel",
+                                           params={"thread_id": thread_id, "user": self.test_user_uuid})
+
+            self.assertEqual(export_response.status_code, 200)
+            self.assertEqual(export_response.headers["Content-Disposition"],
+                             'attachment; filename=user_context_export.xlsx')
+
+            # Validate if the response content type is Excel
+            self.assertEqual(export_response.headers["Content-Type"],
+                             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+            # Check the content of the Excel file (optional validation)
+            from io import BytesIO
+            import openpyxl
+
+            # Load the Excel content from the response
+            excel_content = BytesIO(export_response.content)
+            workbook = openpyxl.load_workbook(excel_content)
+            sheet = workbook.active
+
+            # Validate the headers
+            headers = [cell.value for cell in sheet[1]]
+            self.assertEqual(headers, ["UUID", "User", "Thread ID", "Context Data", "Created", "Updated"])
+
+            # Validate that the created prompt is present in the Excel data
+            prompt_found = False
+            for row in sheet.iter_rows(min_row=2, values_only=True):
+                if row[0] == created_context[0]["uuid"]:  # Compare UUID of the created context
+                    prompt_found = True
+                    self.assertEqual(row[1], self.test_user_uuid)  # Check if the user matches
+                    self.assertEqual(row[2], thread_id)  # Check if the thread_id matches
+                    self.assertIn("Test completion message", row[3])  # Check if context_data contains the message
+                    break
+
+            self.assertTrue(prompt_found, "The created prompt was not found in the exported Excel file.")
+
+        finally:
+            # Clean up by deleting the created user context after the test
+            delete_response = requests.delete(f"{self.BASE_URL}/usercontext/{thread_id}")
+            self.assertEqual(delete_response.status_code, 200)
+            print(f"User context with thread_id {thread_id} successfully deleted.")
+
+
 if __name__ == '__main__':
     unittest.main()
