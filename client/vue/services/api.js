@@ -246,3 +246,20 @@ export const exportUserContextToExel = async (user, thread_id) => {
         console.error('Error exporting to Excel:', error);
     }
 }
+
+/**
+ * Fetches telegram accounts from the server.
+ * @returns {Promise<Array>} A promise that resolves to an array of telegram accounts.
+ */
+export const getTelegramAccounts = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/socialmedia/telegram/accounts`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching telegram accounts:', error);
+        throw error;
+    }
+};

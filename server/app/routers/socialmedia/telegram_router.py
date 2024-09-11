@@ -121,3 +121,60 @@ async def publish_to_telegram(publish_request: TelegramPublishRequestModel):
     finally:
         if client:
             await client.disconnect()
+
+
+
+class TelegramAccount(BaseModel):
+    id: int
+    displayname: str
+    groups: list[str]
+
+
+import logging
+import json
+from fastapi import APIRouter, HTTPException
+from server.app.config.settings import Settings
+
+# Router and settings initialization
+router = APIRouter()
+settings = Settings()
+
+# Logger
+logger = logging.getLogger(__name__)
+
+@router.get("/socialmedia/telegram/accounts", tags=["socialmedia"])
+async def get_telegram_accounts():
+    """
+    Fetch available Telegram accounts from the configuration.
+    Returns a list of accounts with display names, associated groups, and provider.
+    """
+    try:
+        # Load and parse TELEGRAM_CONFIG
+        telegram_config_str = settings.get("default").get("TELEGRAM_CONFIG")
+        telegram_config = json.loads(telegram_config_str)
+
+        # Extract relevant fields from config and include provider
+        accounts = [
+            {
+                "provider": provider["provider"],   # Ensure provider is included
+                "id": provider["api_id"],
+                "displayname": provider["displayname"],  # Ensure displayname is present
+                "groups": provider["groups"]
+            }
+            for provider in telegram_config
+        ]
+
+        logger.debug(f"Telegram accounts retrieved: {accounts}")
+        return accounts
+
+    except KeyError as e:
+        logger.error(f"Key error while fetching Telegram accounts: {e}")
+        raise HTTPException(status_code=500, detail=f"Missing expected key in TELEGRAM_CONFIG: {e}")
+
+    except json.JSONDecodeError as e:
+        logger.error(f"Error decoding TELEGRAM_CONFIG JSON: {e}")
+        raise HTTPException(status_code=500, detail="Invalid JSON format in TELEGRAM_CONFIG.")
+
+    except Exception as e:
+        logger.error(f"Unexpected error fetching telegram accounts: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch Telegram accounts.")

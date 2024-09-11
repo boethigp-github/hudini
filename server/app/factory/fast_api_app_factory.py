@@ -72,3 +72,4 @@ class FastAPIAppFactory:
         self.app.include_router(google_ai_generation_router)
         self.app.include_router(socialmedia_telegram_router)
         self.logger.debug("Finished: Registering routes")
+
