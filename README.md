@@ -19,6 +19,7 @@ Hudini is an interactive chat interface that works with CPU magic on SLM, allowi
   - [2. Create the Anaconda Environment](#2-create-the-anaconda-environment)
   - [3. Install Required Python Packages](#3-install-required-python-packages)
   - [4. Set Up PostgreSQL Database](#4-set-up-postgresql-database)
+  - [4_1. Activate LLM Provider](#4_1-activate-llm-provider)
   - [5. Configure Environment Variables](#5-configure-environment-variables)
   - [6. Install the Llama Model](#6-install-the-llama-model)
 - [Running the Application](#running-the-application)
@@ -83,6 +84,7 @@ API_KEY_ANTHROPIC=<API_KEY_ANTHROPIC>
 API_KEY_GOOGLE_AI=<API_KEY_GOOGLE_AI>
 PROJECT_FRONTEND_DIRECTORY=C:\\projects\\llama.cpp\\projects\\src\\llama-cpp-chat\\src\\frontend\
 DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost/hudini
+APP_ACTIVE_PROVIDER=OPEN_AI,ANTHROPIC,GOOGLE_AI
 APP_DEBUG=False
 APP_ENV=development
 APP_Testing=False
@@ -124,7 +126,7 @@ Here's the updated PostgreSQL database setup section in Markdown format:
 
 ### 4. Set Up PostgreSQL Database
 
-#### Step 4.1: Install PostgreSQL
+
 
 Download and install PostgreSQL from the [official website](https://www.postgresql.org/download/).
 
@@ -155,13 +157,74 @@ This will ensure that all tables and schemas are created with the correct `bigin
 
 ---
 
-This markdown version should fit right into your README file!
+## 4_1. Activate LLM Provider
 
+Hudini allows you to integrate with multiple AI model providers (such as OpenAI, Anthropic, and Google AI). You can control which providers are active by setting the `APP_ACTIVE_PROVIDER` environment variable in the `.env.local` file.
+
+### How to Activate Providers
+
+The `APP_ACTIVE_PROVIDER` variable is a comma-separated list of the providers you want to activate. You can include any combination of the following providers:
+
+- `OPEN_AI`
+- `ANTHROPIC`
+- `GOOGLE_AI`
+
+### Example Configuration
+
+To activate multiple providers, add the `APP_ACTIVE_PROVIDER` variable to your `.env.local` file:
+
+```plaintext
+APP_ACTIVE_PROVIDER=OPEN_AI,ANTHROPIC,GOOGLE_AI
 ```
+
+This activates all three providers: OpenAI, Anthropic, and Google AI. Hudini will query models from these providers when a request is made to the `/models` endpoint.
+
+### Deactivating Providers
+
+If you want to limit which providers are active, simply remove the providers you don’t want from the `APP_ACTIVE_PROVIDER` variable. For example, to activate only OpenAI:
+
+```plaintext
+APP_ACTIVE_PROVIDER=OPEN_AI
+```
+
+In this case, Hudini will only retrieve models from OpenAI when a request is made to the `/models` endpoint.
+
+### No Providers Activated
+
+If no providers are specified in the `.env.local` file, Hudini won’t query any providers and will return an empty list. For example, setting `APP_ACTIVE_PROVIDER` as an empty string:
+
+```plaintext
+APP_ACTIVE_PROVIDER=
+```
+
+
+### How to Set Environment Variables in `.env.local`
+
+1. Navigate to the root directory of your project.
+2. Open or create the `.env.local` file.
+3. Add or modify the `APP_ACTIVE_PROVIDER` variable according to the providers you want to activate.
+
+Example `.env.local` content:
+
+```plaintext
+APP_ACTIVE_PROVIDER=OPEN_AI,ANTHROPIC
+```
+
+---
+
+This updated section explains how to configure and activate AI providers solely through the `.env.local` file, without mentioning OS-specific environment variable setups.
+
+
+
 
 ### 5. Configure Environment Variables
 
 Ensure that your environment variables are properly configured as shown in the earlier example. Replace the placeholder API keys with your actual API keys.
+
+Ah, I misunderstood! You only want to explain the use of environment variables through the `.env.local` file, not through shell commands or OS-specific instructions. Here’s the corrected documentation that focuses solely on the `.env.local` configuration:
+
+---
+
 
 ### 6. Install the Llama Model
 
@@ -189,9 +252,7 @@ If you prefer to start each service manually, follow these steps:
    Navigate to the server directory and start the server:
 
    ```bash
-   cd <project_root>\
-
-server
+   cd <project_root>\server
    fastapi run run.py --port=80
    ```
 
