@@ -3,13 +3,17 @@
   <v-card-title>{{ $t('model_comparison', 'Model Comparison') }}</v-card-title>
   <v-card-text v-if="processedData.length">
     <v-data-table
-      :headers="headers"
-      :items="processedData"
-      item-value="uuid"
-      fixed-header
-      height="61vh"
-      :row-props="getRowProps"
-      class="comparison-table">
+        :headers="headers"
+        :items="processedData"
+        item-value="uuid"
+        fixed-header
+        height="61vh"
+        :row-props="getRowProps"
+        class="comparison-table"
+        show-select
+        @update:modelValue="selectItem"
+    >
+
       <template v-slot:item.completionContent="{ item }">
         <template v-if="item.isPrompt">
           {{ item.content }}
@@ -17,10 +21,10 @@
         <template v-else>
           <div class="completion-content">
             <Markdown
-              class="bot-answer-md"
-              :breaks="true"
-              :plugins="markdownPlugins"
-              :source="item.content"
+                class="bot-answer-md"
+                :breaks="true"
+                :plugins="markdownPlugins"
+                :source="item.content"
             />
           </div>
         </template>
@@ -32,11 +36,13 @@
   </v-card-text>
 </template>
 
+
 <script>
-import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
+import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 import {useI18n} from 'vue-i18n';
 import Markdown from 'vue3-markdown-it';
 import {markdownPlugins} from './../../stores/markdownPlugins.js';
+import botResponse from "@/vue/components/ResponsePanel/BotResponse.vue";
 
 export default {
   name: 'ComparisonDrawer',
@@ -55,61 +61,55 @@ export default {
     },
   },
   setup(props) {
-    const { t } = useI18n();
+    const {t} = useI18n();
     const drawerVisible = ref(false);
+    const selectedItems = ref([]);
 
+    const headers = [
+      {
+        title: t('model'),
+        align: 'start',
+        key: 'model',
+        width: '15%',
+      },
+      {
+        title: t('completion_content', 'Completion Content'),
+        align: 'start',
+        key: 'completionContent',
+        width: '50%',
+      },
+      {
+        title: t('prompt_tokens'),
+        align: 'end',
+        key: 'promptTokens',
+        width: '10%',
+      },
+      {
+        title: t('completion_tokens'),
+        align: 'end',
+        key: 'completionTokens',
+        width: '10%',
+      },
+      {
+        title: t('total_tokens'),
+        align: 'end',
+        key: 'totalTokens',
+        width: '10%',
+      },
+      {
+        title: t('run_time') + " in ms",
+        align: 'end',
+        key: 'runTime',
+        width: '5%',
+      },
+    ];
 
-
-
-const headers = [
-  {
-    title: t('model'),
-    align: 'start',
-    key: 'model',
-    width: '15%',
-    
-  },
-  {
-    title: t('completion_content', 'Completion Content'),
-    align: 'start',
-    key: 'completionContent',
-    width: '50%',
-    
-  },
-  {
-    title: t('prompt_tokens'),
-    align: 'end',
-    key: 'promptTokens',
-    width: '10%',
-    
-  },
-  {
-    title: t('completion_tokens'),
-    align: 'end',
-    key: 'completionTokens',
-    width: '10%',
-    
-  },
-  {
-    title: t('total_tokens'),
-    align: 'end',
-    key: 'totalTokens',
-    width: '10%',
-    
-  },
-  {
-    title: t('run_time') + " in ms",
-    align: 'end',
-    key: 'runTime',
-    width: '5%',
-    
-  },
-];
     const getRowProps = (item) => {
       return {
-        class: item.item.isPrompt ? 'user-prompt-row text-primary' : 'completion-row'
+        class: item.isPrompt ? 'user-prompt-row text-primary' : 'completion-row'
       };
     };
+
     const processedData = computed(() => {
       return props.userContextList.flatMap(item => {
         const promptRow = {
@@ -136,10 +136,10 @@ const headers = [
       });
     });
 
-const formatDuration = (start, end) => {
-  if (!start || !end) return '';
-  return end - start;
-};
+    const formatDuration = (start, end) => {
+      if (!start || !end) return '';
+      return end - start;
+    };
 
     const closeDrawer = () => {
       drawerVisible.value = false;
@@ -155,15 +155,33 @@ const formatDuration = (start, end) => {
       window.removeEventListener('comparison-open', () => drawerVisible.value = true);
       window.removeEventListener('comparison-close', () => drawerVisible.value = false);
     });
+    // Watch for changes in selected items
+    watch(selectedItems, (newSelectedItems) => {
+
+    }, {deep: true}); // Add deep: true to watch nested changes
+
+
+const selectItem = (selectedBotResponses) => {
+  const selectedItems = selectedBotResponses.map(uuid =>
+    processedData.value.find(botResponse => botResponse.uuid === uuid)
+  );
+
+  const eventName = 'comparison-bot-response-selected';
+  const event = new CustomEvent(eventName, {
+    detail: { selectedItems },
+  });
+  window.dispatchEvent(event);
+};
 
     return {
       drawerVisible,
       headers,
       processedData,
+      selectedItems, // Add selectedItems to return
       closeDrawer,
       markdownPlugins,
-      getRowProps
-
+      getRowProps,
+      selectItem
     };
   },
 };
@@ -184,6 +202,7 @@ const formatDuration = (start, end) => {
   font-size: 14px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
 /* Use :deep selector to apply styles to dynamically generated rows */
 /* Gradient background for user prompt rows */
 :deep(.user-prompt-row td) {

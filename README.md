@@ -118,155 +118,44 @@ cd src/server
 pip install -r requirements.txt
 ```
 
+Here's the updated PostgreSQL database setup section in Markdown format:
+
+---
+
 ### 4. Set Up PostgreSQL Database
 
-**Step 4.1: Install PostgreSQL**
+#### Step 4.1: Install PostgreSQL
 
-- Download and install PostgreSQL from the [official website](https://www.postgresql.org/download/).
+Download and install PostgreSQL from the [official website](https://www.postgresql.org/download/).
 
-**Step 4.2: Create a Database**
+#### Step 4.2: Create a Database
 
-- Open the PostgreSQL command line or a tool like pgAdmin.
-- To ensure you start with a clean setup, you may drop the existing `hudini` database (if it exists) and then create a new one using the following SQL commands:
+Open the PostgreSQL command line or a tool like pgAdmin. To create a new database, use the following SQL command:
 
 ```sql
--- Drop the database if it exists
-DROP DATABASE IF EXISTS hudini;
-
--- Create the new database
-CREATE DATABASE hudini
-    WITH
-    OWNER = postgres
-    ENCODING = 'UTF8'
-    LC_COLLATE = 'en_US.UTF-8'
-    LC_CTYPE = 'en_US.UTF-8'
-    LOCALE_PROVIDER = 'libc'
-    TABLESPACE = pg_default
-    CONNECTION LIMIT = -1
-    IS_TEMPLATE = False;
+CREATE DATABASE hudini;
 ```
 
-- Create a user and assign it to the database (replace `your_username` and `your_password` with your desired values):
+#### Step 4.3: Apply Database Migrations
 
-  ```postgressql
-  CREATE USER your_username WITH PASSWORD 'your_password';
-  GRANT ALL PRIVILEGES ON DATABASE hudini TO your_username;
-  ```
+1. Navigate to the database migration directory:
 
-**Step 4.3: Create the `prompts`, `user_context`, and `users` Tables**
+    ```bash
+    cd <project_root>/server/app/db
+    ```
 
-- After setting up the database, you can create the necessary tables using the following SQL commands:
+2. To reset your database to its initial state and then apply all migrations, use Alembic:
 
-```postgressql
--- Table: public.prompts
+    ```bash
+    alembic downgrade base
+    alembic upgrade head
+    ```
 
--- DROP TABLE IF EXISTS public.prompts;
+This will ensure that all tables and schemas are created with the correct `bigint` types for `user` and `id`.
 
-CREATE TABLE IF NOT EXISTS public.prompts
-(
-    id bigint NOT NULL DEFAULT nextval('prompts_id_seq'::regclass),
-    prompt text COLLATE pg_catalog."default" NOT NULL,
-    status character varying(30) COLLATE pg_catalog."default",
-    "user" bigint NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    uuid uuid DEFAULT uuid_generate_v4(),
-    CONSTRAINT prompts_pkey PRIMARY KEY (id),
-    CONSTRAINT fk_user_id FOREIGN KEY ("user")
-        REFERENCES public.users (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE CASCADE
-)
+---
 
-TABLESPACE pg_default;
-
-ALTER TABLE IF EXISTS public.prompts
-    OWNER to postgres;
--- Index: idx_prompts_status
-
--- DROP INDEX IF EXISTS public.idx_prompts_status;
-
-CREATE INDEX IF NOT EXISTS idx_prompts_status
-    ON public.prompts USING btree
-    (status COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
--- Index: idx_prompts_user
-
--- DROP INDEX IF EXISTS public.idx_prompts_user;
-
-CREATE INDEX IF NOT EXISTS idx_prompts_user
-    ON public.prompts USING btree
-    ("user" ASC NULLS LAST)
-    TABLESPACE pg_default;
--- Index: idx_prompts_uuid
-
--- DROP INDEX IF EXISTS public.idx_prompts_uuid;
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_prompts_uuid
-    ON public.prompts USING btree
-    (uuid ASC NULLS LAST)
-    TABLESPACE pg_default;
-
-
-
--- Table: public.user_context
-
--- DROP TABLE IF EXISTS public.user_context;
-
-CREATE TABLE IF NOT EXISTS public.user_context
-(
-    id bigint NOT NULL DEFAULT nextval('user_context_id_seq'::regclass),
-    created timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    updated timestamp with time zone DEFAULT CURRENT_TIMESTAMP,
-    context_data jsonb,
-    thread_id bigint,
-    "user" bigint,
-    prompt_uuid uuid NOT NULL DEFAULT uuid_generate_v4(),
-    CONSTRAINT user_context_pkey PRIMARY KEY (id),
-    CONSTRAINT fk_prompt_uuid FOREIGN KEY (prompt_uuid)
-        REFERENCES public.prompts (uuid) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE CASCADE,
-    CONSTRAINT fk_user_id FOREIGN KEY ("user")
-        REFERENCES public.users (id) MATCH SIMPLE
-        ON UPDATE NO ACTION
-        ON DELETE CASCADE
-)
-
-TABLESPACE pg_default;
-
-ALTER TABLE IF EXISTS public.user_context
-    OWNER to postgres;
-    
-    
-    
-    
-    -- Table: public.users
-
--- DROP TABLE IF EXISTS public.users;
-
-CREATE TABLE IF NOT EXISTS public.users
-(
-    id bigint NOT NULL DEFAULT nextval('users_id_seq'::regclass),
-    username character varying(50) COLLATE pg_catalog."default" NOT NULL,
-    email character varying(100) COLLATE pg_catalog."default" NOT NULL,
-    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
-    last_login timestamp without time zone,
-    CONSTRAINT users_pkey PRIMARY KEY (id)
-)
-
-TABLESPACE pg_default;
-
-ALTER TABLE IF EXISTS public.users
-    OWNER to postgres;
--- Index: idx_username
-
--- DROP INDEX IF EXISTS public.idx_username;
-
-CREATE INDEX IF NOT EXISTS idx_username
-    ON public.users USING btree
-    (username COLLATE pg_catalog."default" ASC NULLS LAST)
-    TABLESPACE pg_default;
-
+This markdown version should fit right into your README file!
 
 ```
 

@@ -19,8 +19,18 @@
           @click="openDeleteDialog"
       ></v-btn>
     </v-row>
+     <v-row v-if="selectedBotResponses.length">
+      <v-btn
+          class="panel-menu-button"
+          icon="mdi-account-group"
+          :title="$t('publish_social_media', 'Publish in social media')"
+          key="publish_social_media"
+          @click="publishSocialMedia"
+      ></v-btn>
+    </v-row>
 
-    <v-row>
+
+    <v-row  v-if="!selectedBotResponses.length">
       <v-btn
           class="panel-menu-button"
           icon="mdi-microsoft-excel"
@@ -44,8 +54,6 @@
             }}
           </v-btn>
           <v-btn color="red-darken-1" @click="confirmDelete">{{ $t('delete_thread_ok_text', 'Yes, delete it') }}</v-btn>
-
-
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -53,7 +61,7 @@
 </template>
 
 <script>
-import {ref, onMounted} from 'vue';
+import {ref, onMounted, onBeforeUnmount} from 'vue';
 import {useI18n} from 'vue-i18n';
 
 export default {
@@ -69,6 +77,7 @@ export default {
   setup(props) {
     const isComparisonOpen = ref(false);
     const deleteDialog = ref(false);
+    const selectedBotResponses = ref([]);
     const {t} = useI18n();
 
     const toggleComparison = () => {
@@ -81,13 +90,35 @@ export default {
 
     const exportToExcel = () => {
       isComparisonOpen.value = !isComparisonOpen.value;
-      const eventName =  'usercontext-export-excel'
+      const eventName = 'usercontext-export-excel'
       const event = new CustomEvent(eventName, {});
       window.dispatchEvent(event);
     };
 
+    const onSelectedBotResponse = ((event) => {
+      selectedBotResponses.value = event.detail.selectedItems
+    });
+
+
+    onMounted(() => {
+
+
+      window.addEventListener('comparison-bot-response-selected', onSelectedBotResponse);
+
+    });
+
+    onBeforeUnmount(() => {
+      window.removeEventListener('comparison-bot-response-selected', onSelectedBotResponse);
+
+    });
+
+
     const openDeleteDialog = () => {
       deleteDialog.value = true;
+    };
+
+      const publishSocialMedia = () => {
+
     };
 
     const cancelDelete = () => {
@@ -120,7 +151,10 @@ export default {
       openDeleteDialog,
       cancelDelete,
       confirmDelete,
-      exportToExcel
+      exportToExcel,
+      onSelectedBotResponse,
+      publishSocialMedia,
+      selectedBotResponses
     };
   },
 };
