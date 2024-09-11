@@ -1,4 +1,4 @@
-import { createI18n } from 'vue-i18n';
+import {createI18n} from 'vue-i18n';
 
 const messages = {
     en: {
@@ -67,7 +67,10 @@ const messages = {
         delete_thread_confirmation: 'Are you sure you want to delete this thread?',
         cancel: 'Cancel',
         failed_to_delete_thread: 'Failed to delete thread',
-        export_to_excel: "Export to Excel"
+        export_to_excel: "Export to Excel",
+        publish_social_media: "Publish in Social Media",
+        select_social_media: "Select Social Media Accounts",
+        publish: "Publish"
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -135,7 +138,10 @@ const messages = {
         delete_thread_confirmation: 'Sind Sie sicher, dass Sie diesen Thread löschen möchten?',
         cancel: 'Abbrechen',
         failed_to_delete_thread: 'Fehler beim Löschen des Threads',
-        export_to_excel: "Für Excel exportieren"
+        export_to_excel: "Für Excel exportieren",
+        publish_social_media: "In sozialen Medien veröffentlichen",
+        select_social_media: "Soziale Medien Konten auswählen",
+        publish: "Veröffentlichen"
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -203,7 +209,11 @@ const messages = {
         delete_thread_confirmation: 'Êtes-vous sûr de vouloir supprimer ce fil de discussion ?',
         cancel: 'Annuler',
         failed_to_delete_thread: 'Échec de la suppression du fil de discussion',
-        export_to_excel: "Exporter vers Excel"
+        export_to_excel: "Exporter vers Excel",
+        publish_social_media: "Publier sur les réseaux sociaux",
+        select_social_media: "Sélectionnez les comptes de réseaux sociaux",
+        publish: "Publier"
+
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
@@ -271,10 +281,14 @@ const messages = {
         delete_thread_confirmation: 'Вы уверены, что хотите удалить этот поток?',
         cancel: 'Отмена',
         failed_to_delete_thread: 'Не удалось удалить поток',
-        export_to_excel: "Экспорт в Excel"
+        export_to_excel: "Экспорт в Excel",
+        publish_social_media: "Опубликовать в социальных сетях",
+        select_social_media: "Выберите аккаунты социальных сетей",
+        publish: "Опубликовать"
+
 
     },
-        zh: {
+    zh: {
         hudini_title: 'Hudini - CPU 魔术师在 SLM',
         select_model: '选择模型',
         model: '模型',
@@ -338,12 +352,13 @@ const messages = {
         delete_thread_confirmation: '您确定要删除此线程吗？',
         cancel: '取消',
         failed_to_delete_thread: '删除线程失败',
-        export_to_excel: "导出到 Excel"
+        export_to_excel: "导出到 Excel",
+        publish_social_media: "发布到社交媒体",
+        select_social_media: "选择社交媒体账户",
+        publish: "发布"
     },
     // Add other languages as needed
 };
-
-
 
 
 const i18n = createI18n({

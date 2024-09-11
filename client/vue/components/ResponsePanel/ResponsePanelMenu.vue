@@ -57,13 +57,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <SelectAccounts :dialogVisible="isSelectAccountsVisible"></SelectAccounts>
   </v-container>
 </template>
 
 <script>
 import {ref, onMounted, onBeforeUnmount} from 'vue';
 import {useI18n} from 'vue-i18n';
-
+import SelectAccounts from './../SocialMedia/SelectAccounts.vue'
 export default {
   name: 'SubMenu',
   props: {
@@ -74,12 +76,13 @@ export default {
     },
 
   },
+  components:{SelectAccounts},
   setup(props) {
     const isComparisonOpen = ref(false);
     const deleteDialog = ref(false);
     const selectedBotResponses = ref([]);
     const {t} = useI18n();
-
+    const isSelectAccountsVisible=ref(false)
     const toggleComparison = () => {
       isComparisonOpen.value = !isComparisonOpen.value;
       const eventName = isComparisonOpen.value ? 'comparison-open' : 'comparison-close';
@@ -101,15 +104,11 @@ export default {
 
 
     onMounted(() => {
-
-
       window.addEventListener('comparison-bot-response-selected', onSelectedBotResponse);
-
     });
 
     onBeforeUnmount(() => {
       window.removeEventListener('comparison-bot-response-selected', onSelectedBotResponse);
-
     });
 
 
@@ -118,7 +117,8 @@ export default {
     };
 
       const publishSocialMedia = () => {
-
+      const event = new CustomEvent('socialmedia-accounts-selection-open', {detail: {}});
+      window.dispatchEvent(event);
     };
 
     const cancelDelete = () => {
@@ -154,7 +154,8 @@ export default {
       exportToExcel,
       onSelectedBotResponse,
       publishSocialMedia,
-      selectedBotResponses
+      selectedBotResponses,
+      isSelectAccountsVisible
     };
   },
 };
