@@ -2,7 +2,6 @@ import logging
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 import asyncio
-import json
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List, Any, Dict, Type, Optional
 from pydantic import BaseModel, Field
@@ -16,6 +15,7 @@ from server.app.models.generation.generation_request import GenerationRequest
 from server.app.models.generation.success_generation_model import SuccessGenerationModel
 from sqlalchemy import select
 from server.app.models.usercontext.user_context import UserContextModel
+import json
 router = APIRouter()
 settings = Settings()
 
@@ -168,6 +168,9 @@ async def stream_route(request: GenerationRequest, db: AsyncSession = Depends(ge
 
     async def generate():
         tasks = []
+
+
+
         for model, client, method in valid_models:
             # Pass the context from the database as a parameter to fetch_completion
             async_task = method(model, request.prompt, request.id, context=user_context)
