@@ -257,6 +257,9 @@ export default {
       }
     }
 
+    /**
+     * Fetches stored user contexts
+     */
     fetchUserContext(user, thread_id)
         .then(fetchUserContextCallback)
         .catch((error) => {
@@ -268,6 +271,13 @@ export default {
           triggerPromptPanelUpdate();
         });
 
+
+    /**
+     * Creates a prompt object
+     *
+     * @param promptPostRequest
+     * @returns {Promise<Object>}
+     */
     const createPromptServerside = async (promptPostRequest) => {
       triggerPromptPanelUpdate();
       return createPrompt(promptPostRequest);
@@ -281,7 +291,11 @@ export default {
       loading.value = false;
     };
 
-
+    /**
+     * Inits user account
+     *
+     * @param promptPostRequest
+     */
     const initUserContexts = (promptPostRequest) => {
       const userContextValue = structuredClone(new UserContext.UserContextPostRequestModel(
           promptPostRequest.uuid,
@@ -333,19 +347,26 @@ export default {
     });
 
 
+    /**
+     * Exports to excel
+     *
+     * @returns {Promise<void>}
+     */
     const exportToExcel = async () => {
-
-        // Extract user and thread_id from the userContextList props
         const user = userContextList.value[0]?.prompt.user;
         const thread_id = userContextList.value[0]?.thread_id;
-
         if (!user || !thread_id) {
           throw new Error("User or Thread ID not available.");
         }
-
         await exportUserContextToExel(user, thread_id)
     };
 
+    /**
+     * Deletes a thread
+     *
+     * @param event
+     * @returns {Promise<void>}
+     */
     const deleteThreadEvent = async (event) => {
       try {
         await deleteUserContext(event.detail.thread_id);
@@ -356,6 +377,8 @@ export default {
         console.error('Error deleting thread:', error);
       }
     };
+
+
     return {
       handleKeydown,
       handleSubmit,
