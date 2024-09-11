@@ -287,6 +287,13 @@ Hudini uses a caching mechanism to store and retrieve data quickly, improving th
 
 To clear the cache, you can manually delete the contents of the cache directory specified by `APP_CACHE`.
 
+via cli:
+
+```shell
+cd <project_root/server/app/cli>
+python cache-clear.py 
+```
+
 ## Directory Structure
 
 Here's a typical directory structure for the Hudini project:
