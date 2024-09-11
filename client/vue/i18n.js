@@ -70,7 +70,8 @@ const messages = {
         export_to_excel: "Export to Excel",
         publish_social_media: "Publish in Social Media",
         select_social_media: "Select Social Media Accounts",
-        publish: "Publish"
+        publish: "Publish",
+        provider: 'Provider',
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -141,7 +142,8 @@ const messages = {
         export_to_excel: "Für Excel exportieren",
         publish_social_media: "In sozialen Medien veröffentlichen",
         select_social_media: "Soziale Medien Konten auswählen",
-        publish: "Veröffentlichen"
+        publish: "Veröffentlichen",
+        provider: 'Anbieter',
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -212,7 +214,8 @@ const messages = {
         export_to_excel: "Exporter vers Excel",
         publish_social_media: "Publier sur les réseaux sociaux",
         select_social_media: "Sélectionnez les comptes de réseaux sociaux",
-        publish: "Publier"
+        publish: "Publier",
+        provider: 'Fournisseur',
 
     },
     ru: {
@@ -284,7 +287,8 @@ const messages = {
         export_to_excel: "Экспорт в Excel",
         publish_social_media: "Опубликовать в социальных сетях",
         select_social_media: "Выберите аккаунты социальных сетей",
-        publish: "Опубликовать"
+        publish: "Опубликовать",
+        provider: 'Поставщик'
 
 
     },
@@ -355,7 +359,8 @@ const messages = {
         export_to_excel: "导出到 Excel",
         publish_social_media: "发布到社交媒体",
         select_social_media: "选择社交媒体账户",
-        publish: "发布"
+        publish: "发布",
+        provider: '供应商',
     },
     // Add other languages as needed
 };

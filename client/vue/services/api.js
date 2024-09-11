@@ -263,3 +263,26 @@ export const getTelegramAccounts = async () => {
         throw error;
     }
 };
+
+/**
+ * Fetches telegram accounts from the server.
+ * @returns {Promise<Array>} A promise that resolves to an array of telegram accounts.
+ */
+export const sendSocialMediaMessage = async (provider, socialMediaMessage) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/socialmedia/${provider}/message/send`, {
+            method: 'POST',
+             headers: {
+                'Content-Type': 'application/json',
+            },
+             body: JSON.stringify(socialMediaMessage),
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error sending message:', error);
+        throw error;
+    }
+};

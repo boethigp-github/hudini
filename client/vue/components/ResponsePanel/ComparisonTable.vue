@@ -155,10 +155,7 @@ export default {
       window.removeEventListener('comparison-open', () => drawerVisible.value = true);
       window.removeEventListener('comparison-close', () => drawerVisible.value = false);
     });
-    // Watch for changes in selected items
-    watch(selectedItems, (newSelectedItems) => {
 
-    }, {deep: true}); // Add deep: true to watch nested changes
 
 
 const selectItem = (selectedBotResponses) => {

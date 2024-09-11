@@ -44,7 +44,7 @@ def test_publish_with_2fa(base_url, telegram_publish_payload_with_2fa):
     """
     Test sending a message to an authorized Telegram group with 2FA enabled.
     """
-    response = requests.post(f"{base_url}/socialmedia/publish/telegram", json=telegram_publish_payload_with_2fa)
+    response = requests.post(f"{base_url}/socialmedia/telegram/message/send", json=telegram_publish_payload_with_2fa)
 
     assert response.status_code == 201
     data = response.json()

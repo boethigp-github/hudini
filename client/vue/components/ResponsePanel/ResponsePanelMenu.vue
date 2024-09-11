@@ -121,7 +121,7 @@ export default {
     };
 
       const publishSocialMedia = () => {
-      const event = new CustomEvent('socialmedia-accounts-selection-open', {detail: {}});
+      const event = new CustomEvent('socialmedia-accounts-selection-open', {detail: { selectedBotResponses: selectedBotResponses.value }});
       window.dispatchEvent(event);
     };
 

@@ -151,6 +151,8 @@ export default {
       snackbar.value.color = color;
     };
 
+
+
     watch(loading, (newValue) => {
       if (!newValue) {
         prompt.value.prompt = '';
@@ -336,6 +338,7 @@ export default {
       window.addEventListener('comparison-open', showComparisonView);
       window.addEventListener('comparison-close', hideComparisonView);
       window.addEventListener('usercontext-export-excel', exportToExcel);
+      window.addEventListener('show-message', onShowMessage);
     });
 
     onBeforeUnmount(() => {
@@ -344,8 +347,12 @@ export default {
       window.removeEventListener('comparison-open', showComparisonView);
       window.removeEventListener('comparison-close', hideComparisonView);
       window.removeEventListener('usercontext-export-excel', exportToExcel);
+      window.removeEventListener('show-message', onShowMessage);
     });
 
+    const onShowMessage = (event)=>{
+      showMessage(event.detail.message);
+    }
 
     /**
      * Exports to excel

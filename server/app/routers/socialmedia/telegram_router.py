@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from telethon import TelegramClient
 from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.messages import SendMessageRequest
-from telethon.tl.types import InputPeerChat
+
 from server.app.config.settings import Settings
 
 settings = Settings()
@@ -31,8 +31,7 @@ class TelegramPublishResponseModel(BaseModel):
     message_id: int
 
 
-@router.post("/socialmedia/publish/telegram", response_model=TelegramPublishResponseModel,
-             status_code=status.HTTP_201_CREATED, tags=["socialmedia"])
+@router.post("/socialmedia/telegram/message/send", response_model=TelegramPublishResponseModel,status_code=status.HTTP_201_CREATED, tags=["socialmedia"])
 async def publish_to_telegram(publish_request: TelegramPublishRequestModel):
     """
     Publish a message to a specified Telegram group using a userbot.
@@ -130,17 +129,6 @@ class TelegramAccount(BaseModel):
     groups: list[str]
 
 
-import logging
-import json
-from fastapi import APIRouter, HTTPException
-from server.app.config.settings import Settings
-
-# Router and settings initialization
-router = APIRouter()
-settings = Settings()
-
-# Logger
-logger = logging.getLogger(__name__)
 
 @router.get("/socialmedia/telegram/accounts", tags=["socialmedia"])
 async def get_telegram_accounts():

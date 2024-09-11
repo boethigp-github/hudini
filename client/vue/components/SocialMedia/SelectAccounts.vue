@@ -1,30 +1,39 @@
 <template>
-  <v-dialog v-model="dialogVisible" max-width="600px">
+  <v-dialog v-model="dialogVisible" max-width="80%">
     <v-card>
       <v-card-title>{{ $t('select_social_media', 'Select Social Media Accounts') }}</v-card-title>
       <v-card-text>
         <v-container>
-          <h2>{{$t('provider', 'Provider')}}</h2><br/>
+          <h2>{{ $t('provider', 'Provider') }}</h2><br/>
           <v-row v-for="(groups, provider) in groupedTelegramAccounts" :key="provider">
-            <v-col>
+            <v-col cols="3" md="3">
               <v-row align="center">
-                <component :is="groups.logo" class="provider-logo" />
+                <component :is="groups.logo" class="provider-logo"/>
                 <h2>{{ provider }}</h2>
               </v-row>
               <v-row v-for="(accounts, groupName) in groups.groups" :key="groupName">
                 <v-col>
-                  <h4>{{$t('group', 'Group')}}: {{ groupName }}</h4>
-                  <h5>{{$t('user', 'User')}}: {{ groupName }}</h5>
-                  <v-checkbox
-                      v-for="(account, index) in accounts"
-                      :key="index"
-                      :label="account.displayname"
-                      v-model="selectedSocialMediaAccounts"
-                      :value="account.id"
-                  />
+                  <h4>{{ $t('group', 'Group') }}: {{ groupName }}</h4>
+                  <h5>{{ $t('user', 'User') }}: {{ groupName }}</h5>
+                  <v-list
+                      :items="getListItems(accounts, groupName)"
+                      lines="three"
+                      :mandatory="true"
+                      v-model:selected="selectedAccounts"
+                      @update:selected="handleSelected"
+                      item-props>
+                    <template v-slot:subtitle="{ subtitle }">
+                      <div v-html="subtitle"></div>
+                    </template>
+                  </v-list>
                 </v-col>
+
               </v-row>
             </v-col>
+             <v-col cols="9" md="9">
+                  <v-textarea rows="20" width="100%" v-model="messageText" variant="filled" auto-grow counter>
+                  </v-textarea>
+                </v-col>
           </v-row>
         </v-container>
       </v-card-text>
@@ -38,22 +47,24 @@
 </template>
 <script>
 import {markRaw, onBeforeUnmount, onMounted, ref, watch} from "vue";
-import {getTelegramAccounts} from './../../services/api'; // Import your API method
+import {getTelegramAccounts, sendSocialMediaMessage} from './../../services/api'; // Import your API method
 import TelegramLogo from './TelegramLogo.vue';
+import AvatarComponent from './DummyAvatar.vue';
+import {useI18n} from 'vue-i18n'
+import {SocialMedia} from "@/vue/models/SocialMedia.js";
 
 export default {
   name: "SocialMediaModal",
-
-  components:{
-    TelegramLogo
+  components: {
+    TelegramLogo,
+    AvatarComponent
   },
   setup() {
-
-    // Store for selected social media accounts
-    const selectedSocialMediaAccounts = ref([]);
+    const {t} = useI18n();
     const dialogVisible = ref(false);
     const groupedTelegramAccounts = ref({}); // Grouped accounts by provider and group
-
+    const selectedBotResponses=ref([])
+    const messageText = ref('')
     // Fetch the Telegram accounts from the API only when the dialog is opened
     const fetchTelegramAccounts = async () => {
       try {
@@ -63,6 +74,17 @@ export default {
         console.error("Failed to fetch telegram accounts:", error);
       }
     };
+    const getListItems = (accounts, groupName) => {
+      return accounts.map(account => ({
+        prependAvatar: 'https://cdn.vuetifyjs.com/images/lists/1.jpg',
+        title: account.displayname,
+        subtitle: `<div>${groupName}</div>`,
+        value: account.id
+      }));
+    };
+
+    const selectedAccounts = ref([])
+
 
     // Group accounts by provider and group
     const groupAccountsByProviderAndGroup = (accounts) => {
@@ -95,9 +117,11 @@ export default {
       return logoMap[provider] || '/assets/default-logo.png';  // Fallback to a default logo
     };
 
-  // Open modal event listener
-    const onSocialMediaAccountSelectionOpen = () => {
+    // Open modal event listener
+    const onSocialMediaAccountSelectionOpen = (event) => {
       dialogVisible.value = true;
+      selectedBotResponses.value=event.detail.selectedBotResponses
+      messageText.value = selectedBotResponses.value.map(item=>item.content).join('\n');
     };
 
     onMounted(() => {
@@ -110,18 +134,25 @@ export default {
 
     // Cancel action
     const cancel = () => {
-      const event = new CustomEvent('social-media-cancel', {});
-      window.dispatchEvent(event);
+      dialogVisible.value=false
     };
 
     // Confirm action, dispatch selected accounts via window event
     const confirm = () => {
-      const event = new CustomEvent('social-media-confirm', {
-        detail: {
-          selectedAccounts: selectedSocialMediaAccounts.value,
-        },
-      });
-      window.dispatchEvent(event);
+
+
+      console.log("selectedAccounts", selectedAccounts.value);
+
+            if(!selectedAccounts.value.length) {
+              window.dispatchEvent(new CustomEvent('show-message', {detail: {message: t('please_choose_a_user', "Please choose a user")}}));
+            }
+
+            selectedAccounts.value.forEach(account=>{
+console.log("account", account);
+              let group_id = '@hudinitests'
+          sendSocialMediaMessage("telegram", new SocialMedia.Message(String(account), account, group_id, messageText.value ));
+      })
+
     };
 
     // Watcher: Fetch accounts only when dialog is opened
@@ -131,13 +162,23 @@ export default {
       }
     });
 
+    const handleSelected=()=>{
+
+      console.log("selectedAccounts",selectedAccounts.value);
+
+    }
+
     return {
       groupedTelegramAccounts,
-      selectedSocialMediaAccounts,
       cancel,
       confirm,
       dialogVisible,
-      getProviderLogo
+      getProviderLogo,
+      getListItems,
+      selectedAccounts,
+      handleSelected,
+      selectedBotResponses,
+      messageText
     };
   },
 };
