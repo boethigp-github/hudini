@@ -96,7 +96,6 @@ export const saveUserContext = async (userContextList, callback = null) => {
     try {
 
 
-
         const response = await fetch(`${API_BASE_URL}/usercontext`, {
             method: 'POST',
             headers: {
@@ -211,3 +210,39 @@ export const deleteUserContext = async (threadId) => {
         throw error;
     }
 };
+
+/**
+ * Exports to excel
+ * @param user
+ * @param thread_id
+ * @returns {Promise<Response>}
+ */
+export const exportUserContextToExel = async (user, thread_id) => {
+
+    try {
+        const response = await fetch(`${API_BASE_URL}/usercontext/export/excel?user=${user}&thread_id=${thread_id}`, {
+            method: 'GET',
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to export: ${response.statusText}`);
+        }
+
+        // Get the response as a Blob (binary large object)
+        const blob = await response.blob();
+
+        // Create a link element to download the file
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'user_context_export.xlsx'); // Set the file name
+        document.body.appendChild(link);
+        link.click();
+
+        // Clean up after the download
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Error exporting to Excel:', error);
+    }
+}
