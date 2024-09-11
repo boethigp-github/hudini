@@ -20,8 +20,9 @@ router = APIRouter()
 class TelegramPublishRequestModel(BaseModel):
     user: str = Field(..., description="User sending the message")
     api_id: int = Field(..., description="API ID for the Telegram account")
-    group_id: int = Field(..., description="Telegram Group ID")  # Use group_id
+    group_id: str = Field(..., description="Telegram Group Name")  # Now a string for group name
     message: str = Field(..., description="Message to send")
+
 
 
 # Model for response
@@ -86,7 +87,7 @@ async def publish_to_telegram(publish_request: TelegramPublishRequestModel):
             logger.info(f"User {phone_number} is already authorized.")
 
         # Use group ID directly to create the InputPeerChat
-        group_peer = await client.get_input_entity("@hudinitests")
+        group_peer = await client.get_input_entity(publish_request.group_id)
 
         # Send message to the group
         result = await client(SendMessageRequest(
