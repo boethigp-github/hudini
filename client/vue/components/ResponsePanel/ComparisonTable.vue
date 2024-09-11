@@ -106,7 +106,7 @@ export default {
 
     const getRowProps = (item) => {
       return {
-        class: item.isPrompt ? 'user-prompt-row text-primary' : 'completion-row'
+        class: item.item.isPrompt ? 'user-prompt-row text-primary' : 'completion-row'
       };
     };
 
