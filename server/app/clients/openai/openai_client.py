@@ -31,14 +31,17 @@ class OpenAIClient:
         return logger
 
     async def fetch_completion(self, openai_model: OpenaiModel, prompt: str, id: str,
-                               presence_penalty: Optional[float] = 0.0):
+                               context: str, presence_penalty: Optional[float] = 0.0):
         try:
             self.logger.debug(
-                f"Fetching streaming completion for model: {openai_model.id} with presence_penalty: {presence_penalty}")
+                f"Fetching streaming completion for model: {openai_model.id} with presence_penalty: {presence_penalty}"
+            )
+
+            # Use the context in the system message and pass it to the OpenAI API
             stream = await self.client.chat.completions.create(
                 model=openai_model.id,
                 messages=[
-                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "system", "content": context},  # Set context text here
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.0,
@@ -49,7 +52,6 @@ class OpenAIClient:
             async def async_generator():
                 full_content = ""
                 async for chunk in stream:
-
                     if chunk.choices[0].delta.content is not None:
                         content = chunk.choices[0].delta.content
                         full_content += content

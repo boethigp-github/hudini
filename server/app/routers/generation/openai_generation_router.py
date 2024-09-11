@@ -14,7 +14,8 @@ from server.app.models.generation.openai_model import OpenaiModel
 from server.app.models.generation.anthropic_model import AnthropicModel
 from server.app.models.generation.generation_request import GenerationRequest
 from server.app.models.generation.success_generation_model import SuccessGenerationModel
-
+from sqlalchemy import select
+from server.app.models.usercontext.user_context import UserContextModel
 router = APIRouter()
 settings = Settings()
 
@@ -115,6 +116,22 @@ def validate_models_and_clients(models: List[ModelConfig], method_name: str) -> 
     return valid_models
 
 
+async def get_user_context(db: AsyncSession, thread_id: int = 1) -> str:
+    result = await db.execute(
+        select(UserContextModel)
+        .where(UserContextModel.thread_id == thread_id)
+        .order_by(UserContextModel.created.asc())
+    )
+    user_contexts = result.scalars().all()
+
+    # Extract context_data and convert to string
+    context_data_strings = [json.dumps(uc.context_data) for uc in user_contexts]
+
+    # Add "You are a helpful assistant" as the first part of the context
+    combined_context = "You are a helpful assistant. " + " ".join(context_data_strings)
+
+    return combined_context
+
 @router.post(
     "/stream/openai",
     response_model=SuccessGenerationModel,
@@ -144,12 +161,16 @@ async def stream_route(request: GenerationRequest, db: AsyncSession = Depends(ge
     logger.info(request.model_dump_json())  # Use model_dump_json for logging
     logger.info("=" * 50)
 
+    # Fetch user context from the database
+    user_context = await get_user_context(db, thread_id=1)
+
     valid_models = validate_models_and_clients(request.models, request.method_name)
 
     async def generate():
         tasks = []
         for model, client, method in valid_models:
-            async_task = method(model, request.prompt, request.id)
+            # Pass the context from the database as a parameter to fetch_completion
+            async_task = method(model, request.prompt, request.id, context=user_context)
             task = asyncio.create_task(async_task)
             tasks.append(task)
 
