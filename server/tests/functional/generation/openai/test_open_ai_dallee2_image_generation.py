@@ -1,6 +1,5 @@
 import unittest
 import requests
-import json
 import uuid
 from server.app.config.settings import Settings
 from server.app.models.generation.generation_request import GenerationRequest, ModelConfig, ModelCategory, Platform

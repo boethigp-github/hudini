@@ -24,7 +24,7 @@ client = OpenAI(api_key=settings.get("default").get("API_KEY_OPEN_AI"))
 class ImageGenerationRequest(BaseModel):
     prompt: str = Field(..., description="The prompt for image generation")
     n: int = Field(1, ge=1, le=10, description="Number of images to generate")
-    size: Literal["1024x1024", "1792x1024", "1024x1792"] = Field("1024x1024", description="Size of the generated images")
+    size: Literal[ "1024x1024", "1792x1024", "1024x1792"] = Field("1024x1024", description="Size of the generated images")
     quality: Literal["standard", "hd"] = Field("standard", description="Quality of the generated images")
     style: Literal["vivid", "natural"] = Field("vivid", description="Style of the generated images")
 

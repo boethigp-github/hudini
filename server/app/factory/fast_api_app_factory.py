@@ -9,7 +9,7 @@ from server.app.routers.usercontext.usercontext_router import router as usercont
 from server.app.routers.generation.anthropic_generation_router import router as anthropic_generation_router
 from server.app.routers.generation.google_ai_generation_router import router as google_ai_generation_router
 from server.app.routers.socialmedia.telegram_router import router as socialmedia_telegram_router
-from server.app.routers.generation.openai.openai_dalle2_image_generation_router import router as openai_dalle2_image_generation_router
+from server.app.routers.generation.openai.openai_dalle3_image_generation_router import router as openai_dalle2_image_generation_router
 from server.app.routers.users.users_router import router as users_router
 
 
