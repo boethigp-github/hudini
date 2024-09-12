@@ -48,7 +48,6 @@
                 </v-col>
                 <v-col cols="12">
                   <v-card-actions>
-
                     <v-btn color="blue-darken-1" @click="cancel" :disabled="isLoading || isImageGenerating">
                       {{ $t('cancel', 'Cancel') }}
                     </v-btn>
