@@ -4,8 +4,7 @@
       <v-card-title>{{ $t('select_social_media', 'Select Social Media Accounts') }}</v-card-title>
       <v-card-text>
         <v-container>
-          <h2>{{ $t('provider', 'Provider') }}</h2><br/>
-          <v-row v-for="(groups, provider) in groupedTelegramAccounts" :key="provider">
+          <v-row v-for="(groups, provider) in groupedSocialMediaAccounts" :key="provider">
             <v-col cols="3" md="3">
               <v-row align="center">
                 <component :is="groups.logo" class="provider-logo"/>
@@ -34,7 +33,7 @@
               </v-row>
             </v-col>
             <v-col cols="9" md="9">
-              <v-row style="margin-top: -120px">
+              <v-row style="margin-top: -80px">
                 <v-col cols="12">
                   <v-img :width="200" aspect-ratio="16/9" cover :src="generatedImageUrl"/>
                 </v-col>
@@ -42,23 +41,14 @@
                   <v-text-field
                       v-model="imagePrompt"
                       :label="$t('image_prompt', 'Image Generation Prompt')"
+                      @keydown.enter="triggerGenerateImage"
                       variant="outlined">
                     <v-progress-linear v-if="isImageGenerating" color="primary" indeterminate></v-progress-linear>
                   </v-text-field>
                 </v-col>
-                <v-col cols="12" class="d-flex justify-end">
-                  <v-btn
-                      size="small"
-                      color="primary"
-                      @click="triggerGenerateImage"
-                      :loading="isImageGenerating"
-                      :disabled="!imagePrompt">
-                    {{ $t('generate_image', 'Generate Image') }}
-                  </v-btn>
-                </v-col>
                 <v-col cols="12">
                   <v-card-actions>
-                    <v-spacer></v-spacer>
+
                     <v-btn color="blue-darken-1" @click="cancel" :disabled="isLoading || isImageGenerating">
                       {{ $t('cancel', 'Cancel') }}
                     </v-btn>
@@ -106,7 +96,7 @@ export default {
   setup() {
     const {t} = useI18n();
     const dialogVisible = ref(false);
-    const groupedTelegramAccounts = ref({});
+    const groupedSocialMediaAccounts = ref({});
     const selectedBotResponses = ref([]);
     const messageText = ref('');
     const selectedAccounts = ref([]);
@@ -114,11 +104,11 @@ export default {
     const imagePrompt = ref('');
     const isImageGenerating = ref(false);
     const generatedImageUrl = ref('');
-    const textareaWidth = ref(0);
+
     const messageTextarea = ref(null);
     const imageError = ref('');
 
-    const fetchTelegramAccounts = async () => {
+    const fetchSocialMediaAccounts = async () => {
       try {
         const accounts = await getTelegramAccounts();
         groupAccountsByProviderAndGroup(accounts);
@@ -153,7 +143,7 @@ export default {
           providers[provider].groups[group].push(account);
         });
       });
-      groupedTelegramAccounts.value = providers;
+      groupedSocialMediaAccounts.value = providers;
     };
 
     const getProviderLogo = (provider) => {
@@ -205,9 +195,9 @@ export default {
     };
 
     const getGroupByAccount = (accountId) => {
-      for (const provider in groupedTelegramAccounts.value) {
-        for (const groupName in groupedTelegramAccounts.value[provider].groups) {
-          const account = groupedTelegramAccounts.value[provider].groups[groupName].find(acc => acc.id === accountId);
+      for (const provider in groupedSocialMediaAccounts.value) {
+        for (const groupName in groupedSocialMediaAccounts.value[provider].groups) {
+          const account = groupedSocialMediaAccounts.value[provider].groups[groupName].find(acc => acc.id === accountId);
           if (account && account.groups && account.groups.length > 0) {
             return {
               account: account,
@@ -344,12 +334,7 @@ export default {
 
     watch(dialogVisible, (newVal) => {
       if (newVal) {
-        fetchTelegramAccounts();
-        nextTick(() => {
-          if (messageTextarea.value) {
-            textareaWidth.value = messageTextarea.value.$el.offsetWidth;
-          }
-        });
+        fetchSocialMediaAccounts();
       } else {
         imagePrompt.value = '';
         generatedImageUrl.value = '';
@@ -357,12 +342,9 @@ export default {
       }
     });
 
-    watch(generatedImageUrl, (newVal) => {
-      console.log("Generated image URL updated:", newVal);
-    });
 
     return {
-      groupedTelegramAccounts,
+      groupedSocialMediaAccounts,
       cancel,
       confirm,
       dialogVisible,
@@ -378,7 +360,6 @@ export default {
       generatedImageUrl,
       triggerGenerateImage,
       messageTextarea,
-      textareaWidth,
       imageError,
       handleImageError
     };
