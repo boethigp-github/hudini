@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 openai_client = OpenAIClient(api_key=settings.get("default").get("API_KEY_OPEN_AI"))
 anthropic_client = AnthropicClient(api_key=settings.get("default").get("API_KEY_ANTHROPIC"))
 
-registered_methods = ['fetch_completion', 'chat_completion', 'generate_image']
+registered_methods = ['fetch_completion', 'chat_completion']
 clients = {
     'openai': openai_client,
     'anthropic': anthropic_client,
