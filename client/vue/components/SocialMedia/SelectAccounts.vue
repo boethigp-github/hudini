@@ -272,7 +272,7 @@ export default {
         if (sentMessages.length > 0) {
           const messageIds = sentMessages.map(msg => `${msg.accountId}: ${msg.messageId}`).join(', ');
           window.dispatchEvent(new CustomEvent('show-message', {
-            detail: {message: t('messages_sent_successfully', `Messages sent successfully. Message IDs: ${messageIds}`)}
+            detail: { color:'success',message: t('messages_sent_successfully', `Messages sent successfully. Message IDs: ${messageIds}`)}
           }));
         } else {
           window.dispatchEvent(new CustomEvent('show-message', {
@@ -282,7 +282,7 @@ export default {
       } catch (error) {
         console.error("Error sending messages:", error);
         window.dispatchEvent(new CustomEvent('show-message', {
-          detail: {message: error}
+          detail: {message: error,  color:'error'}
         }));
       } finally {
         isLoading.value = false;
@@ -294,6 +294,13 @@ export default {
       console.error("Error loading image:", error);
       imageError.value = t('error_loading_image', "Error loading image");
     };
+
+    function sendGenerationError(error) {
+      imageError.value = t('error_generating_image', "Error generating image");
+      window.dispatchEvent(new CustomEvent('show-message', {
+        detail: {message: imageError.value + " Error:" + error, color:'error'}
+      }));
+    }
 
     const triggerGenerateImage = async () => {
       if (!imagePrompt.value) {
@@ -322,14 +329,7 @@ export default {
           throw new Error(response.detail);
         }
       } catch (error) {
-
-        imageError.value = t('error_generating_image', "Error generating image");
-        console.log(error)
-
-        window.dispatchEvent(new CustomEvent('show-message', {
-
-          detail: {message: imageError.value + " Error:" + error}
-        }));
+        sendGenerationError(error);
       } finally {
         isImageGenerating.value = false;
       }
