@@ -307,17 +307,11 @@ export const generateImage = async (params) => {
             body: JSON.stringify(params),
         });
 
-
-
         return await response.json();
 };
 
 export const sendSocialMediaImageMessage = async (provider, messageData) => {
-
-  // Construct the URL for sending the image message
         const url = `${API_BASE_URL}/socialmedia/${provider}/image/send`;
-
-        // Send the POST request with FormData
         const response = await fetch(url, {
             method: 'POST',
              headers: {

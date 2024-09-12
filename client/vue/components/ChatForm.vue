@@ -349,7 +349,7 @@ export default {
     });
 
     const onShowMessage = (event)=>{
-      showMessage(event.detail.message);
+      showMessage(event.detail.message, event.detail.color);
     }
 
     /**
