@@ -25,7 +25,7 @@
                       lines="three"
                       :mandatory="true"
                       v-model:selected="selectedAccounts"
-                      @update:selected="handleSelected"
+
                       item-props>
                     <template v-slot:subtitle="{ subtitle }">
                       <div v-html="subtitle"></div>
@@ -233,15 +233,7 @@ export default {
           url:generatedImageUrl.value
         };
 
-
-
-        console.log("messageData",messageData);
         if (generatedImageUrl.value) {
-          // If an image was generated, construct the URL with the encoded payload
-          const encodedPayload = encodeURIComponent(JSON.stringify(messageData));
-
-
-
           // Send the POST request using sendSocialMediaImageMessage
           response = await sendSocialMediaImageMessage(provider, messageData);
         } else {
@@ -282,9 +274,6 @@ export default {
 
 
 
-    const handleSelected = () => {
-      console.log("selectedAccounts", selectedAccounts.value);
-    };
 
     const handleImageError = (error) => {
       console.error("Error loading image:", error);
@@ -311,19 +300,20 @@ export default {
           style: "vivid"
         });
 
-        console.log("Image generation response:", response);
-
         if (response && response.data && response.data.length > 0) {
           generatedImageUrl.value = response.data[0].url;
           console.log("Generated image URL:", generatedImageUrl.value);
         } else {
-          throw new Error("No image URL in the response");
+          throw new Error(response.detail);
         }
       } catch (error) {
-        console.error("Error generating image:", error);
+
         imageError.value = t('error_generating_image', "Error generating image");
+          console.log(error)
+
         window.dispatchEvent(new CustomEvent('show-message', {
-          detail: {message: t('error_generating_image', "Error generating image")}
+
+          detail: {message: imageError.value + " Error:"+error}
         }));
       } finally {
         isImageGenerating.value = false;
@@ -357,7 +347,6 @@ export default {
       getProviderLogo,
       getListItems,
       selectedAccounts,
-      handleSelected,
       selectedBotResponses,
       messageText,
       isLoading,

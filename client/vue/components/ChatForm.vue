@@ -142,7 +142,7 @@ export default {
       show: false,
       text: '',
       color: 'info',
-      timeout: 3000
+      timeout: 10000
     });
 
     const showMessage = (text, color = 'info') => {
@@ -150,8 +150,6 @@ export default {
       snackbar.value.text = text;
       snackbar.value.color = color;
     };
-
-
 
     watch(loading, (newValue) => {
       if (!newValue) {

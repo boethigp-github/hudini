@@ -299,8 +299,7 @@ export const sendSocialMediaMessage = async (provider, socialMediaMessage) => {
  * @returns {Promise<Object>} A promise that resolves to the generated image data.
  */
 export const generateImage = async (params) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/generate/image`, {
+    const response = await fetch(`${API_BASE_URL}/generate/image`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -308,20 +307,14 @@ export const generateImage = async (params) => {
             body: JSON.stringify(params),
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+
 
         return await response.json();
-    } catch (error) {
-        console.error('Error generating image:', error);
-        throw error;
-    }
 };
 
 export const sendSocialMediaImageMessage = async (provider, messageData) => {
-    try {
-        // Construct the URL for sending the image message
+
+  // Construct the URL for sending the image message
         const url = `${API_BASE_URL}/socialmedia/${provider}/image/send`;
 
         // Send the POST request with FormData
@@ -333,14 +326,6 @@ export const sendSocialMediaImageMessage = async (provider, messageData) => {
             body: JSON.stringify(messageData) // Send the FormData object directly
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
         // Return the JSON response
         return await response.json();
-    } catch (error) {
-        console.error('Error sending image message:', error);
-        throw error;
-    }
 };
