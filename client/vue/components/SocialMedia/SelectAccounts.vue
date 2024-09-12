@@ -27,7 +27,6 @@
                     </template>
                   </v-list>
                 </v-col>
-
               </v-row>
             </v-col>
              <v-col cols="9" md="9">
@@ -39,15 +38,17 @@
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue-darken-1" @click="cancel">{{ $t('cancel', 'Cancel') }}</v-btn>
-        <v-btn color="primary" @click="confirm">{{ $t('publish', 'Publish') }}</v-btn>
+        <v-btn color="blue-darken-1" @click="cancel" :disabled="isLoading">{{ $t('cancel', 'Cancel') }}</v-btn>
+        <v-btn color="primary" @click="confirm" :loading="isLoading">{{ $t('publish', 'Publish') }}</v-btn>
       </v-card-actions>
+      <v-progress-linear v-if="isLoading" color="primary" indeterminate></v-progress-linear>
     </v-card>
   </v-dialog>
 </template>
+
 <script>
 import {markRaw, onBeforeUnmount, onMounted, ref, watch} from "vue";
-import {getTelegramAccounts, sendSocialMediaMessage} from './../../services/api'; // Import your API method
+import {getTelegramAccounts, sendSocialMediaMessage} from './../../services/api';
 import TelegramLogo from './TelegramLogo.vue';
 import AvatarComponent from './DummyAvatar.vue';
 import {useI18n} from 'vue-i18n'
@@ -62,10 +63,12 @@ export default {
   setup() {
     const {t} = useI18n();
     const dialogVisible = ref(false);
-    const groupedTelegramAccounts = ref({}); // Grouped accounts by provider and group
-    const selectedBotResponses=ref([])
+    const groupedTelegramAccounts = ref({});
+    const selectedBotResponses = ref([])
     const messageText = ref('')
-    // Fetch the Telegram accounts from the API only when the dialog is opened
+    const selectedAccounts = ref([])
+    const isLoading = ref(false)
+
     const fetchTelegramAccounts = async () => {
       try {
         const accounts = await getTelegramAccounts();
@@ -74,6 +77,7 @@ export default {
         console.error("Failed to fetch telegram accounts:", error);
       }
     };
+
     const getListItems = (accounts, groupName) => {
       return accounts.map(account => ({
         prependAvatar: 'https://cdn.vuetifyjs.com/images/lists/1.jpg',
@@ -83,17 +87,13 @@ export default {
       }));
     };
 
-    const selectedAccounts = ref([])
-
-
-    // Group accounts by provider and group
     const groupAccountsByProviderAndGroup = (accounts) => {
       const providers = {};
       accounts.forEach(account => {
-        const provider = account.provider; // Group by provider (e.g., 'telegram')
+        const provider = account.provider;
         if (!providers[provider]) {
           providers[provider] = {
-            logo: getProviderLogo(provider),  // Assign logo based on provider dynamically
+            logo: getProviderLogo(provider),
             groups: {}
           };
         }
@@ -107,21 +107,17 @@ export default {
       groupedTelegramAccounts.value = providers;
     };
 
-    // Function to dynamically get the provider logo
     const getProviderLogo = (provider) => {
       const logoMap = {
         telegram: markRaw(TelegramLogo),
-
-        // Add more providers and their corresponding logos here
       };
-      return logoMap[provider] || '/assets/default-logo.png';  // Fallback to a default logo
+      return logoMap[provider] || '/assets/default-logo.png';
     };
 
-    // Open modal event listener
     const onSocialMediaAccountSelectionOpen = (event) => {
       dialogVisible.value = true;
-      selectedBotResponses.value=event.detail.selectedBotResponses
-      messageText.value = selectedBotResponses.value.map(item=>item.content).join('\n');
+      selectedBotResponses.value = event.detail.selectedBotResponses
+      messageText.value = selectedBotResponses.value.map(item => item.content).join('\n');
     };
 
     onMounted(() => {
@@ -132,40 +128,71 @@ export default {
       window.removeEventListener('socialmedia-accounts-selection-open', onSocialMediaAccountSelectionOpen);
     });
 
-    // Cancel action
     const cancel = () => {
-      dialogVisible.value=false
+      dialogVisible.value = false
     };
 
-    // Confirm action, dispatch selected accounts via window event
-    const confirm = () => {
-
-
-      console.log("selectedAccounts", selectedAccounts.value);
-
-            if(!selectedAccounts.value.length) {
-              window.dispatchEvent(new CustomEvent('show-message', {detail: {message: t('please_choose_a_user', "Please choose a user")}}));
-            }
-
-            selectedAccounts.value.forEach(account=>{
-console.log("account", account);
-              let group_id = '@hudinitests'
-          sendSocialMediaMessage("telegram", new SocialMedia.Message(String(account), account, group_id, messageText.value ));
-      })
-
+    const getGroupByAccount = (accountId) => {
+      for (const provider in groupedTelegramAccounts.value) {
+        for (const groupName in groupedTelegramAccounts.value[provider].groups) {
+          const account = groupedTelegramAccounts.value[provider].groups[groupName].find(acc => acc.id === accountId);
+          if (account && account.groups && account.groups.length > 0) {
+            return {
+              account: account,
+              group: account.groups[0],
+              provider: provider
+            };
+          }
+        }
+      }
+      return null;
     };
 
-    // Watcher: Fetch accounts only when dialog is opened
+    const confirm = async () => {
+      if (!selectedAccounts.value.length) {
+        window.dispatchEvent(new CustomEvent('show-message', {
+          detail: {message: t('please_choose_a_user', "Please choose a user")}
+        }));
+        return;
+      }
+
+      isLoading.value = true;
+
+      try {
+        for (const accountId of selectedAccounts.value) {
+          const result = getGroupByAccount(accountId);
+          if (result) {
+            const {account, group, provider} = result;
+            await sendSocialMediaMessage(
+              provider,
+              new SocialMedia.Message(account.displayname, accountId, group, messageText.value)
+            );
+          } else {
+            console.error(`No valid account or group found for account ID ${accountId}`);
+          }
+        }
+
+        window.dispatchEvent(new CustomEvent('show-message', {
+          detail: {message: t('messages_sent_successfully', "Messages sent successfully")}
+        }));
+      } catch (error) {
+        console.error("Error sending messages:", error);
+        window.dispatchEvent(new CustomEvent('show-message', {
+          detail: {message: t('error_sending_messages', "Error sending messages")}
+        }));
+      } finally {
+        isLoading.value = false;
+      }
+    };
+
     watch(dialogVisible, (newVal) => {
       if (newVal) {
         fetchTelegramAccounts();
       }
     });
 
-    const handleSelected=()=>{
-
-      console.log("selectedAccounts",selectedAccounts.value);
-
+    const handleSelected = () => {
+      console.log("selectedAccounts", selectedAccounts.value);
     }
 
     return {
@@ -178,7 +205,8 @@ console.log("account", account);
       selectedAccounts,
       handleSelected,
       selectedBotResponses,
-      messageText
+      messageText,
+      isLoading
     };
   },
 };
