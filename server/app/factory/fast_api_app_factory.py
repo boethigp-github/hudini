@@ -10,6 +10,7 @@ from server.app.routers.generation.anthropic_generation_router import router as 
 from server.app.routers.generation.google_ai_generation_router import router as google_ai_generation_router
 from server.app.routers.socialmedia.telegram_router import router as socialmedia_telegram_router
 from server.app.routers.generation.openai.openai_dalle3_image_generation_router import router as openai_dalle2_image_generation_router
+from server.app.routers.socialmedia.telegram_image_text_router import router as socialmedia_telegram_image_text_router
 from server.app.routers.users.users_router import router as users_router
 
 
@@ -73,5 +74,6 @@ class FastAPIAppFactory:
         self.app.include_router(google_ai_generation_router)
         self.app.include_router(socialmedia_telegram_router)
         self.app.include_router(openai_dalle2_image_generation_router)
+        self.app.include_router(socialmedia_telegram_image_text_router)
         self.logger.debug("Finished: Registering routes")
 

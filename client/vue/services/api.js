@@ -286,3 +286,35 @@ export const sendSocialMediaMessage = async (provider, socialMediaMessage) => {
         throw error;
     }
 };
+
+
+/**
+ * Generates an image based on the given prompt and parameters.
+ * @param {Object} params - The parameters for image generation.
+ * @param {string} params.prompt - The prompt for image generation.
+ * @param {number} params.n - Number of images to generate.
+ * @param {string} params.size - Size of the image to generate.
+ * @param {string} params.quality - Quality of the image to generate.
+ * @param {string} params.style - Style of the image to generate.
+ * @returns {Promise<Object>} A promise that resolves to the generated image data.
+ */
+export const generateImage = async (params) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/generate/image`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(params),
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error generating image:', error);
+        throw error;
+    }
+};

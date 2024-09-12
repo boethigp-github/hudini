@@ -72,6 +72,9 @@ const messages = {
         select_social_media: "Select Social Media Accounts",
         publish: "Publish",
         provider: 'Provider',
+        generate_image: 'Generate Image',
+        image_prompt: 'Enter an image description...',
+        group: 'Group',
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -144,6 +147,9 @@ const messages = {
         select_social_media: "Soziale Medien Konten auswählen",
         publish: "Veröffentlichen",
         provider: 'Anbieter',
+        generate_image: 'Bild generieren',
+        image_prompt: 'Geben Sie eine Bildbeschreibung ein...',
+        group: 'Gruppe',
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -216,6 +222,9 @@ const messages = {
         select_social_media: "Sélectionnez les comptes de réseaux sociaux",
         publish: "Publier",
         provider: 'Fournisseur',
+        generate_image: 'Générer une image',
+        image_prompt: 'Entrez une description d\'image...',
+        group: 'Groupe',
 
     },
     ru: {
@@ -288,9 +297,10 @@ const messages = {
         publish_social_media: "Опубликовать в социальных сетях",
         select_social_media: "Выберите аккаунты социальных сетей",
         publish: "Опубликовать",
-        provider: 'Поставщик'
-
-
+        provider: 'Поставщик',
+        generate_image: '生成图片',
+        image_prompt: '输入图片描述...',
+        group: 'Группа',
     },
     zh: {
         hudini_title: 'Hudini - CPU 魔术师在 SLM',
@@ -361,6 +371,9 @@ const messages = {
         select_social_media: "选择社交媒体账户",
         publish: "发布",
         provider: '供应商',
+        generate_image: '生成图片',
+        image_prompt: '输入图片描述...',
+        group: '组',
     },
     // Add other languages as needed
 };

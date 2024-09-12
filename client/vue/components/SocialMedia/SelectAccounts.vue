@@ -34,30 +34,70 @@
                 </v-col>
               </v-row>
             </v-col>
-             <v-col cols="9" md="9">
-                  <v-textarea rows="20" width="100%" v-model="messageText" variant="filled" auto-grow counter>
-                  </v-textarea>
+            <v-col cols="9" md="9">
+              <v-row>
+                <v-col cols="12">
+                  <v-text-field
+                    v-model="imagePrompt"
+                    :label="$t('image_prompt', 'Image Generation Prompt')"
+                    variant="outlined"
+                  ></v-text-field>
                 </v-col>
+                <v-col cols="12" class="d-flex justify-end">
+                  <v-btn
+                    color="primary"
+                    @click="triggerGenerateImage"
+                    :loading="isImageGenerating"
+                    :disabled="!imagePrompt">
+                    {{ $t('generate_image', 'Generate Image') }}
+                  </v-btn>
+                </v-col>
+                <v-col cols="12">
+                  <v-img
+                    :width="300"
+                    aspect-ratio="16/9"
+                    cover
+                     :src="generatedImageUrl">
+                    <template v-slot:placeholder>
+                      <v-row class="fill-height ma-0" align="center" justify="center">
+                        <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
+                      </v-row>
+                    </template>
+                  </v-img>
+                  <p v-if="imageError" class="error--text">{{ imageError }}</p>
+                </v-col>
+                <v-col cols="12">
+                  <v-textarea
+                    ref="messageTextarea"
+                    rows="20"
+                    v-model="messageText"
+                    variant="filled"
+                    auto-grow
+                    counter
+                  ></v-textarea>
+                </v-col>
+              </v-row>
+            </v-col>
           </v-row>
         </v-container>
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="blue-darken-1" @click="cancel" :disabled="isLoading">{{ $t('cancel', 'Cancel') }}</v-btn>
-        <v-btn color="primary" @click="confirm" :loading="isLoading">{{ $t('publish', 'Publish') }}</v-btn>
+        <v-btn color="blue-darken-1" @click="cancel" :disabled="isLoading || isImageGenerating">{{ $t('cancel', 'Cancel') }}</v-btn>
+        <v-btn color="primary" @click="confirm" :loading="isLoading" :disabled="isImageGenerating">{{ $t('publish', 'Publish') }}</v-btn>
       </v-card-actions>
-      <v-progress-linear v-if="isLoading" color="primary" indeterminate></v-progress-linear>
+      <v-progress-linear v-if="isLoading || isImageGenerating" color="primary" indeterminate></v-progress-linear>
     </v-card>
   </v-dialog>
 </template>
 
 <script>
-import {markRaw, onBeforeUnmount, onMounted, ref, watch} from "vue";
-import {getTelegramAccounts, sendSocialMediaMessage} from './../../services/api';
+import { markRaw, onBeforeUnmount, onMounted, ref, watch, nextTick } from "vue";
+import { getTelegramAccounts, sendSocialMediaMessage, generateImage } from './../../services/api';
 import TelegramLogo from './TelegramLogo.vue';
 import AvatarComponent from './DummyAvatar.vue';
-import {useI18n} from 'vue-i18n'
-import {SocialMedia} from "@/vue/models/SocialMedia.js";
+import { useI18n } from 'vue-i18n'
+import { SocialMedia } from "@/vue/models/SocialMedia.js";
 
 export default {
   name: "SocialMediaModal",
@@ -69,10 +109,16 @@ export default {
     const {t} = useI18n();
     const dialogVisible = ref(false);
     const groupedTelegramAccounts = ref({});
-    const selectedBotResponses = ref([])
-    const messageText = ref('')
-    const selectedAccounts = ref([])
-    const isLoading = ref(false)
+    const selectedBotResponses = ref([]);
+    const messageText = ref('');
+    const selectedAccounts = ref([]);
+    const isLoading = ref(false);
+    const imagePrompt = ref('');
+    const isImageGenerating = ref(false);
+    const generatedImageUrl = ref('');
+    const textareaWidth = ref(0);
+    const messageTextarea = ref(null);
+    const imageError = ref('');
 
     const fetchTelegramAccounts = async () => {
       try {
@@ -138,7 +184,10 @@ export default {
     });
 
     const cancel = () => {
-      dialogVisible.value = false
+      dialogVisible.value = false;
+      imagePrompt.value = '';
+      generatedImageUrl.value = '';
+      imageError.value = '';
     };
 
     const getGroupByAccount = (accountId) => {
@@ -173,9 +222,13 @@ export default {
           const result = getGroupByAccount(accountId);
           if (result) {
             const {account, group, provider} = result;
+            let message = messageText.value;
+            if (generatedImageUrl.value) {
+              message += `\n\n${generatedImageUrl.value}`;
+            }
             const response = await sendSocialMediaMessage(
-              provider,
-              new SocialMedia.Message(account.displayname, accountId, group, messageText.value)
+                provider,
+                new SocialMedia.Message(account.displayname, accountId, group, message)
             );
             if (response && response.status === "Message sent successfully") {
               sentMessages.push({accountId, messageId: response.message_id});
@@ -205,15 +258,72 @@ export default {
       }
     };
 
+    const handleSelected = () => {
+      console.log("selectedAccounts", selectedAccounts.value);
+    };
+
+    const handleImageError = (error) => {
+      console.error("Error loading image:", error);
+      imageError.value = t('error_loading_image', "Error loading image");
+    };
+
+    const triggerGenerateImage = async () => {
+      if (!imagePrompt.value) {
+        window.dispatchEvent(new CustomEvent('show-message', {
+          detail: {message: t('please_enter_image_prompt', "Please enter an image prompt")}
+        }));
+        return;
+      }
+
+      isImageGenerating.value = true;
+      imageError.value = '';
+
+      try {
+        const response = await generateImage({
+          prompt: imagePrompt.value,
+          n: 1,
+          size: "1024x1024",
+          quality: "standard",
+          style: "vivid"
+        });
+
+        console.log("Image generation response:", response);
+
+        if (response && response.data && response.data.length > 0) {
+          generatedImageUrl.value = response.data[0].url;
+          console.log("Generated image URL:", generatedImageUrl.value);
+        } else {
+          throw new Error("No image URL in the response");
+        }
+      } catch (error) {
+        console.error("Error generating image:", error);
+        imageError.value = t('error_generating_image', "Error generating image");
+        window.dispatchEvent(new CustomEvent('show-message', {
+          detail: {message: t('error_generating_image', "Error generating image")}
+        }));
+      } finally {
+        isImageGenerating.value = false;
+      }
+    };
+
     watch(dialogVisible, (newVal) => {
       if (newVal) {
         fetchTelegramAccounts();
+        nextTick(() => {
+          if (messageTextarea.value) {
+            textareaWidth.value = messageTextarea.value.$el.offsetWidth;
+          }
+        });
+      } else {
+        imagePrompt.value = '';
+        generatedImageUrl.value = '';
+        imageError.value = '';
       }
     });
 
-    const handleSelected = () => {
-      console.log("selectedAccounts", selectedAccounts.value);
-    }
+    watch(generatedImageUrl, (newVal) => {
+      console.log("Generated image URL updated:", newVal);
+    });
 
     return {
       groupedTelegramAccounts,
@@ -227,7 +337,15 @@ export default {
       selectedBotResponses,
       messageText,
       isLoading,
-      getGroupLink
+      getGroupLink,
+      imagePrompt,
+      isImageGenerating,
+      generatedImageUrl,
+      triggerGenerateImage,
+      messageTextarea,
+      textareaWidth,
+      imageError,
+      handleImageError
     };
   },
 };
