@@ -13,8 +13,13 @@
               </v-row>
               <v-row v-for="(accounts, groupName) in groups.groups" :key="groupName">
                 <v-col>
-                  <h4>{{ $t('group', 'Group') }}: {{ groupName }}</h4>
-                  <h5>{{ $t('user', 'User') }}: {{ groupName }}</h5>
+                  <h4>
+                    {{ $t('group', 'Group') }}:
+                    <a v-if="provider === 'telegram'" :href="getGroupLink(groupName)" target="_blank">
+                      {{ groupName }}
+                    </a>
+                    <span v-else>{{ groupName }}</span>
+                  </h4>
                   <v-list
                       :items="getListItems(accounts, groupName)"
                       lines="three"
@@ -114,6 +119,10 @@ export default {
       return logoMap[provider] || '/assets/default-logo.png';
     };
 
+    const getGroupLink = (groupName) => {
+      return `https://t.me/${groupName.replace('@', '')}`;
+    };
+
     const onSocialMediaAccountSelectionOpen = (event) => {
       dialogVisible.value = true;
       selectedBotResponses.value = event.detail.selectedBotResponses
@@ -159,22 +168,33 @@ export default {
       isLoading.value = true;
 
       try {
+        const sentMessages = [];
         for (const accountId of selectedAccounts.value) {
           const result = getGroupByAccount(accountId);
           if (result) {
             const {account, group, provider} = result;
-            await sendSocialMediaMessage(
+            const response = await sendSocialMediaMessage(
               provider,
               new SocialMedia.Message(account.displayname, accountId, group, messageText.value)
             );
+            if (response && response.status === "Message sent successfully") {
+              sentMessages.push({accountId, messageId: response.message_id});
+            }
           } else {
             console.error(`No valid account or group found for account ID ${accountId}`);
           }
         }
 
-        window.dispatchEvent(new CustomEvent('show-message', {
-          detail: {message: t('messages_sent_successfully', "Messages sent successfully")}
-        }));
+        if (sentMessages.length > 0) {
+          const messageIds = sentMessages.map(msg => `${msg.accountId}: ${msg.messageId}`).join(', ');
+          window.dispatchEvent(new CustomEvent('show-message', {
+            detail: {message: t('messages_sent_successfully', `Messages sent successfully. Message IDs: ${messageIds}`)}
+          }));
+        } else {
+          window.dispatchEvent(new CustomEvent('show-message', {
+            detail: {message: t('no_messages_sent', "No messages were sent successfully")}
+          }));
+        }
       } catch (error) {
         console.error("Error sending messages:", error);
         window.dispatchEvent(new CustomEvent('show-message', {
@@ -206,7 +226,8 @@ export default {
       handleSelected,
       selectedBotResponses,
       messageText,
-      isLoading
+      isLoading,
+      getGroupLink
     };
   },
 };
