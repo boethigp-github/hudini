@@ -25,7 +25,6 @@
                       lines="three"
                       :mandatory="true"
                       v-model:selected="selectedAccounts"
-
                       item-props>
                     <template v-slot:subtitle="{ subtitle }">
                       <div v-html="subtitle"></div>
@@ -35,16 +34,21 @@
               </v-row>
             </v-col>
             <v-col cols="9" md="9">
-              <v-row>
+              <v-row style="margin-top: -120px">
+                <v-col cols="12">
+                  <v-img :width="200" aspect-ratio="16/9" cover :src="generatedImageUrl"/>
+                </v-col>
                 <v-col cols="12">
                   <v-text-field
                       v-model="imagePrompt"
                       :label="$t('image_prompt', 'Image Generation Prompt')"
-                      variant="outlined"
-                  ></v-text-field>
+                      variant="outlined">
+                    <v-progress-linear v-if="isImageGenerating" color="primary" indeterminate></v-progress-linear>
+                  </v-text-field>
                 </v-col>
                 <v-col cols="12" class="d-flex justify-end">
                   <v-btn
+                      size="small"
                       color="primary"
                       @click="triggerGenerateImage"
                       :loading="isImageGenerating"
@@ -53,20 +57,15 @@
                   </v-btn>
                 </v-col>
                 <v-col cols="12">
-                  <v-img
-                      :width="300"
-                      aspect-ratio="16/9"
-                      cover
-                      :src="generatedImageUrl">
-                    <template v-slot:placeholder>
-                      <v-row class="fill-height ma-0" align="center" justify="center">
-                        <v-progress-circular indeterminate color="grey lighten-5"></v-progress-circular>
-                      </v-row>
-                    </template>
-                  </v-img>
-                  <p v-if="imageError" class="error--text">{{ imageError }}</p>
-                </v-col>
-                <v-col cols="12">
+                  <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="blue-darken-1" @click="cancel" :disabled="isLoading || isImageGenerating">
+                      {{ $t('cancel', 'Cancel') }}
+                    </v-btn>
+                    <v-btn color="primary" @click="confirm" :loading="isLoading" :disabled="isImageGenerating">
+                      {{ $t('publish', 'Publish') }}
+                    </v-btn>
+                  </v-card-actions>
                   <v-textarea
                       ref="messageTextarea"
                       rows="20"
@@ -81,16 +80,6 @@
           </v-row>
         </v-container>
       </v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn color="blue-darken-1" @click="cancel" :disabled="isLoading || isImageGenerating">
-          {{ $t('cancel', 'Cancel') }}
-        </v-btn>
-        <v-btn color="primary" @click="confirm" :loading="isLoading" :disabled="isImageGenerating">
-          {{ $t('publish', 'Publish') }}
-        </v-btn>
-      </v-card-actions>
-      <v-progress-linear v-if="isLoading || isImageGenerating" color="primary" indeterminate></v-progress-linear>
     </v-card>
   </v-dialog>
 </template>
@@ -192,6 +181,22 @@ export default {
       window.removeEventListener('socialmedia-accounts-selection-open', onSocialMediaAccountSelectionOpen);
     });
 
+    const sendMessageSuccess = (sentMessages) => {
+      const messageIds = sentMessages.map(msg => `${msg.accountId}: ${msg.messageId}`).join(', ');
+      window.dispatchEvent(new CustomEvent('show-message', {
+        detail: {
+          color: 'success',
+          message: t('messages_sent_successfully', `Messages sent successfully. Message IDs: ${messageIds}`)
+        }
+      }));
+    }
+
+    const sendMessagesNoMessagesSended = (errors) => {
+      window.dispatchEvent(new CustomEvent('show-message', {
+        detail: {message: errors.join(","), color: 'error'}
+      }));
+    }
+
     const cancel = () => {
       dialogVisible.value = false;
       imagePrompt.value = '';
@@ -214,6 +219,17 @@ export default {
       }
       return null;
     };
+
+    function sendMessagesError(error) {
+      console.error("Error sending messages:", error);
+      window.dispatchEvent(new CustomEvent('show-message', {
+        detail: {message: error, color: 'error'}
+      }));
+    }
+
+    function isSendMessagesResponseOkay(response) {
+      return response && (response.status === "Image sent successfully" || response.status === "Message sent successfully");
+    }
 
     const confirm = async () => {
       if (!selectedAccounts.value.length) {
@@ -254,13 +270,12 @@ export default {
             continue;
           }
 
-
           /**
            * Send Image and Textcaption
            */
           let response = await sendSocialMediaImageMessage(provider, messageData);
 
-          if (response && (response.status === "Image sent successfully" || response.status === "Message sent successfully")) {
+          if (isSendMessagesResponseOkay(response)) {
             sentMessages.push({accountId, messageId: response.message_id});
           }
 
@@ -270,20 +285,12 @@ export default {
         }
 
         if (sentMessages.length > 0) {
-          const messageIds = sentMessages.map(msg => `${msg.accountId}: ${msg.messageId}`).join(', ');
-          window.dispatchEvent(new CustomEvent('show-message', {
-            detail: { color:'success',message: t('messages_sent_successfully', `Messages sent successfully. Message IDs: ${messageIds}`)}
-          }));
+          sendMessageSuccess(sentMessages);
         } else {
-          window.dispatchEvent(new CustomEvent('show-message', {
-            detail: {message: errors.join(","), color:'error'}
-          }));
+          sendMessagesNoMessagesSended(errors);
         }
       } catch (error) {
-        console.error("Error sending messages:", error);
-        window.dispatchEvent(new CustomEvent('show-message', {
-          detail: {message: error,  color:'error'}
-        }));
+        sendMessagesError(error);
       } finally {
         isLoading.value = false;
       }
@@ -298,7 +305,7 @@ export default {
     function sendGenerationError(error) {
       imageError.value = t('error_generating_image', "Error generating image");
       window.dispatchEvent(new CustomEvent('show-message', {
-        detail: {message: imageError.value + " Error:" + error, color:'error'}
+        detail: {message: imageError.value + " Error:" + error, color: 'error'}
       }));
     }
 
@@ -319,7 +326,7 @@ export default {
           n: 1,
           size: "1024x1024",
           quality: "standard",
-          style: "vivid"
+          style: "natural"
         });
 
         if (response && response.data && response.data.length > 0) {

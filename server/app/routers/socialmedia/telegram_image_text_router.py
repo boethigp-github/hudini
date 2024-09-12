@@ -74,7 +74,7 @@ async def publish_image_to_telegram(
                 with open(temp_file_path, "wb") as f:
                     f.write(await response.read())
 
-        logger.debug(f"Downloaded image saved to {temp_file_path}")
+
 
         # Load the TELEGRAM_CONFIG from the environment and parse it as JSON
         telegram_config = json.loads(settings.get("default").get("TELEGRAM_CONFIG"))
