@@ -1,12 +1,16 @@
 import logging
 import json
 import os
-from fastapi import APIRouter, HTTPException, status, UploadFile, File, Query
+import aiohttp
+import tempfile
+import shutil
+from fastapi import APIRouter, HTTPException, status, Query
 from pydantic import BaseModel
 from telethon import TelegramClient
 from telethon.errors import SessionPasswordNeededError
-import tempfile
-import shutil
+from urllib.parse import urlparse
+import random
+import string
 
 from server.app.config.settings import Settings
 
@@ -18,6 +22,14 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+# Model for request body
+class PublishRequestModel(BaseModel):
+    user: str
+    api_id: str
+    group_id: str
+    caption: str
+    url: str
+
 # Model for response
 class TelegramImagePublishResponseModel(BaseModel):
     status: str
@@ -26,15 +38,13 @@ class TelegramImagePublishResponseModel(BaseModel):
 @router.post("/socialmedia/telegram/image/send", response_model=TelegramImagePublishResponseModel,
              status_code=status.HTTP_201_CREATED, tags=["socialmedia"])
 async def publish_image_to_telegram(
-        publish_request: str = Query(..., description="JSON string containing publish request data"),
-        file: UploadFile = File(...)
+        publish_request: PublishRequestModel
 ):
     """
     Publish an image with a caption to a specified Telegram group using a userbot.
 
     Args:
-        publish_request: JSON string containing user, api_id, group_id, and caption.
-        file: The image file to be uploaded.
+        publish_request: JSON body containing user, api_id, group_id, caption, and url.
 
     Returns:
         TelegramImagePublishResponseModel: Status and message ID of the sent message.
@@ -43,20 +53,28 @@ async def publish_image_to_telegram(
     temp_dir = None
 
     try:
-        # Parse the publish_request JSON string
-        publish_request_dict = json.loads(publish_request)
+        # Convert the request body to a dictionary
+        publish_request_dict = publish_request.dict()
         logger.debug(f"Received publish_request: {publish_request_dict}")
-        logger.debug(f"Received file: {file.filename}")
 
-        # Create a temporary directory
+        # Fetch the image from the URL
+        image_url = publish_request_dict['url']
+        file_extension = os.path.splitext(urlparse(image_url).path)[1] or '.png'  # Default to .png if no extension
+
+        # Create a temporary directory and file
         temp_dir = tempfile.mkdtemp()
-        temp_file_path = os.path.join(temp_dir, file.filename)
+        temp_file_name = ''.join(random.choices(string.ascii_letters + string.digits, k=10)) + file_extension
+        temp_file_path = os.path.join(temp_dir, temp_file_name)
 
-        # Save the uploaded file with its original filename
-        with open(temp_file_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
+        # Download and save the image
+        async with aiohttp.ClientSession() as session:
+            async with session.get(image_url) as response:
+                if response.status != 200:
+                    raise HTTPException(status_code=400, detail=f"Failed to download image from URL: {image_url}")
+                with open(temp_file_path, "wb") as f:
+                    f.write(await response.read())
 
-        logger.debug(f"Attempting to send image to Telegram group ID: {publish_request_dict['group_id']}")
+        logger.debug(f"Downloaded image saved to {temp_file_path}")
 
         # Load the TELEGRAM_CONFIG from the environment and parse it as JSON
         telegram_config = json.loads(settings.get("default").get("TELEGRAM_CONFIG"))
@@ -105,7 +123,7 @@ async def publish_image_to_telegram(
             channel,
             temp_file_path,
             caption=publish_request_dict['caption'],
-            file_name=file.filename  # Use the original filename
+            file_name=temp_file_name  # Use the generated filename
         )
 
         # Log and return the result

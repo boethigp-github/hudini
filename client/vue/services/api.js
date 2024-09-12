@@ -318,3 +318,29 @@ export const generateImage = async (params) => {
         throw error;
     }
 };
+
+export const sendSocialMediaImageMessage = async (provider, messageData) => {
+    try {
+        // Construct the URL for sending the image message
+        const url = `${API_BASE_URL}/socialmedia/${provider}/image/send`;
+
+        // Send the POST request with FormData
+        const response = await fetch(url, {
+            method: 'POST',
+             headers: {
+                'Content-Type': 'application/json' // Ensure the server knows you're sending JSON
+            },
+            body: JSON.stringify(messageData) // Send the FormData object directly
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        // Return the JSON response
+        return await response.json();
+    } catch (error) {
+        console.error('Error sending image message:', error);
+        throw error;
+    }
+};

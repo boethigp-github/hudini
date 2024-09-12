@@ -169,8 +169,6 @@ async def stream_route(request: GenerationRequest, db: AsyncSession = Depends(ge
     async def generate():
         tasks = []
 
-
-
         for model, client, method in valid_models:
             # Pass the context from the database as a parameter to fetch_completion
             async_task = method(model, request.prompt, request.id, context=user_context)

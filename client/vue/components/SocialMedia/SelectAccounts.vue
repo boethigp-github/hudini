@@ -93,7 +93,7 @@
 
 <script>
 import { markRaw, onBeforeUnmount, onMounted, ref, watch, nextTick } from "vue";
-import { getTelegramAccounts, sendSocialMediaMessage, generateImage } from './../../services/api';
+import { getTelegramAccounts, sendSocialMediaMessage, sendSocialMediaImageMessage, generateImage } from './../../services/api';
 import TelegramLogo from './TelegramLogo.vue';
 import AvatarComponent from './DummyAvatar.vue';
 import { useI18n } from 'vue-i18n'
@@ -207,56 +207,80 @@ export default {
     };
 
     const confirm = async () => {
-      if (!selectedAccounts.value.length) {
-        window.dispatchEvent(new CustomEvent('show-message', {
-          detail: {message: t('please_choose_a_user', "Please choose a user")}
-        }));
-        return;
-      }
+  if (!selectedAccounts.value.length) {
+    window.dispatchEvent(new CustomEvent('show-message', {
+      detail: { message: t('please_choose_a_user', "Please choose a user") }
+    }));
+    return;
+  }
 
-      isLoading.value = true;
+  isLoading.value = true;
 
-      try {
-        const sentMessages = [];
-        for (const accountId of selectedAccounts.value) {
-          const result = getGroupByAccount(accountId);
-          if (result) {
-            const {account, group, provider} = result;
-            let message = messageText.value;
-            if (generatedImageUrl.value) {
-              message += `\n\n${generatedImageUrl.value}`;
-            }
-            const response = await sendSocialMediaMessage(
-                provider,
-                new SocialMedia.Message(account.displayname, accountId, group, message)
-            );
-            if (response && response.status === "Message sent successfully") {
-              sentMessages.push({accountId, messageId: response.message_id});
-            }
-          } else {
-            console.error(`No valid account or group found for account ID ${accountId}`);
-          }
-        }
+  try {
+    const sentMessages = [];
+    for (const accountId of selectedAccounts.value) {
+      const result = getGroupByAccount(accountId);
+      if (result) {
+        const { account, group, provider } = result;
+        let message = messageText.value;
+        let response;
 
-        if (sentMessages.length > 0) {
-          const messageIds = sentMessages.map(msg => `${msg.accountId}: ${msg.messageId}`).join(', ');
-          window.dispatchEvent(new CustomEvent('show-message', {
-            detail: {message: t('messages_sent_successfully', `Messages sent successfully. Message IDs: ${messageIds}`)}
-          }));
+        const messageData = {
+          user: account.displayname,
+          api_id: accountId,
+          group_id: group,
+          caption: message,
+          url:generatedImageUrl.value
+        };
+
+
+
+        console.log("messageData",messageData);
+        if (generatedImageUrl.value) {
+          // If an image was generated, construct the URL with the encoded payload
+          const encodedPayload = encodeURIComponent(JSON.stringify(messageData));
+
+
+
+          // Send the POST request using sendSocialMediaImageMessage
+          response = await sendSocialMediaImageMessage(provider, messageData);
         } else {
-          window.dispatchEvent(new CustomEvent('show-message', {
-            detail: {message: t('no_messages_sent', "No messages were sent successfully")}
-          }));
+          // If no image, use the existing sendSocialMediaMessage
+          response = await sendSocialMediaMessage(
+            provider,
+            new SocialMedia.Message(messageData.user, messageData.api_id, messageData.group_id, messageData.caption)
+          );
         }
-      } catch (error) {
-        console.error("Error sending messages:", error);
-        window.dispatchEvent(new CustomEvent('show-message', {
-          detail: {message: t('error_sending_messages', "Error sending messages")}
-        }));
-      } finally {
-        isLoading.value = false;
+
+        if (response && (response.status === "Image sent successfully" || response.status === "Message sent successfully")) {
+          sentMessages.push({ accountId, messageId: response.message_id });
+        }
+      } else {
+        console.error(`No valid account or group found for account ID ${accountId}`);
       }
-    };
+    }
+
+    if (sentMessages.length > 0) {
+      const messageIds = sentMessages.map(msg => `${msg.accountId}: ${msg.messageId}`).join(', ');
+      window.dispatchEvent(new CustomEvent('show-message', {
+        detail: { message: t('messages_sent_successfully', `Messages sent successfully. Message IDs: ${messageIds}`) }
+      }));
+    } else {
+      window.dispatchEvent(new CustomEvent('show-message', {
+        detail: { message: t('no_messages_sent', "No messages were sent successfully") }
+      }));
+    }
+  } catch (error) {
+    console.error("Error sending messages:", error);
+    window.dispatchEvent(new CustomEvent('show-message', {
+      detail: { message: t('error_sending_messages', "Error sending messages") }
+    }));
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+
 
     const handleSelected = () => {
       console.log("selectedAccounts", selectedAccounts.value);
