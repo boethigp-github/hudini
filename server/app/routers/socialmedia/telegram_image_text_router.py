@@ -4,7 +4,7 @@ import os
 import aiohttp
 import tempfile
 import shutil
-from fastapi import APIRouter, HTTPException, status, Query
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 from telethon import TelegramClient
 from telethon.errors import SessionPasswordNeededError
@@ -118,12 +118,11 @@ async def publish_image_to_telegram(
         # Get the target chat
         channel = await client.get_entity(publish_request_dict['group_id'])
 
-        # Send the file with the original filename
-        message = await client.send_file(
+        # Send the file with the caption
+        message = await client.send_message(
             channel,
-            temp_file_path,
-            caption=publish_request_dict['caption'],
-            file_name=temp_file_name  # Use the generated filename
+            publish_request_dict['caption'],
+            file=temp_file_path
         )
 
         # Log and return the result
