@@ -71,7 +71,10 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="primary" @click="isModalOpen = false">
+          <v-btn v-if="hasNewDocuments" color="primary" @click="saveAndUpload">
+            {{ t('save', 'Save') }}
+          </v-btn>
+          <v-btn color="secondary" @click="isModalOpen = false">
             {{ t('close', 'Close') }}
           </v-btn>
         </v-card-actions>
@@ -81,7 +84,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();
@@ -89,19 +92,23 @@ const isModalOpen = ref(false);
 const files = ref([]);
 const uploadedFiles = ref([]);
 const availableTags = ref(['Work', 'Personal', 'Project A', 'Project B', 'Confidential', 'Public']);
+const newDocuments = ref([]);
+
+const hasNewDocuments = computed(() => newDocuments.value.length > 0);
 
 const handleFileUpload = () => {
-  uploadedFiles.value = files.value.map(file => ({
+  newDocuments.value = files.value.map(file => ({
+    file: file,
     name: file.name,
     size: file.size,
+    type: file.type,
     active: true,
     tags: []
   }));
-  // Here you can implement the logic for the actual upload to the server
+  uploadedFiles.value = [...uploadedFiles.value, ...newDocuments.value];
 };
 
 const updateFileContext = (file) => {
-  // Here you can implement the logic to update the context based on the file's activation status
   console.log(`File ${file.name} is now ${file.active ? 'active' : 'inactive'}`);
   console.log(`Tags for ${file.name}:`, file.tags);
 };
@@ -109,6 +116,68 @@ const updateFileContext = (file) => {
 const removeTag = (file, tag) => {
   const index = file.tags.indexOf(tag);
   if (index >= 0) file.tags.splice(index, 1);
+};
+
+const uploadSingleFile = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file.file);
+  formData.append('metadata', JSON.stringify({
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    active: file.active,
+    tags: file.tags
+  }));
+
+  const response = await fetch('/gripsbox', {
+    method: 'POST',
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return await response.json();
+};
+
+const saveAndUpload = async () => {
+  let successCount = 0;
+  let errorCount = 0;
+
+  for (const file of newDocuments.value) {
+    try {
+      const result = await uploadSingleFile(file);
+      console.log('File uploaded successfully:', result);
+      successCount++;
+    } catch (error) {
+      console.error('Error uploading file:', file.name, error);
+      errorCount++;
+    }
+  }
+
+  if (successCount > 0) {
+    window.dispatchEvent(new CustomEvent('show-message', {
+      detail: {
+        color: 'success',
+        message: t('files_uploaded_successfully', `${successCount} file(s) uploaded successfully.`)
+      }
+    }));
+  }
+
+  if (errorCount > 0) {
+    window.dispatchEvent(new CustomEvent('show-message', {
+      detail: {
+        color: 'error',
+        message: t('error_uploading_files', `Failed to upload ${errorCount} file(s). Please try again.`)
+      }
+    }));
+  }
+
+  if (successCount > 0 && errorCount === 0) {
+    newDocuments.value = []; // Clear new documents only if all uploads were successful
+    isModalOpen.value = false; // Close the modal
+  }
 };
 </script>
 
@@ -128,7 +197,7 @@ const removeTag = (file, tag) => {
   margin-bottom: 2px;
 }
 
-.active-file{
+.active-file {
   margin-left: 10px;
 }
 </style>
