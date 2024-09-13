@@ -4,6 +4,7 @@
       class="contextmanager-opener"
       icon="mdi-head-snowflake"
       color="primary"
+      size="small"
       elevation="2"
       :title="t('open_context_manager', 'Hudinis Brain')"
       @click="isModalOpen = true"
