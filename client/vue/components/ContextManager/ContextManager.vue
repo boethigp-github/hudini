@@ -13,7 +13,7 @@
     <v-dialog v-model="isModalOpen" max-width="90%">
       <v-card>
         <v-card-title>
-          {{ t('Hudinis Gripsbox', 'Hudinis Gripsbox') }}
+          {{ t('hudinis_gripsbox', 'Hudinis Gripsbox') }}
         </v-card-title>
         <v-card-text>
           <v-file-input
@@ -27,14 +27,14 @@
           <v-list>
             <v-list-item v-for="(file, index) in uploadedFiles" :key="index">
               <v-row align="center" no-gutters>
-                <v-col cols="12" sm="4" md="3">
+                <v-col cols="12" sm="3" md="2">
                   <v-list-item-title class="text-truncate">
                     <v-icon start icon="mdi-file" size="small"></v-icon>
                     {{ file.name }}
                   </v-list-item-title>
                   <v-list-item-subtitle class="text-truncate">{{ file.size }} bytes</v-list-item-subtitle>
                 </v-col>
-                <v-col cols="12" sm="5" md="5">
+                <v-col cols="12" sm="2" md="4">
                   <v-combobox
                     v-model="file.tags"
                     :items="availableTags"
@@ -57,7 +57,31 @@
                     </template>
                   </v-combobox>
                 </v-col>
-                <v-col cols="12" sm="3" md="4" class="text-sm-right">
+                <v-col cols="12" sm="3" md="3" style="padding:5px">
+                  <v-combobox
+                    v-model="file.selectedModels"
+                    :items="modelsStore.models"
+                    item-title="id"
+                    item-value="id"
+                    :label="t('select_model_placeholder', 'Select one or more models')"
+                    chips
+                    multiple
+                    clearable
+                    density="compact"
+                    hide-details
+                    class="model-selector"
+                    @update:modelValue="updateModels(file)"
+                  >
+                    <template v-slot:chip="{ props, item }">
+                      <v-chip
+                        v-bind="props"
+                        :text="item.raw.id"
+                        size="x-small"
+                      ></v-chip>
+                    </template>
+                  </v-combobox>
+                </v-col>
+                <v-col cols="12" sm="2" md="2" class="text-sm-right">
                   <v-switch
                     class="active-file"
                     v-model="file.active"
@@ -85,11 +109,13 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { postToGripsbox } from '@/vue/services/api.js'; // Import the API method
+import {ref, computed, onMounted} from 'vue';
+import {useI18n} from 'vue-i18n';
+import {postToGripsbox} from '@/vue/services/api.js';
+import {useModelsStore} from '@/vue/stores';
 
-const { t } = useI18n();
+const {t} = useI18n();
+const modelsStore = useModelsStore();
 const isModalOpen = ref(false);
 const files = ref([]);
 const uploadedFiles = ref([]);
@@ -105,7 +131,8 @@ const handleFileUpload = () => {
     size: file.size,
     type: file.type,
     active: true,
-    tags: []
+    tags: [],
+    selectedModels: []
   }));
   uploadedFiles.value = [...uploadedFiles.value, ...newDocuments.value];
 };
@@ -113,6 +140,7 @@ const handleFileUpload = () => {
 const updateFileContext = (file) => {
   console.log(`File ${file.name} is now ${file.active ? 'active' : 'inactive'}`);
   console.log(`Tags for ${file.name}:`, file.tags);
+  console.log(`Selected models for ${file.name}:`, file.selectedModels);
 };
 
 const removeTag = (file, tag) => {
@@ -122,14 +150,14 @@ const removeTag = (file, tag) => {
 
 const uploadSingleFile = async (file) => {
   const formData = new FormData();
-  formData.append('file', file.file);  // Ensure 'file' is correctly named
+  formData.append('file', file.file);
   formData.append('name', file.name);
   formData.append('size', file.size);
   formData.append('type', file.type);
   formData.append('active', file.active);
   formData.append('tags', JSON.stringify(file.tags));
+  formData.append('selectedModels', JSON.stringify(file.selectedModels));
 
-  // Use the imported API method
   const response = await postToGripsbox(formData);
 
   if (!response.ok) {
@@ -138,7 +166,6 @@ const uploadSingleFile = async (file) => {
 
   return await response.json();
 };
-
 
 const saveAndUpload = async () => {
   let successCount = 0;
@@ -174,10 +201,21 @@ const saveAndUpload = async () => {
   }
 
   if (successCount > 0 && errorCount === 0) {
-    newDocuments.value = []; // Clear new documents only if all uploads were successful
-    isModalOpen.value = false; // Close the modal
+    newDocuments.value = [];
+    isModalOpen.value = false;
   }
 };
+
+const updateModels = (file) => {
+  console.log(`Updated selected models for ${file.name}:`, file.selectedModels);
+};
+
+onMounted(async () => {
+  await modelsStore.loadFromStorage();
+  if (modelsStore.loadModels) {
+    await modelsStore.loadModels();
+  }
+});
 </script>
 
 <style scoped>
@@ -185,13 +223,15 @@ const saveAndUpload = async () => {
   margin-top: -20px;
 }
 
-.tag-selector :deep(.v-field__input) {
+.tag-selector :deep(.v-field__input),
+.model-selector :deep(.v-field__input) {
   min-height: 32px;
   padding-top: 0;
   padding-bottom: 0;
 }
 
-.tag-selector :deep(.v-chip) {
+.tag-selector :deep(.v-chip),
+.model-selector :deep(.v-chip) {
   margin-top: 2px;
   margin-bottom: 2px;
 }
