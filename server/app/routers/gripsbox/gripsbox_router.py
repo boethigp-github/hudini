@@ -20,7 +20,7 @@ router = APIRouter()
 settings = Settings()
 
 # Load allowed file extensions from environment variable
-allowed_file_extensions_str = settings.get("default").get("ALLOWED_FILE_EXTENSIONS")
+allowed_file_extensions_str = settings.get("default").get("ALLOWED_FILE_EXTENSIONS", '[".jpg", ".png", ".pdf"]')
 ALLOWED_FILE_EXTENSIONS = json.loads(allowed_file_extensions_str)
 
 # Dependency to get the database session
@@ -36,7 +36,7 @@ async def get_gripsbox(db: AsyncSession = Depends(get_db)):
         return gripsbox_list  # FastAPI will automatically convert SQLAlchemy models to Pydantic models
     except Exception as e:
         logger.error(f"Error retrieving gripsbox: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"An unexpected error occurred {str(e)}")
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
 @router.post("/gripsbox", response_model=GripsboxPostResponseModel, status_code=status.HTTP_201_CREATED, tags=["gripsbox"])
 async def create_gripsbox(
@@ -55,10 +55,11 @@ async def create_gripsbox(
     # Validate file extension
     file_extension = os.path.splitext(file.filename)[1].lower()
     if file_extension not in ALLOWED_FILE_EXTENSIONS:
+        logger.error(f"File type '{file_extension}' is not allowed")
         raise HTTPException(status_code=400, detail=f"File type '{file_extension}' is not allowed")
 
     # Convert tags from a comma-separated string to a list
-    tags_list = tags.split(',')
+    tags_list = [tag.strip() for tag in tags.split(',')]
 
     # Create GripsboxPostRequestModel instance
     gripsbox_data = GripsboxPostRequestModel(
@@ -80,20 +81,28 @@ async def create_gripsbox(
     file_location = os.path.join(gripsbox_path, file.filename)
 
     # Save the file to disk
-    with open(file_location, "wb") as f:
-        f.write(await file.read())
+    try:
+        with open(file_location, "wb") as f:
+            f.write(await file.read())
+    except Exception as e:
+        logger.error(f"Error saving file {file.filename}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
 
     # Create and save new gripsbox record
-    new_gripsbox = Gripsbox(
-        name=gripsbox_data.name,
-        size=gripsbox_data.size,
-        type=gripsbox_data.type,
-        active=gripsbox_data.active,
-        tags=gripsbox_data.tags
-    )
-    db.add(new_gripsbox)
-    await db.commit()
-    await db.refresh(new_gripsbox)
+    try:
+        new_gripsbox = Gripsbox(
+            name=gripsbox_data.name,
+            size=gripsbox_data.size,
+            type=gripsbox_data.type,
+            active=gripsbox_data.active,
+            tags=gripsbox_data.tags
+        )
+        db.add(new_gripsbox)
+        await db.commit()
+        await db.refresh(new_gripsbox)
+    except Exception as e:
+        logger.error(f"Error creating gripsbox record: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error creating record: {str(e)}")
 
     # Log the newly created gripsbox
     logger.debug(f"Gripsbox created successfully: {new_gripsbox}")

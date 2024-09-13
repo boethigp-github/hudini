@@ -87,6 +87,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { postToGripsbox } from '@/vue/services/api.js'; // Import the API method
 
 const { t } = useI18n();
 const isModalOpen = ref(false);
@@ -121,19 +122,15 @@ const removeTag = (file, tag) => {
 
 const uploadSingleFile = async (file) => {
   const formData = new FormData();
-  formData.append('file', file.file);
-  formData.append('metadata', JSON.stringify({
-    name: file.name,
-    size: file.size,
-    type: file.type,
-    active: file.active,
-    tags: file.tags
-  }));
+  formData.append('file', file.file);  // Ensure 'file' is correctly named
+  formData.append('name', file.name);
+  formData.append('size', file.size);
+  formData.append('type', file.type);
+  formData.append('active', file.active);
+  formData.append('tags', JSON.stringify(file.tags));
 
-  const response = await fetch('/gripsbox', {
-    method: 'POST',
-    body: formData,
-  });
+  // Use the imported API method
+  const response = await postToGripsbox(formData);
 
   if (!response.ok) {
     throw new Error(`HTTP error! status: ${response.status}`);
@@ -141,6 +138,7 @@ const uploadSingleFile = async (file) => {
 
   return await response.json();
 };
+
 
 const saveAndUpload = async () => {
   let successCount = 0;

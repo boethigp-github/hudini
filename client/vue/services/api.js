@@ -323,3 +323,30 @@ export const sendSocialMediaImageMessage = async (provider, messageData) => {
         // Return the JSON response
         return await response.json();
 };
+
+/**
+ * Sends a POST request to the /gripsbox endpoint.
+ * @param {Object} gripsboxData - The data to send to the gripsbox endpoint.
+ * @returns {Promise<Object>} A promise that resolves to the server's response.
+ */
+// api.js
+
+export const postToGripsbox = async (formData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/gripsbox`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error in postToGripsbox:', error);
+    throw error;
+  }
+};
+
+
