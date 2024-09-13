@@ -500,3 +500,23 @@ To clear the cache, you can manually delete the contents of the cache directory 
 ---
 
 This README documentation now provides a comprehensive guide on how to set up, run, and test the Hudini project, with the necessary adjustments for using `bigint` for `user` and `prompt_id`.
+
+
+## Embeddings
+put your pdfs in /server/storage/pdfs
+Create embeddings:
+```shell
+cd server/app/cli
+python  pdf_embeddings_cli.py C:/projects/hudini/server/storage/pdfs --output embeddings.pkl --metadata-output metadata.pkl
+```
+
+save embeddings to faiss
+```shell
+cd server/app/cli
+python  save_vectors_to_faiss.py
+```
+
+ask chatgpt about the content
+```shell
+python  ask_gpt_with_faiss_search.py
+```

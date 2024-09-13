@@ -1,18 +1,6 @@
 <template>
   <v-layout ref="app">
-    <v-app-bar class="v-app-bar" name="app-bar" density="compact">
-      <v-container fluid>
-        <v-row align="center" no-gutters>
-          <v-col class="theme-switch-container" cols="auto">
-            <ThemeSwitch/>
-          </v-col>
-          <v-spacer></v-spacer>
-          <v-col class="language-switch-container" cols="auto">
-            <LanguageSwitch/>
-          </v-col>
-        </v-row>
-      </v-container>
-    </v-app-bar>
+    <AppBar/>
     <v-navigation-drawer location="end" name="drawer" permanent>
       <div class="d-flex justify-center align-top h-100">
         <PromptPanel :key="promptPanelUpdateTrigger"/>
@@ -29,7 +17,6 @@
         </v-col>
       </v-row>
     </v-main>
-
     <v-footer name="footer" app>
       <v-container>
         <v-row>
@@ -51,8 +38,6 @@
         </v-row>
       </v-container>
     </v-footer>
-
-
     <v-snackbar
         v-model="snackbar.show"
         :color="snackbar.color"
@@ -80,8 +65,6 @@ import ModelSelection from './ModelSelection.vue';
 import ComparisonDrawer from './ResponsePanel/ComparisonTable.vue';
 import ThemeSwitch from './ThemeSwitch.vue';
 import ResponsePanelMenu from "@/vue/components/ResponsePanel/ResponsePanelMenu.vue";
-import _ from 'lodash'
-import {toRaw} from 'vue';
 import {
   createPrompt,
   deleteUserContext,
@@ -93,10 +76,12 @@ import {
 } from './../services/api';
 import {v4 as uuidv4} from 'uuid';
 import {UserContext} from '../models/UserContext.js';
+import AppBar from "@/vue/components/AppBar/AppBar.vue";
 
 export default {
   name: 'ChatForm',
   components: {
+    AppBar,
     ResponsePanelMenu,
     PromptPanel,
     ResponsePanel,

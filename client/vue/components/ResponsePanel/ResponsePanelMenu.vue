@@ -31,8 +31,6 @@
           @click="publishSocialMedia"
       ></v-btn>
     </v-row>
-
-
     <v-row  v-if="!selectedBotResponses.length">
       <v-btn
           size="small"

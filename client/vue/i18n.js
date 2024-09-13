@@ -75,6 +75,13 @@ const messages = {
         generate_image: 'Generate Image',
         image_prompt: 'Enter an image description...',
         group: 'Group',
+        open_context_manager: "Open Context Manager",
+        hudinis_gripsbox: "Hudini's Gripsbox",
+        upload_files: "Upload Files",
+        assign_tags: "Assign Tags",
+        active: "Active",
+        close: "Close"
+
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -150,6 +157,13 @@ const messages = {
         generate_image: 'Bild generieren',
         image_prompt: 'Geben Sie eine Bildbeschreibung ein...',
         group: 'Gruppe',
+        open_context_manager: "Kontextmanager öffnen",
+        hudinis_gripsbox: "Hudinis Gripsbox",
+        upload_files: "Dateien hochladen",
+        assign_tags: "Tags zuweisen",
+        active: "Aktiv",
+        close: "Schließen"
+
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -225,6 +239,12 @@ const messages = {
         generate_image: 'Générer une image',
         image_prompt: 'Entrez une description d\'image...',
         group: 'Groupe',
+        open_context_manager: "Ouvrir le gestionnaire de contexte",
+        hudinis_gripsbox: "Boîte à astuces de Hudini",
+        upload_files: "Télécharger des fichiers",
+        assign_tags: "Attribuer des tags",
+        active: "Actif",
+        close: "Fermer"
 
     },
     ru: {
@@ -301,6 +321,12 @@ const messages = {
         generate_image: '生成图片',
         image_prompt: '输入图片描述...',
         group: 'Группа',
+        open_context_manager: "Открыть менеджер контекста",
+        hudinis_gripsbox: "Коробка идей Худини",
+        upload_files: "Загрузить файлы",
+        assign_tags: "Назначить теги",
+        active: "Активный",
+        close: "Закрыть"
     },
     zh: {
         hudini_title: 'Hudini - CPU 魔术师在 SLM',
@@ -374,6 +400,12 @@ const messages = {
         generate_image: '生成图片',
         image_prompt: '输入图片描述...',
         group: '组',
+        open_context_manager: "打开上下文管理器",
+        hudinis_gripsbox: "胡迪尼的智慧盒",
+        upload_files: "上传文件",
+        assign_tags: "分配标签",
+        active: "激活",
+        close: "关闭"
     },
     // Add other languages as needed
 };
