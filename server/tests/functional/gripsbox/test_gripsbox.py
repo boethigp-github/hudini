@@ -1,16 +1,17 @@
 import unittest
 import requests
-import uuid
 import os
 from server.app.config.settings import Settings
 from server.app.models.gripsbox.gripsbox_post_request import GripsboxPostRequestModel
+
 
 class TestGripsbox(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.settings = Settings()
         cls.BASE_URL = cls.settings.get("default").get("SERVER_URL")
-        cls.TEST_FILE = "test_file.pdf"
+        cls.APP_STORAGE = cls.settings.get("default").get("APP_STORAGE")
+        cls.TEST_FILE = "test_file.txt"
         cls.create_test_file()
 
     @classmethod
@@ -22,8 +23,18 @@ class TestGripsbox(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Cleanup test files."""
-        if os.path.exists(cls.TEST_FILE):
-            os.remove(cls.TEST_FILE)
+        gripsbox_path = os.path.join(cls.APP_STORAGE, "gripsbox")
+        test_file_path = os.path.join(gripsbox_path, cls.TEST_FILE)
+
+        # Remove the specific test file
+        if os.path.exists(test_file_path):
+            os.remove(test_file_path)
+
+        # Optionally, remove other files in gripsbox_path if needed
+        for file_name in os.listdir(gripsbox_path):
+            file_path = os.path.join(gripsbox_path, file_name)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
 
     def create_test_gripsbox(self):
         """Create a test gripsbox using the model and return its UUID."""
@@ -41,7 +52,7 @@ class TestGripsbox(unittest.TestCase):
 
         # Prepare files for the POST request
         with open(self.TEST_FILE, "rb") as file:
-            files = {"file": ("test_file.txt", file, "text/plain")}
+            files = {"file": (self.TEST_FILE, file, "text/plain")}
             response = requests.post(
                 f"{self.BASE_URL}/gripsbox",
                 files=files,
@@ -74,7 +85,8 @@ class TestGripsbox(unittest.TestCase):
         if response.status_code != 200:
             self.fail(f"Failed to get gripsboxes after deletion: {response.text}")
         gripsboxes = response.json()
-        self.assertFalse(any(gripsbox['id'] == new_id for gripsbox in gripsboxes), "Gripsbox still found after deletion")
+        self.assertFalse(any(gripsbox['id'] == new_id for gripsbox in gripsboxes),
+                         "Gripsbox still found after deletion")
 
     def delete_gripsbox(self, gripsbox_id):
         """Delete the given gripsbox by UUID."""
@@ -84,6 +96,7 @@ class TestGripsbox(unittest.TestCase):
         delete_data = delete_response.json()
         if delete_data.get('status') != "Gripsbox deleted successfully":
             self.fail(f"Unexpected response for gripsbox deletion: {delete_data}")
+
 
 if __name__ == '__main__':
     unittest.main()
