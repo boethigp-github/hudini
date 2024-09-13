@@ -76,17 +76,17 @@ async def publish_image_to_telegram(
 
         logger.debug(f"Downloaded image saved to {temp_file_path}")
 
-        # Load the TELEGRAM_CONFIG from the environment and parse it as JSON
-        telegram_config = json.loads(settings.get("default").get("TELEGRAM_CONFIG"))
+        # Load the SOCIALMEDIA_USER from the environment and parse it as JSON
+        SOCIALMEDIA_USER = json.loads(settings.get("default").get("SOCIALMEDIA_USER"))
 
         # Find the Telegram provider based on the api_id submitted in the request
         telegram_provider = next(
-            (provider for provider in telegram_config if provider["api_id"] == str(publish_request_dict['api_id'])),
+            (provider for provider in SOCIALMEDIA_USER if provider["api_id"] == str(publish_request_dict['api_id'])),
             None)
 
         if not telegram_provider:
             raise HTTPException(status_code=404,
-                                detail=f"Telegram provider configuration with api_id {publish_request_dict['api_id']} not found in TELEGRAM_CONFIG")
+                                detail=f"Telegram provider configuration with api_id {publish_request_dict['api_id']} not found in SOCIALMEDIA_USER")
 
         # Telethon client (Userbot)
         api_id = telegram_provider["api_id"]

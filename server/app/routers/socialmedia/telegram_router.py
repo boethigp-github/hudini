@@ -47,16 +47,16 @@ async def publish_to_telegram(publish_request: TelegramPublishRequestModel):
     try:
         logger.debug(f"Attempting to send message to Telegram group ID: {publish_request.group_id}")
 
-        # Load the TELEGRAM_CONFIG from the environment and parse it as JSON
-        telegram_config = json.loads(settings.get("default").get("TELEGRAM_CONFIG"))
+        # Load the SOCIALMEDIA_USER from the environment and parse it as JSON
+        SOCIALMEDIA_USER = json.loads(settings.get("default").get("SOCIALMEDIA_USER"))
 
         # Find the Telegram provider based on the api_id submitted in the request
         telegram_provider = next(
-            (provider for provider in telegram_config if provider["api_id"] == str(publish_request.api_id)), None)
+            (provider for provider in SOCIALMEDIA_USER if provider["api_id"] == str(publish_request.api_id)), None)
 
         if not telegram_provider:
             raise HTTPException(status_code=404,
-                                detail=f"Telegram provider configuration with api_id {publish_request.api_id} not found in TELEGRAM_CONFIG")
+                                detail=f"Telegram provider configuration with api_id {publish_request.api_id} not found in SOCIALMEDIA_USER")
 
         # Telethon client (Userbot)
         api_id = telegram_provider["api_id"]
@@ -137,9 +137,9 @@ async def get_telegram_accounts():
     Returns a list of accounts with display names, associated groups, and provider.
     """
     try:
-        # Load and parse TELEGRAM_CONFIG
-        telegram_config_str = settings.get("default").get("TELEGRAM_CONFIG")
-        telegram_config = json.loads(telegram_config_str)
+        # Load and parse SOCIALMEDIA_USER
+        SOCIALMEDIA_USER_str = settings.get("default").get("SOCIALMEDIA_USER")
+        SOCIALMEDIA_USER = json.loads(SOCIALMEDIA_USER_str)
 
         # Extract relevant fields from config and include provider
         accounts = [
@@ -149,7 +149,7 @@ async def get_telegram_accounts():
                 "displayname": provider["displayname"],  # Ensure displayname is present
                 "groups": provider["groups"]
             }
-            for provider in telegram_config
+            for provider in SOCIALMEDIA_USER
         ]
 
         logger.debug(f"Telegram accounts retrieved: {accounts}")
@@ -157,11 +157,11 @@ async def get_telegram_accounts():
 
     except KeyError as e:
         logger.error(f"Key error while fetching Telegram accounts: {e}")
-        raise HTTPException(status_code=500, detail=f"Missing expected key in TELEGRAM_CONFIG: {e}")
+        raise HTTPException(status_code=500, detail=f"Missing expected key in SOCIALMEDIA_USER: {e}")
 
     except json.JSONDecodeError as e:
-        logger.error(f"Error decoding TELEGRAM_CONFIG JSON: {e}")
-        raise HTTPException(status_code=500, detail="Invalid JSON format in TELEGRAM_CONFIG.")
+        logger.error(f"Error decoding SOCIALMEDIA_USER JSON: {e}")
+        raise HTTPException(status_code=500, detail="Invalid JSON format in SOCIALMEDIA_USER.")
 
     except Exception as e:
         logger.error(f"Unexpected error fetching telegram accounts: {e}")

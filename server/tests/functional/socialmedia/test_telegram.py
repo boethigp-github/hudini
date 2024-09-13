@@ -24,7 +24,7 @@ def telegram_publish_payload():
     """
     return {
         "user": "JohnDoe",
-        "api_id": 23915104,  # Match your TELEGRAM_CONFIG API ID
+        "api_id": 23915104,  # Match your SOCIALMEDIA_USER API ID
         "group_id": "@hudinitests",  # Use the group ID directly
         "message": "Test message from pytest"
     }

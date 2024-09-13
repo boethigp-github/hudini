@@ -1,69 +1,33 @@
 import click
-import os
-import fitz  # PyMuPDF for PDF extraction
-from sentence_transformers import SentenceTransformer
-import pickle
-from typing import List
-from tqdm import tqdm
+from diskcache import FanoutCache
+# Ensure the root of the project is in sys.path
+import logging
+import os,sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../')))
+from server.app.config.settings import Settings  # Importing your Settings
 
-# Initialize the SentenceTransformer model
-model = SentenceTransformer('all-MiniLM-L6-v2')  # You can choose another model
 
-def extract_text_from_pdf(file_path: str) -> str:
-    text = ""
-    try:
-        pdf_document = fitz.open(file_path)
-        for page in pdf_document:
-            text += page.get_text()
-        pdf_document.close()
-    except Exception as e:
-        click.echo(f"Error reading PDF file {file_path}: {str(e)}", err=True)
-    return text
+# Initialize the logger
+logger = logging.getLogger("cache_clear")
 
-def generate_embeddings(texts: List[str]) -> List[List[float]]:
-    return model.encode(texts)
+@click.command('cache-clear')
+def cache_clear():
+    """
+    CLI command to clear the FanoutCache used in the FastAPI app.
+    """
+    # Load settings
+    settings = Settings()  # Load settings from the environment
 
-@click.command()
-@click.argument('pdf_directory', type=click.Path(exists=True))
-@click.option('--output', default='embeddings.pkl', help='Output file for embeddings')
-def process_pdfs(pdf_directory: str, output: str):
-    """Process PDFs and generate embeddings."""
-    try:
-        # List all PDF files in the directory
-        pdf_files = [f for f in os.listdir(pdf_directory) if f.endswith('.pdf')]
+    # Get the cache directory from settings
+    cache_directory = settings.default["APP_CACHE"]  # Fetch APP_CACHE from settings
 
-        if not pdf_files:
-            click.echo("No PDF files found in the directory.", err=True)
-            return
+    # Initialize FanoutCache with the specified cache directory
+    cache = FanoutCache(directory=cache_directory, shards=8)
 
-        texts = []
-
-        # Process PDFs with progress bar
-        with click.progressbar(pdf_files, label='Processing PDFs') as bar:
-            for pdf_file in bar:
-                file_path = os.path.join(pdf_directory, pdf_file)
-                text = extract_text_from_pdf(file_path)
-                if text:
-                    texts.append(text)
-
-        # Generate embeddings with progress bar
-        click.echo("Generating embeddings...")
-        embeddings = []
-        chunk_size = 10  # Process 10 texts at a time to show progress
-        for i in tqdm(range(0, len(texts), chunk_size), desc="Generating embeddings"):
-            chunk = texts[i:i+chunk_size]
-            chunk_embeddings = generate_embeddings(chunk)
-            embeddings.extend(chunk_embeddings)
-
-        # Save embeddings to a file
-        with open(output, "wb") as f:
-            pickle.dump(embeddings, f)
-
-        click.echo(f"Embeddings saved to {output}")
-        click.echo(f"Processed {len(pdf_files)} files.")
-
-    except Exception as e:
-        click.echo(f"An error occurred while processing PDFs: {str(e)}", err=True)
+    # Clear the cache
+    logger.debug("Clearing cache...")
+    cache.clear()
+    click.echo("Cache cleared successfully.")
 
 if __name__ == "__main__":
-    process_pdfs()
+    cache_clear()

@@ -79,24 +79,39 @@ SERVER_URL=http://localhost:80
 PROJECT_MODEL_PATH=C:\\projects\\llama.cpp\\models\\custom\
 
 PROJEKT_ROOT=C:\projects\llama.cpp\projects\src\llama-cpp-chat\src
-API_KEY_OPEN_AI=<API_KEY_OPEN_AI>
-API_KEY_ANTHROPIC=<API_KEY_ANTHROPIC>
-API_KEY_GOOGLE_AI=<API_KEY_GOOGLE_AI>
+API_KEY_OPEN_AI=
+API_KEY_ANTHROPIC=
+API_KEY_GOOGLE_AI=
+APP_ACTIVE_PROVIDER=OPEN_AI
 PROJECT_FRONTEND_DIRECTORY=C:\\projects\\llama.cpp\\projects\\src\\llama-cpp-chat\\src\\frontend\
 DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost/hudini
-APP_ACTIVE_PROVIDER=OPEN_AI,ANTHROPIC,GOOGLE_AI
+DATABASE_URL_SYNC=postgresql+psycopg2://postgres:postgres@localhost/hudini
+APP_TIMEZONE=Europe/Berlin
 APP_DEBUG=False
 APP_ENV=development
 APP_Testing=False
 APP_LOG_LEVEL=DEBUG
 APP_PROJECT_NAME=HUDINI
 APP_CORS_ORIGIN=http://localhost:5173,https://editor.swagger.io
+APP_CACHE=C:\projects\hudini\server\var\cache
+APP_STORAGE=C:\projects\hudini\server\storage
 DB_SQL_ECHO=False
 DB_POOL_SIZE=20
 DB_MAX_OVERFLOW=5
 DB_POOL_TIMEOUT=30
 DB_POOL_RECYCLE=1800
 DB_USE_NULL_POOL=False
+SOCIALMEDIA_USER='[{
+  "provider": "telegram",
+  "api_id": "",
+  "displayname": "hudini",
+  "api_hash": "",
+  "phone_number": "",
+  "password": "",
+  "groups": [
+      "@hudinitests"
+    ]
+}]'
 ```
 
 Then, create the Anaconda environment using the name from the `ANACONDA_ENV_NAME` variable:
