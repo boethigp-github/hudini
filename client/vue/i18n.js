@@ -80,7 +80,9 @@ const messages = {
         upload_files: "Upload Files",
         assign_tags: "Assign Tags",
         active: "Active",
-        close: "Close"
+        close: "Close",
+        save: "Save",
+        error_uploading_files: "Error uploading files"
 
     },
     de: {
@@ -162,7 +164,9 @@ const messages = {
         upload_files: "Dateien hochladen",
         assign_tags: "Tags zuweisen",
         active: "Aktiv",
-        close: "Schließen"
+        close: "Schließen",
+        save: "Speichern",
+        error_uploading_files: "Fehler beim Hochladen der Dateien"
 
     },
     fr: {
@@ -244,7 +248,9 @@ const messages = {
         upload_files: "Télécharger des fichiers",
         assign_tags: "Attribuer des tags",
         active: "Actif",
-        close: "Fermer"
+        close: "Fermer",
+        save: "Sauvegarder",
+        error_uploading_files: "Erreur lors du téléchargement des fichiers"
 
     },
     ru: {
@@ -326,7 +332,9 @@ const messages = {
         upload_files: "Загрузить файлы",
         assign_tags: "Назначить теги",
         active: "Активный",
-        close: "Закрыть"
+        close: "Закрыть",
+        save: "Сохранить",
+        error_uploading_files: "Ошибка загрузки файлов"
     },
     zh: {
         hudini_title: 'Hudini - CPU 魔术师在 SLM',
@@ -405,7 +413,9 @@ const messages = {
         upload_files: "上传文件",
         assign_tags: "分配标签",
         active: "激活",
-        close: "关闭"
+        close: "关闭",
+        save: "保存",
+        error_uploading_files: "上传文件时出错"
     },
     // Add other languages as needed
 };

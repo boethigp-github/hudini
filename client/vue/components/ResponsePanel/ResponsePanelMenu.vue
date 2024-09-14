@@ -60,7 +60,7 @@
       </v-card>
     </v-dialog>
 
-    <SelectAccounts :dialogVisible="isSelectAccountsVisible"></SelectAccounts>
+    <SelectAccounts ></SelectAccounts>
   </v-container>
 </template>
 

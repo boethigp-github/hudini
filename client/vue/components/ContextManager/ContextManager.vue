@@ -158,13 +158,7 @@ const uploadSingleFile = async (file) => {
   formData.append('tags', JSON.stringify(file.tags));
   formData.append('selectedModels', JSON.stringify(file.selectedModels));
 
-  const response = await postToGripsbox(formData);
-
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-
-  return await response.json();
+  return await postToGripsbox(formData);
 };
 
 const saveAndUpload = async () => {

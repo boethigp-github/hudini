@@ -1,7 +1,12 @@
 <template>
   <v-dialog v-model="dialogVisible" max-width="80%">
     <v-card>
-      <v-card-title>{{ $t('select_social_media', 'Select Social Media Accounts') }}</v-card-title>
+      <v-card-title class="d-flex justify-space-between align-center">
+        {{ $t('select_social_media', 'Select Social Media Accounts') }}
+        <v-btn icon @click="cancel">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-card-title>
       <v-card-text>
         <v-container>
           <v-row v-for="(groups, provider) in groupedSocialMediaAccounts" :key="provider">
@@ -35,7 +40,14 @@
             <v-col cols="9" md="9">
               <v-row style="margin-top: -80px">
                 <v-col cols="12">
-                  <v-img :width="200" aspect-ratio="16/9" cover :src="generatedImageUrl"/>
+                  <v-img
+                      :width="200"
+                      aspect-ratio="16/9"
+                      cover
+                      :src="generatedImageUrl"
+                      @click="openImageModal"
+                      style="cursor: pointer;"
+                  />
                 </v-col>
                 <v-col cols="12">
                   <v-text-field
@@ -71,10 +83,38 @@
       </v-card-text>
     </v-card>
   </v-dialog>
+
+  <v-dialog v-model="imageModalVisible" max-width="90%">
+    <v-card>
+      <v-card-actions>
+        <v-card-title class="headline d-flex justify-space-between align-center">
+          {{ $t('full_size_image', 'Full Size Image') }}
+        </v-card-title>
+        <v-spacer></v-spacer>
+        <v-btn color="primary" @click="closeImageModal">
+          {{ $t('close', 'Close') }}
+        </v-btn>
+      </v-card-actions>
+
+      <v-card-text>
+        <v-img
+            :src="generatedImageUrl"
+            max-height="80vh"
+            contain
+        />
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="primary" @click="closeImageModal">
+          {{ $t('close', 'Close') }}
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>
-import {markRaw, onBeforeUnmount, onMounted, ref, watch, nextTick} from "vue";
+import {markRaw, onBeforeUnmount, onMounted, ref, watch} from "vue";
 import {
   getTelegramAccounts,
   sendSocialMediaMessage,
@@ -95,6 +135,7 @@ export default {
   setup() {
     const {t} = useI18n();
     const dialogVisible = ref(false);
+    const imageModalVisible = ref(false);
     const groupedSocialMediaAccounts = ref({});
     const selectedBotResponses = ref([]);
     const messageText = ref('');
@@ -238,7 +279,6 @@ export default {
           const {account, group, provider} = result;
           let message = messageText.value;
 
-
           const messageData = {
             user: account.displayname,
             api_id: accountId,
@@ -247,9 +287,6 @@ export default {
             url: generatedImageUrl.value
           };
 
-          /**
-           * Send Text only Messages
-           */
           if (!generatedImageUrl.value) {
             let response = await sendSocialMediaMessage(
                 provider,
@@ -259,9 +296,6 @@ export default {
             continue;
           }
 
-          /**
-           * Send Image and Textcaption
-           */
           let response = await sendSocialMediaImageMessage(provider, messageData);
 
           if (isSendMessagesResponseOkay(response)) {
@@ -284,7 +318,6 @@ export default {
         isLoading.value = false;
       }
     };
-
 
     const handleImageError = (error) => {
       console.error("Error loading image:", error);
@@ -331,6 +364,16 @@ export default {
       }
     };
 
+    const openImageModal = () => {
+      if (generatedImageUrl.value) {
+        imageModalVisible.value = true;
+      }
+    };
+
+    const closeImageModal = () => {
+      imageModalVisible.value = false;
+    };
+
     watch(dialogVisible, (newVal) => {
       if (newVal) {
         fetchSocialMediaAccounts();
@@ -340,7 +383,6 @@ export default {
         imageError.value = '';
       }
     });
-
 
     return {
       groupedSocialMediaAccounts,
@@ -360,7 +402,10 @@ export default {
       triggerGenerateImage,
       messageTextarea,
       imageError,
-      handleImageError
+      handleImageError,
+      imageModalVisible,
+      openImageModal,
+      closeImageModal
     };
   },
 };
