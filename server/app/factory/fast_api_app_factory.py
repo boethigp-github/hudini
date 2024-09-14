@@ -49,12 +49,11 @@ class FastAPIAppFactory:
 
     def add_cors_middleware(self):
         self.logger.debug("Adding CORS middleware")
-        origins = [
-            "http://localhost:5173",  # Your Vue.js development server
-            "http://localhost:8080",  # Another common development port
-            "http://localhost",  # For production, if served from the same domain
-            # Add any other origins you need to allow
-        ]
+        # Get origins from environment variables
+        origins = self.settings.get("default").get("APP_CORS_ORIGIN", "").split(",")
+        if not origins:
+            self.logger.warning("No CORS origins specified in environment variables.")
+            origins = ["*"]  # Allow all origins as fallback
 
         self.app.add_middleware(
             CORSMiddleware,
