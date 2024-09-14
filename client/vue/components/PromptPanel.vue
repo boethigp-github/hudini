@@ -208,6 +208,8 @@ onMounted(() => {
 .title {
   font-weight: bold;
   flex-grow: 1;
+  color: #858585;
+  font-weight: normal;
 }
 
 /* Show buttons on hover */
