@@ -13,6 +13,8 @@ import time
 router = APIRouter()
 oauth = OAuth()
 settings = Settings()
+from fastapi.responses import RedirectResponse
+from fastapi import Response
 
 def setup_oauth():
     google_client_id = settings.get("default").get("APP_GOOGLE_AUTH_CLIENT_ID")
@@ -56,7 +58,7 @@ async def login_google(request: Request):
 
 
 @router.get('/auth/google/callback', tags=["authentication"])
-async def auth_google_callback(request: Request):
+async def auth_google_callback(request: Request, response: Response):
     try:
         code = request.query_params.get("code")
 
@@ -68,17 +70,21 @@ async def auth_google_callback(request: Request):
         token = await oauth.google.authorize_access_token(request)
         logger.debug(f"Received access token: {token}")
 
-        # Extract the user info directly from the token
         user_info = token.get('userinfo')
         if not user_info:
             logger.error("User info not found in token")
             raise HTTPException(status_code=400, detail="User info not found in token")
 
-        # Save the complete token in the session (or any storage mechanism)
-        request.session['token'] = token
+        # Speichere den Access Token in der Session
+        request.session['access_token'] = token['access_token']
 
-        logger.debug(f"Parsed user: {user_info}")
-        return {"user": user_info}
+        # Optional: Wenn du User-Infos auch in der Session speichern willst
+        request.session['user_info'] = user_info
+
+        client_url = settings.get("default").get("CLIENT_URL")
+
+        redirect_url = f"{client_url}"
+        return RedirectResponse(url=redirect_url)
 
     except OAuth2Error as e:
         logger.error(f"Failed to handle Google OAuth callback: {str(e)}")
