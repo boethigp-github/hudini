@@ -91,6 +91,9 @@ async def auth_google_callback(request: Request):
             raise HTTPException(status_code=400, detail="User info not found in token")
         request.session['access_token'] = token['access_token']
         request.session['user_info'] = user_info
+
+        logger.debug(f"Set session OAuth callback: { request.session}")
+
         client_url = settings.get("default").get("CLIENT_URL")
         redirect_url = f"{client_url}"
         return RedirectResponse(url=redirect_url)

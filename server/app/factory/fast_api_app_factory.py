@@ -1,8 +1,9 @@
-from diskcache import FanoutCache
 import logging
-from fastapi import FastAPI
+from diskcache import FanoutCache
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.middleware.sessions import SessionMiddleware
+from starlette.middleware.sessions import SessionMiddleware as FastAPISessionMiddleware
+
 from server.app.routers.models.models_router import router as models_router
 from server.app.routers.prompts.prompts_router import router as prompts_router
 from server.app.routers.generation.openai.openai_text_generation_router import router as generation_router
@@ -15,6 +16,10 @@ from server.app.routers.socialmedia.telegram_image_text_router import router as 
 from server.app.routers.gripsbox.gripsbox_router import router as gripsbox_router
 from server.app.routers.users.users_router import router as users_router
 from server.app.routers.auth.auth_router import router as auth_router, setup_oauth
+
+logger = logging.getLogger("hudini_logger")
+
+
 
 class FastAPIAppFactory:
     def __init__(self, settings):
@@ -32,9 +37,9 @@ class FastAPIAppFactory:
     def create_app(self):
         self.logger.debug("Creating FastAPI application")
         self.initialize_cache()
-        self.add_session_middleware()
         self.initialize_oauth()
         self.add_cors_middleware()
+        self.add_session_middleware()  # FastAPI session middleware (built-in) - now last
         self.register_routes()
         return self.app
 
@@ -50,20 +55,25 @@ class FastAPIAppFactory:
         self.app.state.cache = cache
 
     def add_session_middleware(self):
-        self.logger.debug("Adding SessionMiddleware")
+        self.logger.debug("Adding FastAPISessionMiddleware")
         secret_key = self.settings.get("default").get("APP_GOOGLE_AUTH_CLIENT_SECRET")
         if not secret_key:
-            self.logger.error("No APP_GOOGLE_AUTH_CLIENT_SECRET found in settings. SessionMiddleware cannot be added.")
+            self.logger.error("No APP_GOOGLE_AUTH_CLIENT_SECRET found. SessionMiddleware cannot be added.")
             raise ValueError("APP_GOOGLE_AUTH_CLIENT_SECRET is required for SessionMiddleware")
-        self.app.add_middleware(
-            SessionMiddleware,
-            secret_key=secret_key,
-            session_cookie="session",  # Optional: Cookie name
-            max_age=3600,  # Optional: Cookie expiration time in seconds (1 hour here)
-            same_site="lax",  # Optional: SameSite attribute for cross-site request handling
-            https_only=True,  # Changed from secure=True to https_only=True
 
+        # Add FastAPI session middleware to manage sessions
+        self.app.add_middleware(
+            FastAPISessionMiddleware,
+            secret_key=secret_key,
+            session_cookie="session",
+            max_age=3600,  # 1-hour session expiration
+            same_site="lax",  # For security reasons
+            https_only=False  # Set to True in production
         )
+
+    def add_custom_session_protection_middleware(self):
+        self.logger.debug("Adding custom session protection middleware")
+
 
     def initialize_oauth(self):
         self.logger.debug("Initializing OAuth")
@@ -73,8 +83,8 @@ class FastAPIAppFactory:
         self.logger.debug("Adding CORS middleware")
         origins = self.settings.get("default").get("APP_CORS_ORIGIN", "").split(",")
         if not origins:
-            self.logger.warning("No CORS origins specified in environment variables.")
-            origins = ["*"]  # Allow all origins as fallback
+            self.logger.warning("No CORS origins specified. Allowing all origins.")
+            origins = ["*"]
 
         self.app.add_middleware(
             CORSMiddleware,
@@ -97,5 +107,5 @@ class FastAPIAppFactory:
         self.app.include_router(openai_dalle2_image_generation_router)
         self.app.include_router(socialmedia_telegram_image_text_router)
         self.app.include_router(gripsbox_router)
-        self.app.include_router(auth_router)  # Auth router
+        self.app.include_router(auth_router)  # Register auth routes
         self.logger.debug("Finished: Registering routes")

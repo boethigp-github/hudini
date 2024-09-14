@@ -8,10 +8,10 @@ from server.app.db.base import async_session_maker
 from server.app.models.gripsbox.gripsbox_model import Gripsbox
 from server.app.models.gripsbox.gripsbox_post_request import GripsboxPostRequestModel
 from server.app.models.gripsbox.gripsbox_post_response import GripsboxPostResponseModel
-from uuid import UUID
+from server.app.utils.check_user_session import check_user_session
 from typing import List
 from server.app.config.settings import Settings
-
+from uuid import UUID
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -29,7 +29,7 @@ async def get_db():
         yield session
 
 @router.get("/gripsbox", response_model=List[GripsboxPostResponseModel], tags=["gripsbox"])
-async def get_gripsbox(db: AsyncSession = Depends(get_db)):
+async def get_gripsbox(db: AsyncSession = Depends(get_db),  _: str = Depends(check_user_session)):
     try:
         result = await db.execute(select(Gripsbox).order_by(Gripsbox.created.desc()))
         gripsbox_list = result.scalars().all()
@@ -46,7 +46,8 @@ async def create_gripsbox(
     type: str = Form(...),
     active: bool = Form(...),
     tags: str = Form(...),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    _: str = Depends(check_user_session)
 ):
     # Log the incoming data
     logger.debug(f"Incoming file: {file.filename}")
@@ -113,7 +114,7 @@ async def create_gripsbox(
     return gripsbox_response
 
 @router.delete("/gripsbox/{id}", tags=["gripsbox"])
-async def delete_gripsbox(id: UUID, db: AsyncSession = Depends(get_db)):
+async def delete_gripsbox(id: UUID, db: AsyncSession = Depends(get_db), _: str = Depends(check_user_session)):
     gripsbox = await db.get(Gripsbox, id)
     if gripsbox:
         await db.delete(gripsbox)

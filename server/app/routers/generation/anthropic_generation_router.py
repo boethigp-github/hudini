@@ -9,6 +9,7 @@ from server.app.clients.anthropic.anthropic_client import AnthropicClient
 from server.app.models.generation.success_generation_model import SuccessGenerationModel
 from sqlalchemy import select
 from server.app.models.usercontext.user_context import UserContextModel
+from server.app.utils.check_user_session import check_user_session
 import json
 router = APIRouter()
 settings = Settings()
@@ -48,10 +49,11 @@ async def get_user_context(db: AsyncSession, thread_id: int = 1) -> str:
         "It accepts a `GenerationRequest` containing the models to be used for generation. "
         "If the request does not include any models, a `400 Bad Request` error is raised. "
         "The endpoint returns a streaming JSON response that contains the generated output."
-    ),
+    )
+
 )
 
-async def stream_anthropic_route(request: GenerationRequest, db: AsyncSession = Depends(get_db)):
+async def stream_anthropic_route(request: GenerationRequest, db: AsyncSession = Depends(get_db), _: str = Depends(check_user_session)):
     """
     Stream output from the Anthropic model based on the provided generation request.
 

@@ -17,6 +17,7 @@ export const stream = async (stream_url, generationRequest, onChunk, buffer, res
     try {
         const response = await fetch(`${API_BASE_URL}${stream_url}`, {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -48,7 +49,9 @@ export const stream = async (stream_url, generationRequest, onChunk, buffer, res
  */
 export const getModels = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/models`);
+        const response = await fetch(`${API_BASE_URL}/models`, {
+            credentials: 'include',
+        });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -68,6 +71,7 @@ export const createPrompt = async (promptRequest) => {
     try {
         const response = await fetch(`${API_BASE_URL}/prompts`, {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -98,6 +102,7 @@ export const saveUserContext = async (userContextList, callback = null) => {
 
         const response = await fetch(`${API_BASE_URL}/usercontext`, {
             method: 'POST',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -130,6 +135,7 @@ export const fetchUserContext = (user, threadId) => {
 
         return fetch(url.toString(), {
             method: 'GET',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -195,6 +201,7 @@ export const deleteUserContext = async (threadId) => {
     try {
         const response = await fetch(`${API_BASE_URL}/usercontext/${threadId}`, {
             method: 'DELETE',
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -222,6 +229,7 @@ export const exportUserContextToExel = async (user, thread_id) => {
     try {
         const response = await fetch(`${API_BASE_URL}/usercontext/export/excel?user=${user}&thread_id=${thread_id}`, {
             method: 'GET',
+            credentials: 'include'
         });
 
         if (!response.ok) {
@@ -253,7 +261,9 @@ export const exportUserContextToExel = async (user, thread_id) => {
  */
 export const getTelegramAccounts = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/socialmedia/telegram/accounts`);
+        const response = await fetch(`${API_BASE_URL}/socialmedia/telegram/accounts`, {
+            credentials: 'include',  // Added credentials here
+        });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -272,10 +282,11 @@ export const sendSocialMediaMessage = async (provider, socialMediaMessage) => {
     try {
         const response = await fetch(`${API_BASE_URL}/socialmedia/${provider}/message/send`, {
             method: 'POST',
-             headers: {
+            credentials: 'include',  // Added credentials here
+            headers: {
                 'Content-Type': 'application/json',
             },
-             body: JSON.stringify(socialMediaMessage),
+            body: JSON.stringify(socialMediaMessage),
         });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -286,6 +297,7 @@ export const sendSocialMediaMessage = async (provider, socialMediaMessage) => {
         throw error;
     }
 };
+
 
 
 /**
@@ -300,41 +312,43 @@ export const sendSocialMediaMessage = async (provider, socialMediaMessage) => {
  */
 export const generateImage = async (params) => {
     const response = await fetch(`${API_BASE_URL}/generate/image`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(params),
-        });
+        method: 'POST',
+        credentials: 'include',  // Added credentials here
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(params),
+    });
 
-        return await response.json();
+    return await response.json();
 };
 
 export const sendSocialMediaImageMessage = async (provider, messageData) => {
-        const url = `${API_BASE_URL}/socialmedia/${provider}/image/send`;
-        const response = await fetch(url, {
-            method: 'POST',
-             headers: {
-                'Content-Type': 'application/json' // Ensure the server knows you're sending JSON
-            },
-            body: JSON.stringify(messageData) // Send the FormData object directly
-        });
+    const url = `${API_BASE_URL}/socialmedia/${provider}/image/send`;
+    const response = await fetch(url, {
+        method: 'POST',
+        credentials: 'include',  // Added credentials here
+        headers: {
+            'Content-Type': 'application/json' // Ensure the server knows you're sending JSON
+        },
+        body: JSON.stringify(messageData), // Send the JSON data
+    });
 
-        // Return the JSON response
-        return await response.json();
+    // Return the JSON response
+    return await response.json();
 };
+
 
 /**
  * Sends a POST request to the /gripsbox endpoint.
  * @param {Object} gripsboxData - The data to send to the gripsbox endpoint.
  * @returns {Promise<Object>} A promise that resolves to the server's response.
  */
-// api.js
-
 export const postToGripsbox = async (formData) => {
   try {
     const response = await fetch(`${API_BASE_URL}/gripsbox`, {
       method: 'POST',
+      credentials: 'include',  // Added credentials here
       body: formData,
     });
 

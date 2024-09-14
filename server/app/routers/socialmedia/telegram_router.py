@@ -1,11 +1,11 @@
 import logging
 import json
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel, Field
 from telethon import TelegramClient
 from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.messages import SendMessageRequest
-
+from server.app.utils.check_user_session import check_user_session
 from server.app.config.settings import Settings
 
 settings = Settings()
@@ -32,7 +32,7 @@ class TelegramPublishResponseModel(BaseModel):
 
 
 @router.post("/socialmedia/telegram/message/send", response_model=TelegramPublishResponseModel,status_code=status.HTTP_201_CREATED, tags=["socialmedia"])
-async def publish_to_telegram(publish_request: TelegramPublishRequestModel):
+async def publish_to_telegram(publish_request: TelegramPublishRequestModel,_: str = Depends(check_user_session)):
     """
     Publish a message to a specified Telegram group using a userbot.
 

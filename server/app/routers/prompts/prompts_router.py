@@ -9,6 +9,7 @@ from server.app.config.settings import Settings
 from typing import List
 from server.app.models.prompts.prompt_post_response_model import PromptPostResponseModel
 from server.app.models.prompts.prompt_post_request_model import PromptPostRequestModel
+from server.app.utils.check_user_session import check_user_session
 from uuid import UUID
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -33,7 +34,7 @@ async def get_prompts(db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred {str(e)}")
 
 @router.post("/prompts", response_model=PromptPostResponseModel, status_code=status.HTTP_201_CREATED, tags=["prompts"])
-async def create_prompt(prompt: PromptPostRequestModel, db: AsyncSession = Depends(get_db)):
+async def create_prompt(prompt: PromptPostRequestModel, db: AsyncSession = Depends(get_db), _: str = Depends(check_user_session)):
     try:
         # Log the incoming data
         logger.debug(f"Incoming prompt data: {prompt}")
@@ -72,7 +73,7 @@ async def create_prompt(prompt: PromptPostRequestModel, db: AsyncSession = Depen
 
 
 @router.delete("/prompts/{uuid}", tags=["prompts"])
-async def delete_prompt(uuid: UUID, db: AsyncSession = Depends(get_db)):
+async def delete_prompt(uuid: UUID, db: AsyncSession = Depends(get_db), _: str = Depends(check_user_session)):
     prompt = await db.get(Prompt, uuid)
     if prompt:
         await db.delete(prompt)

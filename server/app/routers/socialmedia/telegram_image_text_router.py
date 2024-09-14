@@ -4,10 +4,11 @@ import os
 import aiohttp
 import tempfile
 import shutil
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel
 from telethon import TelegramClient
 from telethon.errors import SessionPasswordNeededError
+from server.app.utils.check_user_session import check_user_session
 from urllib.parse import urlparse
 import random
 import string
@@ -35,10 +36,11 @@ class TelegramImagePublishResponseModel(BaseModel):
     status: str
     message_id: int
 
-@router.post("/socialmedia/telegram/image/send", response_model=TelegramImagePublishResponseModel,
-             status_code=status.HTTP_201_CREATED, tags=["socialmedia"])
+@router.post("/socialmedia/telegram/image/send", response_model=TelegramImagePublishResponseModel,status_code=status.HTTP_201_CREATED, tags=["socialmedia"])
 async def publish_image_to_telegram(
-        publish_request: PublishRequestModel
+        publish_request: PublishRequestModel,
+        _: str = Depends(check_user_session)
+
 ):
     """
     Publish an image with a caption to a specified Telegram group using a userbot.
