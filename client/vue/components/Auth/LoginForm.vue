@@ -89,11 +89,9 @@ const handleGoogleAuth = async () => {
   try {
     const data = await initiateGoogleAuth();
 
-    console.log("handleGoogleAuth",data);
-
     window.location.href = data.redirect_url;
   } catch (error) {
-    console.error('Google auth error:', error);
+
     // Handle Google auth error (show error message to user)
   } finally {
     googleLoading.value = false;

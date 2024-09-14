@@ -55,7 +55,15 @@ class FastAPIAppFactory:
         if not secret_key:
             self.logger.error("No APP_GOOGLE_AUTH_CLIENT_SECRET found in settings. SessionMiddleware cannot be added.")
             raise ValueError("APP_GOOGLE_AUTH_CLIENT_SECRET is required for SessionMiddleware")
-        self.app.add_middleware(SessionMiddleware, secret_key=secret_key)
+        self.app.add_middleware(
+            SessionMiddleware,
+            secret_key=secret_key,
+            session_cookie="session",  # Optional: Cookie name
+            max_age=3600,  # Optional: Cookie expiration time in seconds (1 hour here)
+            same_site="lax",  # Optional: SameSite attribute for cross-site request handling
+            https_only=True,  # Changed from secure=True to https_only=True
+
+        )
 
     def initialize_oauth(self):
         self.logger.debug("Initializing OAuth")

@@ -3,6 +3,7 @@ import requests
 import os
 from server.app.config.settings import Settings
 
+
 class TestOAuthRouter(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -21,4 +22,16 @@ class TestOAuthRouter(unittest.TestCase):
         # Ensure that the response redirects to Google's OAuth URL
         self.assertEqual(response.status_code, 200)
 
+    def test_no_active_session(self):
+        """Test session-info route when there is no active session."""
+        response = requests.get(f"{self.BASE_URL}/auth/session-info")
 
+        # Expecting a 401 Unauthorized response
+        self.assertEqual(response.status_code, 401)
+
+        # Checking if the response contains the expected error message
+        self.assertEqual(response.content, b'{"detail":"No active session found"}')
+
+
+if __name__ == '__main__':
+    unittest.main()

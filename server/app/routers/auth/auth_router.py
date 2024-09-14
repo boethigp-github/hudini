@@ -5,7 +5,7 @@ from authlib.integrations.starlette_client import OAuth
 from authlib.jose import jwt
 from authlib.oauth2.rfc6749.errors import OAuth2Error
 from server.app.config.settings import Settings
-from authlib.jose import JWTClaims
+from pydantic import BaseModel
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -57,35 +57,43 @@ async def login_google(request: Request):
     return await oauth.google.authorize_redirect(request, redirect_uri)
 
 
+# Define the ResponseModel for session info
+class SessionInfoResponseModel(BaseModel):
+    access_token: str
+    user_info: dict
+
+@router.get("/auth/session-info", tags=["authentication"], response_model=SessionInfoResponseModel)
+async def get_session_info(request: Request):
+    access_token = request.session.get('access_token')
+    user_info = request.session.get('user_info')
+
+    if not access_token or not user_info:
+        raise HTTPException(status_code=401, detail="No active session found")
+
+    return SessionInfoResponseModel(
+        access_token=access_token,
+        user_info=user_info
+    )
+
 @router.get('/auth/google/callback', tags=["authentication"])
-async def auth_google_callback(request: Request, response: Response):
+async def auth_google_callback(request: Request):
     try:
         code = request.query_params.get("code")
-
         logger.debug(f"Received code: {code}")
         if not code:
             logger.error("Authorization code not found in callback request")
             raise HTTPException(status_code=400, detail="Authorization code not found")
-
         token = await oauth.google.authorize_access_token(request)
         logger.debug(f"Received access token: {token}")
-
         user_info = token.get('userinfo')
         if not user_info:
             logger.error("User info not found in token")
             raise HTTPException(status_code=400, detail="User info not found in token")
-
-        # Speichere den Access Token in der Session
         request.session['access_token'] = token['access_token']
-
-        # Optional: Wenn du User-Infos auch in der Session speichern willst
         request.session['user_info'] = user_info
-
         client_url = settings.get("default").get("CLIENT_URL")
-
         redirect_url = f"{client_url}"
         return RedirectResponse(url=redirect_url)
-
     except OAuth2Error as e:
         logger.error(f"Failed to handle Google OAuth callback: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Failed to handle Google OAuth callback: {str(e)}")
