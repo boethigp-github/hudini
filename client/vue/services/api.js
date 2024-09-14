@@ -394,7 +394,7 @@ export const isAuthenticated = async () => {
     try {
         const response = await fetch(`${API_BASE_URL}/auth/session-info`, {
             method: 'GET',
-            credentials: 'include', // Ensures cookies are sent along with the request
+            credentials: 'include',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -405,7 +405,7 @@ export const isAuthenticated = async () => {
         }
 
         const data = await response.json();
-        return data.user_info ? true : false;
+        return !!data.user_info;
     } catch (error) {
         console.error('Error checking authentication:', error);
         return false;
