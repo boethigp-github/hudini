@@ -349,4 +349,46 @@ export const postToGripsbox = async (formData) => {
   }
 };
 
+/**
+ * Performs email/password login.
+ * @param {string} email - The user's email.
+ * @param {string} password - The user's password.
+ * @returns {Promise<Object>} A promise that resolves to the login response data.
+ */
+export const loginWithEmailPassword = async (email, password) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            mode: 'no-cors',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, password }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Login failed');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Login error:', error);
+        throw error;
+    }
+};
+
+/**
+ * Initiates Google OAuth login.
+ * @returns {Promise<Object>} A promise that resolves to the Google OAuth initiation response.
+ */
+export const initiateGoogleAuth = async () => {
+    try {
+       window.location.href=`${API_BASE_URL}/auth/login/google`
+    } catch (error) {
+        console.error('Google auth initiation error:', error);
+        throw error;
+    }
+};
+
+
 

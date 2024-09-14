@@ -2,6 +2,7 @@ from diskcache import FanoutCache
 import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.sessions import SessionMiddleware
 from server.app.routers.models.models_router import router as models_router
 from server.app.routers.prompts.prompts_router import router as prompts_router
 from server.app.routers.generation.openai.openai_text_generation_router import router as generation_router
@@ -13,7 +14,7 @@ from server.app.routers.generation.openai.openai_dalle3_image_generation_router 
 from server.app.routers.socialmedia.telegram_image_text_router import router as socialmedia_telegram_image_text_router
 from server.app.routers.gripsbox.gripsbox_router import router as gripsbox_router
 from server.app.routers.users.users_router import router as users_router
-
+from server.app.routers.auth.auth_router import router as auth_router, setup_oauth
 
 class FastAPIAppFactory:
     def __init__(self, settings):
@@ -31,6 +32,8 @@ class FastAPIAppFactory:
     def create_app(self):
         self.logger.debug("Creating FastAPI application")
         self.initialize_cache()
+        self.add_session_middleware()
+        self.initialize_oauth()
         self.add_cors_middleware()
         self.register_routes()
         return self.app
@@ -41,15 +44,25 @@ class FastAPIAppFactory:
 
     def initialize_cache(self):
         self.logger.debug("Initializing FanoutCache")
-        # Set up FanoutCache with persistent storage in a specified directory
-        cache_directory = self.settings.get("default").get("APP_CACHE")  # Replace with your actual directory
+        cache_directory = self.settings.get("default").get("APP_CACHE")
         self.logger.debug(f"Cache directory set to: {cache_directory}")
         cache = FanoutCache(directory=cache_directory, shards=8)
         self.app.state.cache = cache
 
+    def add_session_middleware(self):
+        self.logger.debug("Adding SessionMiddleware")
+        secret_key = self.settings.get("default").get("APP_GOOGLE_AUTH_CLIENT_SECRET")
+        if not secret_key:
+            self.logger.error("No APP_GOOGLE_AUTH_CLIENT_SECRET found in settings. SessionMiddleware cannot be added.")
+            raise ValueError("APP_GOOGLE_AUTH_CLIENT_SECRET is required for SessionMiddleware")
+        self.app.add_middleware(SessionMiddleware, secret_key=secret_key)
+
+    def initialize_oauth(self):
+        self.logger.debug("Initializing OAuth")
+        setup_oauth()
+
     def add_cors_middleware(self):
         self.logger.debug("Adding CORS middleware")
-        # Get origins from environment variables
         origins = self.settings.get("default").get("APP_CORS_ORIGIN", "").split(",")
         if not origins:
             self.logger.warning("No CORS origins specified in environment variables.")
@@ -76,5 +89,5 @@ class FastAPIAppFactory:
         self.app.include_router(openai_dalle2_image_generation_router)
         self.app.include_router(socialmedia_telegram_image_text_router)
         self.app.include_router(gripsbox_router)
+        self.app.include_router(auth_router)  # Auth router
         self.logger.debug("Finished: Registering routes")
-
