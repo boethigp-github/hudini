@@ -390,5 +390,26 @@ export const initiateGoogleAuth = async () => {
     }
 };
 
+export const isAuthenticated = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/session-info`, {
+            method: 'GET',
+            credentials: 'include', // Ensures cookies are sent along with the request
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data.user_info ? true : false;
+    } catch (error) {
+        console.error('Error checking authentication:', error);
+        return false;
+    }
+};
 
 
