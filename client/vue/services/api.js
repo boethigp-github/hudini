@@ -413,3 +413,24 @@ export const isAuthenticated = async () => {
 };
 
 
+/**
+ * Logs the user out by calling the /auth/logout endpoint.
+ * @returns {Promise<void>}
+ */
+export const logout = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+      method: 'GET',
+      credentials: 'include', // Ensure the session cookie is sent
+    });
+
+    if (!response.ok) {
+      throw new Error('Logout failed');
+    }
+
+    console.log('Logout successful');
+  } catch (error) {
+    console.error('Error during logout:', error);
+    throw error;
+  }
+};

@@ -100,3 +100,22 @@ async def auth_google_callback(request: Request):
     except Exception as e:
         logger.error(f"Unexpected error: {str(e)}")
         raise HTTPException(status_code=400, detail=f"Unexpected error: {str(e)}")
+
+
+@router.get('/auth/logout', tags=["authentication"])
+async def logout(request: Request):
+    """
+    Logs the user out by clearing the session.
+    """
+    try:
+        # Clear the session data
+        request.session.clear()
+
+        # Return success response
+        logger.debug("User successfully logged out.")
+        return {"success": True}
+
+    except Exception as e:
+        logger.error(f"Error during logout: {str(e)}")
+        raise HTTPException(status_code=500, detail="Logout failed due to server error")
+

@@ -214,7 +214,7 @@ onMounted(async () => {
 
 <style scoped>
 .contextmanager-opener {
-  margin-top: -20px;
+  margin-top: -25px;
 }
 
 .tag-selector :deep(.v-field__input),

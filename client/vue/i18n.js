@@ -82,7 +82,8 @@ const messages = {
         active: "Active",
         close: "Close",
         save: "Save",
-        error_uploading_files: "Error uploading files"
+        error_uploading_files: "Error uploading files",
+        logout: 'Logout',
 
     },
     de: {
@@ -166,7 +167,8 @@ const messages = {
         active: "Aktiv",
         close: "Schließen",
         save: "Speichern",
-        error_uploading_files: "Fehler beim Hochladen der Dateien"
+        error_uploading_files: "Fehler beim Hochladen der Dateien",
+        logout: "Abmelden",
 
     },
     fr: {
@@ -250,7 +252,8 @@ const messages = {
         active: "Actif",
         close: "Fermer",
         save: "Sauvegarder",
-        error_uploading_files: "Erreur lors du téléchargement des fichiers"
+        error_uploading_files: "Erreur lors du téléchargement des fichiers",
+        logout: "Déconnexion"
 
     },
     ru: {
@@ -334,7 +337,8 @@ const messages = {
         active: "Активный",
         close: "Закрыть",
         save: "Сохранить",
-        error_uploading_files: "Ошибка загрузки файлов"
+        error_uploading_files: "Ошибка загрузки файлов",
+        logout: "Выйти",
     },
     zh: {
         hudini_title: 'Hudini - CPU 魔术师在 SLM',
@@ -415,7 +419,8 @@ const messages = {
         active: "激活",
         close: "关闭",
         save: "保存",
-        error_uploading_files: "上传文件时出错"
+        error_uploading_files: "上传文件时出错",
+        logout: '退出登录',
     },
     // Add other languages as needed
 };

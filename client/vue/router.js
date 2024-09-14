@@ -3,7 +3,7 @@ import ChatForm from './components/ChatForm.vue';
 import Login from './components/Auth/LoginForm.vue';
 import { isAuthenticated } from '@/vue/services/api'; // Import the API-based authentication check
 
-// Function to periodically check session status
+
 let sessionCheckInterval = null;
 
 const startSessionCheck = () => {
@@ -56,9 +56,9 @@ const routes = [
       const authenticated = await isAuthenticated(); // Check if the user is already authenticated
       if (authenticated) {
         console.log('User already authenticated, redirecting to Home');
-        next('/'); // Redirect to Home if already authenticated
+        next('/');
       } else {
-        next(); // Proceed to login if not authenticated
+        next();
       }
     },
   },
@@ -84,7 +84,7 @@ router.beforeEach(async (to, from, next) => {
 // Stop the session check when leaving the protected routes (optional)
 router.afterEach((to) => {
   if (to.path !== '/') {
-    stopSessionCheck(); // Stop the session check if the user leaves the home route
+    stopSessionCheck();
   }
 });
 
