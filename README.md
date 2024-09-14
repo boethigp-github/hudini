@@ -4,7 +4,7 @@ To adjust the README documentation to reflect the use of `bigint` for `user` and
 
 # Hudini - CPU Magician on SLM
 
-![Hudini Logo](/client/vue/assets/hidini2.webp)
+![Hudini Logo](/client/vue/assets/Fhudini-logo.webp)
 
 **CAUTION: FOR TESTING PURPOSES ONLY. NOT FOR PRODUCTION USE.**
 
