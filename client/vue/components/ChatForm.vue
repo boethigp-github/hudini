@@ -107,7 +107,7 @@ export default {
 
         user = userData?.accessToken?.user_info.uuid;
 
-        fetchUserContext(user, thread_id)
+        fetchUserContext()
             .then(fetchUserContextCallback)
             .catch((error) => {
               showMessage(t('failed_to_retrieve_user_context'), 'error');

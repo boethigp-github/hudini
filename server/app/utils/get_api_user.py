@@ -26,4 +26,4 @@ async def get_api_user(api_key: str = Depends(api_key_header), db: AsyncSession 
         )
 
     # Return the associated user
-    return {"username": api_key_entry.user_relationship.username, "api_key": api_key_entry.key}
+    return api_key_entry.user_relationship

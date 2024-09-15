@@ -53,7 +53,7 @@ class TestGripsbox(TestAbstract):
         new_id = await self.create_test_gripsbox()
 
         # Validate gripsbox creation using requests and the query param for api_key
-        response = requests.get(f"{self.BASE_URL}/gripsbox?api_key={self.api_key}")
+        response = requests.post(f"{self.BASE_URL}/gripsbox?api_key={self.api_key}")
         assert response.status_code == 200
         gripsboxes = response.json()
         assert any(gripsbox['id'] == new_id for gripsbox in gripsboxes)

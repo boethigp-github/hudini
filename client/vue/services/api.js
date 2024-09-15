@@ -125,14 +125,11 @@ export const saveUserContext = async (userContextList, callback = null) => {
  * @param {number} threadId - The ID of the thread.
  * @returns {Promise<Object>} A promise that resolves to the user context data.
  */
-export const fetchUserContext = (user, threadId) => {
+export const fetchUserContext = () => {
     try {
 
 
         const url = new URL(`${API_BASE_URL}/usercontext`);
-        url.searchParams.append('user', user);
-        url.searchParams.append('thread_id', String(threadId));
-
         return fetch(url.toString(), {
             method: 'GET',
             credentials: 'include',

@@ -1,17 +1,22 @@
 import logging
-import os
 import json
 from fastapi import APIRouter, HTTPException, Depends, status, File, UploadFile, Form
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from server.app.db.base import async_session_maker
+from server.app.db.get_db import get_db
 from server.app.models.gripsbox.gripsbox_model import Gripsbox
-from server.app.services.gripsbox_service import create_gripsbox_service
-from server.app.models.gripsbox.gripsbox_post_response import GripsboxPostResponseModel
-from server.app.utils.auth import auth
+from server.app.models.users.user import User
 from typing import List
 from server.app.config.settings import Settings
 from uuid import UUID
+import logging
+from fastapi import APIRouter, Depends, status, File, UploadFile, Form
+from sqlalchemy.ext.asyncio import AsyncSession
+from server.app.services.gripsbox_service import create_gripsbox_service
+from server.app.models.gripsbox.gripsbox_post_response import GripsboxPostResponseModel
+from server.app.utils.auth import auth
+from server.app.db.get_db import get_db
+
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -23,11 +28,6 @@ settings = Settings()
 allowed_file_extensions_str = settings.get("default").get("ALLOWED_FILE_EXTENSIONS", '[".jpg", ".png", ".pdf"]')
 ALLOWED_FILE_EXTENSIONS = json.loads(allowed_file_extensions_str)
 
-# Dependency to get the database session
-async def get_db():
-    async with async_session_maker() as session:
-        yield session
-
 @router.get("/gripsbox", response_model=List[GripsboxPostResponseModel], tags=["gripsbox"])
 async def get_gripsbox(db: AsyncSession = Depends(get_db),  _: str = Depends(auth)):
     try:
@@ -38,6 +38,7 @@ async def get_gripsbox(db: AsyncSession = Depends(get_db),  _: str = Depends(aut
         logger.error(f"Error retrieving gripsbox: {str(e)}")
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
+
 @router.post("/gripsbox", response_model=GripsboxPostResponseModel, status_code=status.HTTP_201_CREATED, tags=["gripsbox"])
 async def create_gripsbox(
     file: UploadFile = File(...),
@@ -47,9 +48,9 @@ async def create_gripsbox(
     active: bool = Form(...),
     tags: str = Form(...),
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(auth)
-):
-    # Call the service function to create the gripsbox
+    user: User = Depends(auth)):
+
+    logger.info(f"Gripsbox user info: username={user.username}, uuid={user.uuid}")
     new_gripsbox = await create_gripsbox_service(
         file=file,
         name=name,
@@ -57,10 +58,12 @@ async def create_gripsbox(
         type=type,
         active=active,
         tags=tags,
-        db=db
+        db=db,
+        user=user
     )
 
-    return  GripsboxPostResponseModel.from_orm(new_gripsbox)
+    return GripsboxPostResponseModel.from_orm(new_gripsbox)
+
 
 @router.delete("/gripsbox/{id}", tags=["gripsbox"])
 async def delete_gripsbox(id: UUID, db: AsyncSession = Depends(get_db), _: str = Depends(auth)):

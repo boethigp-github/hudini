@@ -119,7 +119,7 @@ async def auth_google_callback(request: Request, db: AsyncSession = Depends(get_
 
         if not user:
             # User doesn't exist, create a new one using UserService
-            user_service = UserService(db)
+            user_service = UserService()
             user = await user_service.create_user(
                 email=email,
                 username=google_user_info.get('name', email.split('@')[0])
