@@ -8,7 +8,7 @@ from server.app.models.usercontext.usercontext_post_request_model import UserCon
 from server.app.models.usercontext.usercontext_post_request_model import UserContextPrompt
 from server.app.config.settings import Settings
 from server.app.models.users.users_post_request import UserPostRequestModel
-from server.tests.test_abstract import TestAbstract  # Assuming this contains the API key logic
+from server.tests.test_abstract import TestAbstract
 import asyncio
 
 class TestUserContext(TestAbstract):

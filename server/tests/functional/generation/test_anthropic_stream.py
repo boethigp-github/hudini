@@ -6,16 +6,22 @@ import time
 from server.app.config.settings import Settings
 import uuid
 from requests.exceptions import ChunkedEncodingError
+import asyncio
+from server.tests.test_abstract import TestAbstract  # Assuming this contains the API key logic
 
-class TestAnthropicStream(unittest.TestCase):
+class TestAnthropicStream(TestAbstract):
 
     @classmethod
     def setUpClass(cls):
         # Initialize the settings
         cls.settings = Settings()
 
-        # Set the SERVER_URL from the loaded configuration
+        # Set the SERVER_URL and APP_DEFAULT_ADMIN_USERNAME from the loaded configuration
         cls.SERVER_URL = cls.settings.get("default").get("SERVER_URL")
+        cls.APP_DEFAULT_ADMIN_USERNAME = cls.settings.get("default").get("APP_DEFAULT_ADMIN_USERNAME")
+
+        # Manually run async initialization using asyncio.run() to retrieve API key
+        asyncio.run(cls.async_init())
 
     def test_stream_success(self):
         """Test the /stream/anthropic endpoint for a successful streaming response using an Anthropic model."""
@@ -36,7 +42,12 @@ class TestAnthropicStream(unittest.TestCase):
                 "root": None
             }]
         }
-        response = requests.post(f"{self.SERVER_URL}/stream/anthropic", json=stream_payload, stream=True, timeout=20)  # Increased timeout
+        response = requests.post(
+            f"{self.SERVER_URL}/stream/anthropic?api_key={self.api_key}",  # Use the admin API key here
+            json=stream_payload,
+            stream=True,
+            timeout=20  # Increased timeout
+        )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.headers['Content-Type'], 'application/json')
 
@@ -58,9 +69,6 @@ class TestAnthropicStream(unittest.TestCase):
             if time.time() - start_time > timeout_seconds:
                 self.fail("Test timed out while waiting for stream response.")
 
-
-        self.assertEqual(response.status_code, 200)
-
     def test_stream_invalid_model(self):
         """Test the /stream/anthropic endpoint with an invalid Anthropic model."""
         stream_payload = {
@@ -80,7 +88,11 @@ class TestAnthropicStream(unittest.TestCase):
                 "root": None
             }]
         }
-        response = requests.post(f"{self.SERVER_URL}/stream/anthropic", json=stream_payload, stream=True)
+        response = requests.post(
+            f"{self.SERVER_URL}/stream/anthropic?api_key={self.api_key}",  # Use the admin API key here
+            json=stream_payload,
+            stream=True
+        )
         self.assertEqual(response.status_code, 200)
 
 if __name__ == '__main__':

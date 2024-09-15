@@ -12,6 +12,7 @@ class TestAbstract(unittest.TestCase):
         # Retrieve the API key for the default admin user
         cls.api_key = await cls.get_api_key_for_admin()
 
+
     @classmethod
     async def get_api_key_for_admin(cls):
         """Retrieve the first API key for the default admin user."""
@@ -22,5 +23,4 @@ class TestAbstract(unittest.TestCase):
             )
             admin_user = result.scalar()
 
-            # Fetch the first API key directly
-            return admin_user.api_keys[0].key  # Get the first API key
+            return admin_user.api_keys[0].key

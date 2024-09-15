@@ -51,7 +51,7 @@ class AnthropicClient:
         """
         # Use the `system` parameter instead of including it in `messages`
         with self.client.messages.stream(
-                max_tokens=5000,
+                max_tokens=4096,
                 #max_tokens=model_config.max_tokens,
                 system=context,  # Use the system parameter for context
                 messages=[{"role": "user", "content": request.prompt}],
