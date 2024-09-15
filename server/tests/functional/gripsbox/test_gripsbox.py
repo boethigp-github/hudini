@@ -5,7 +5,7 @@ from server.app.config.settings import Settings
 from server.app.models.gripsbox.gripsbox_post_request import GripsboxPostRequestModel
 from server.tests.test_abstract import TestAbstract
 from server.app.services import gripsbox_service  # Import function
-
+import json
 
 class TestGripsbox(TestAbstract):
     @classmethod
@@ -73,6 +73,10 @@ class TestGripsbox(TestAbstract):
         # Convert the Pydantic model to a dictionary for form data
         payload_dict = gripsbox_data.model_dump()
 
+        # Convert tags and models to JSON strings (expected by the API)
+        payload_dict['tags'] = json.dumps(payload_dict['tags'])
+        payload_dict['models'] = json.dumps(payload_dict['models'])
+
         # Use requests to send the API key as a query parameter and send the form data and file together
         with open(self.TEST_FILE, "rb") as f:
             response = requests.post(
@@ -94,5 +98,3 @@ class TestGripsbox(TestAbstract):
         # Use requests to delete the gripsbox using the API key as a query parameter
         response = requests.delete(f"{self.BASE_URL}/gripsbox/{gripsbox_id}?api_key={self.api_key}")
         assert response.status_code == 200
-
-
