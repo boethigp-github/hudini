@@ -3,9 +3,12 @@
     <v-container fluid>
       <v-row align="center" no-gutters>
         <v-col cols="auto">
-          <img src="/assets/hudini.webp" height="40" width="40" class="mr-2"></img>
+          <img src="/assets/hudini.webp" height="40" width="40" class="mr-2" alt="Hudini logo">
         </v-col>
-        <v-app-bar-title>Hudini, bra... </v-app-bar-title>
+        <v-app-bar-title>
+          Hudini greets
+          <span v-if="user_info" class="username ml-2 text-primary">{{ user_info.username }}</span>
+        </v-app-bar-title>
         <v-spacer></v-spacer>
         <v-col class="theme-switch-container" cols="auto">
           <ThemeSwitch />
@@ -17,7 +20,7 @@
         <v-spacer></v-spacer>
         <v-col cols="auto">
           <v-btn
-            class="loggout"
+            class="logout"
             icon="mdi mdi-logout"
             color="primary"
             size="small"
@@ -35,21 +38,46 @@
   </v-app-bar>
 </template>
 
-<script setup>
+<script>
+import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '@/vue/stores/currentUser';
 import ThemeSwitch from "@/vue/components/ThemeSwitch.vue";
 import LanguageSwitch from "@/vue/components/LanguageSwitch.vue";
 import FileManager from "@/vue/components/ContextManager/ContextManager.vue";
-import {useRouter} from 'vue-router'; // Import Vue Router
-import {logout} from '@/vue/services/api'; // Import the logout function from api.js
+import { logout } from '@/vue/services/api';
 
-const router = useRouter();
+export default {
+  components: {
+    ThemeSwitch,
+    LanguageSwitch,
+    FileManager
+  },
+  setup() {
+    const router = useRouter();
+    const authStore = useAuthStore();
+    const user_info = ref('');
 
-const handleLogout = async () => {
-  try {
-    await logout();
-    await router.push('/login');
-  } catch (error) {
-    console.error('Error during logout:', error);
+    onMounted(async () => {
+      const userData = await authStore.loadFromStorage();
+      user_info.value = userData?.accessToken?.user_info;
+    });
+
+    const handleLogout = async () => {
+      try {
+        await logout();
+        await authStore.removeUser();
+        user_info.value = '';  // Clear the user info
+        await router.push('/login');
+      } catch (error) {
+        console.error('Error during logout:', error);
+      }
+    };
+
+    return {
+      user_info,
+      handleLogout
+    };
   }
 };
 </script>
@@ -59,7 +87,13 @@ const handleLogout = async () => {
   margin-left: 8px;
 }
 
-.loggout{
+.logout {
   margin-top: -10px;
+}
+
+.username {
+  font-size: 0.9em;
+  font-weight: normal;
+  opacity: 0.8;
 }
 </style>

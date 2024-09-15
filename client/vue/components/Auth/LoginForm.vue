@@ -84,7 +84,6 @@ const handleSubmit = async () => {
     emit('login-success');
   } catch (error) {
 
-    // Handle login error (show error message to user)
   } finally {
     loading.value = false;
   }
