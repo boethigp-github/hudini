@@ -9,6 +9,7 @@
           v-model="email"
           label="Email"
           type="email"
+          autocomplete="username"
           required
           :rules="[v => !!v || 'Email is required', v => /.+@.+\..+/.test(v) || 'E-mail must be valid']"
         ></v-text-field>
@@ -16,6 +17,7 @@
           v-model="password"
           label="Password"
           type="password"
+          :autocomplete="isLogin ? 'current-password' : 'new-password'"
           required
           :rules="[v => !!v || 'Password is required', v => v.length >= 6 || 'Password must be at least 6 characters']"
         ></v-text-field>
@@ -25,6 +27,7 @@
           block
           class="mt-4"
           :loading="loading"
+          :disabled="loading || googleLoading"
         >
           {{ isLogin ? 'Login' : 'Register' }}
         </v-btn>
@@ -35,6 +38,7 @@
         block
         @click="handleGoogleAuth"
         :loading="googleLoading"
+        :disabled="loading || googleLoading"
       >
         <v-icon left>mdi-google</v-icon>
         Sign in with Google
@@ -55,8 +59,8 @@
 </template>
 
 <script setup>
-import {ref, onMounted} from 'vue';
-import {loginWithEmailPassword, initiateGoogleAuth} from '@/vue/services/api';
+import { ref, onMounted } from 'vue';
+import { loginWithEmailPassword, initiateGoogleAuth } from '@/vue/services/api';
 
 const emit = defineEmits(['login-success']);
 
@@ -68,6 +72,8 @@ const googleLoading = ref(false);
 
 const toggleMode = () => {
   isLogin.value = !isLogin.value;
+  email.value = '';
+  password.value = '';
 };
 
 const handleSubmit = async () => {
@@ -77,7 +83,7 @@ const handleSubmit = async () => {
     localStorage.setItem('userToken', data.token);
     emit('login-success');
   } catch (error) {
-    console.error('Login error:', error);
+
     // Handle login error (show error message to user)
   } finally {
     loading.value = false;
@@ -88,20 +94,14 @@ const handleGoogleAuth = async () => {
   googleLoading.value = true;
   try {
     const data = await initiateGoogleAuth();
-
     window.location.href = data.redirect_url;
-  } catch (error) {
+  }finally {
 
-    // Handle Google auth error (show error message to user)
-  } finally {
-    googleLoading.value = false;
   }
 };
 
-
-
 onMounted(() => {
-
+  // Any mounting logic if needed
 });
 </script>
 

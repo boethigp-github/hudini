@@ -28,10 +28,8 @@ function handleAuthRedirect(accessToken, currentPath, next) {
 const startSessionCheck = () => {
   if (!sessionCheckInterval) {
     sessionCheckInterval = setInterval(async () => {
-      console.log('Performing interval-based session check...');
       const accessToken = await checkAndUpdateAccessToken();
       if (!accessToken) {
-        console.log('Session expired, redirecting to login');
         const authStore = useAuthStore();
         await authStore.removeUser();
         window.location.href = '/login';
@@ -54,11 +52,13 @@ const routes = [
     path: '/',
     name: 'Home',
     component: ChatForm,
+    meta: { requiresAuth: true }
   },
   {
     path: '/login',
     name: 'Login',
     component: Login,
+    meta: { guest: true }
   },
 ];
 
@@ -70,16 +70,31 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   console.log(`Navigating from ${from.path} to ${to.path}`);
 
-  const accessToken = await checkAndUpdateAccessToken();
-  handleAuthRedirect(accessToken, to.path, next);
+  const authStore = useAuthStore();
+  let accessToken = authStore.user?.accessToken;
 
-  if (to.path === '/' && accessToken && !sessionCheckInterval) {
-    startSessionCheck();
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    if (!accessToken) {
+      accessToken = await checkAndUpdateAccessToken();
+    }
+    handleAuthRedirect(accessToken, to.path, next);
+
+    if (to.path === '/' && accessToken && !sessionCheckInterval) {
+      startSessionCheck();
+    }
+  } else if (to.matched.some(record => record.meta.guest)) {
+    if (accessToken) {
+      next('/');
+    } else {
+      next();
+    }
+  } else {
+    next();
   }
 });
 
 router.afterEach((to) => {
-  if (to.path !== '/') {
+  if (to.path !== '/' || !to.meta.requiresAuth) {
     stopSessionCheck();
   }
 });
