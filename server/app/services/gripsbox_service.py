@@ -67,7 +67,8 @@ async def create_gripsbox_service(
         size=gripsbox_post_data.size,
         type=gripsbox_post_data.type,
         active=gripsbox_post_data.active,
-        tags=gripsbox_post_data.tags  # Use the request model's tag list
+        tags=gripsbox_post_data.tags,
+        models=gripsbox_post_data.models
     )
 
     # Add and commit the new gripsbox entry to the database

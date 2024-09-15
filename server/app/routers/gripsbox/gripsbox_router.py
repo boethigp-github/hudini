@@ -43,23 +43,24 @@ async def create_gripsbox(
     size: int = Form(...),
     type: str = Form(...),
     active: bool = Form(...),
-    tags: str = Form(...),  # This will be passed as a comma-separated string
+    tags: str = Form(...),
+    models: str = Form(...),
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     user: User = Depends(auth)
 ):
     logger.info(f"Gripsbox user info: username={user.username}, uuid={user.uuid}")
 
-    # Convert comma-separated tags to list
-    tags_list = [tag.strip() for tag in tags.split(',')]
-
+    tags_list = json.loads(tags)
+    models_list = json.loads(models)
     # Prepare the input data for validation
     data = {
         "name": name,
         "size": size,
         "type": type,
         "active": active,
-        "tags": tags_list
+        "tags": tags_list,
+        "models": models_list
     }
 
     # Validate using model_validate without try-except

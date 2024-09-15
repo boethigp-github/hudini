@@ -66,11 +66,12 @@ class TestGripsbox(TestAbstract):
             size=5,
             type="Type Y",
             active=True,
-            tags=["tag1", "tag2"]
+            tags=["tag1", "tag2"],
+            models=["gpt-3.5-turbo"]
         )
 
         # Convert the Pydantic model to a dictionary for form data
-        payload_dict = gripsbox_data.dict()
+        payload_dict = gripsbox_data.model_dump()
 
         # Use requests to send the API key as a query parameter and send the form data and file together
         with open(self.TEST_FILE, "rb") as f:

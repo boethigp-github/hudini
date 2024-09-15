@@ -156,7 +156,7 @@ const uploadSingleFile = async (file) => {
   formData.append('type', file.type);
   formData.append('active', file.active);
   formData.append('tags', JSON.stringify(file.tags));
-  formData.append('selectedModels', JSON.stringify(file.selectedModels));
+  formData.append('models', JSON.stringify(file.selectedModels));
 
   return await postToGripsbox(formData);
 };

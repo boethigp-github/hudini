@@ -10,6 +10,7 @@ class GripsboxPostResponseModel(BaseModel):
     type: str
     active: bool
     tags: list[str]
+    models: list[str]
     created: datetime
     updated: datetime
 
@@ -30,6 +31,7 @@ class GripsboxPostResponseModel(BaseModel):
             type=obj.type,
             active=obj.active,
             tags=obj.tags,
+            models=obj.models,
             created=obj.created,
             updated=obj.updated
         )
