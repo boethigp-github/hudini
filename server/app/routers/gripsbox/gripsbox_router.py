@@ -8,7 +8,7 @@ from server.app.db.base import async_session_maker
 from server.app.models.gripsbox.gripsbox_model import Gripsbox
 from server.app.models.gripsbox.gripsbox_post_request import GripsboxPostRequestModel
 from server.app.models.gripsbox.gripsbox_post_response import GripsboxPostResponseModel
-from server.app.utils.check_user_session import check_user_session
+from server.app.utils.auth import auth
 from typing import List
 from server.app.config.settings import Settings
 from uuid import UUID
@@ -29,7 +29,7 @@ async def get_db():
         yield session
 
 @router.get("/gripsbox", response_model=List[GripsboxPostResponseModel], tags=["gripsbox"])
-async def get_gripsbox(db: AsyncSession = Depends(get_db),  _: str = Depends(check_user_session)):
+async def get_gripsbox(db: AsyncSession = Depends(get_db),  _: str = Depends(auth)):
     try:
         result = await db.execute(select(Gripsbox).order_by(Gripsbox.created.desc()))
         gripsbox_list = result.scalars().all()
@@ -47,7 +47,7 @@ async def create_gripsbox(
     active: bool = Form(...),
     tags: str = Form(...),
     db: AsyncSession = Depends(get_db),
-    _: str = Depends(check_user_session)
+    _: str = Depends(auth)
 ):
     # Log the incoming data
     logger.debug(f"Incoming file: {file.filename}")
@@ -114,7 +114,7 @@ async def create_gripsbox(
     return gripsbox_response
 
 @router.delete("/gripsbox/{id}", tags=["gripsbox"])
-async def delete_gripsbox(id: UUID, db: AsyncSession = Depends(get_db), _: str = Depends(check_user_session)):
+async def delete_gripsbox(id: UUID, db: AsyncSession = Depends(get_db), _: str = Depends(auth)):
     gripsbox = await db.get(Gripsbox, id)
     if gripsbox:
         await db.delete(gripsbox)

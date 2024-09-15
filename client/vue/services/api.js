@@ -274,6 +274,48 @@ export const getTelegramAccounts = async () => {
     }
 };
 
+
+/**
+ * Fetches prompts from the server.
+ * @returns {Promise<Array>} A promise that resolves to an array of telegram accounts.
+ */
+export const fetchPrompts = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/prompts`, {
+            credentials: 'include',
+            method: 'GET',
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching telegram accounts:', error);
+        throw error;
+    }
+};
+
+/**
+ * Deletes prompt
+ *
+ * @returns {Promise<Array>} A promise that resolves to an array of telegram accounts.
+ */
+export const deletePromptById = async (id) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/prompts/${id}`, {
+            credentials: 'include',
+            method: 'DELETE',
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching telegram accounts:', error);
+        throw error;
+    }
+};
+
 /**
  * Fetches telegram accounts from the server.
  * @returns {Promise<Array>} A promise that resolves to an array of telegram accounts.
@@ -297,7 +339,6 @@ export const sendSocialMediaMessage = async (provider, socialMediaMessage) => {
         throw error;
     }
 };
-
 
 
 /**
@@ -345,22 +386,22 @@ export const sendSocialMediaImageMessage = async (provider, messageData) => {
  * @returns {Promise<Object>} A promise that resolves to the server's response.
  */
 export const postToGripsbox = async (formData) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/gripsbox`, {
-      method: 'POST',
-      credentials: 'include',  // Added credentials here
-      body: formData,
-    });
+    try {
+        const response = await fetch(`${API_BASE_URL}/gripsbox`, {
+            method: 'POST',
+            credentials: 'include',  // Added credentials here
+            body: formData,
+        });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error in postToGripsbox:', error);
+        throw error;
     }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Error in postToGripsbox:', error);
-    throw error;
-  }
 };
 
 /**
@@ -377,7 +418,7 @@ export const loginWithEmailPassword = async (email, password) => {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({email, password}),
         });
 
         if (!response.ok) {
@@ -397,7 +438,7 @@ export const loginWithEmailPassword = async (email, password) => {
  */
 export const initiateGoogleAuth = async () => {
     try {
-       window.location.href=`${API_BASE_URL}/auth/login/google`
+        window.location.href = `${API_BASE_URL}/auth/login/google`
     } catch (error) {
         console.error('Google auth initiation error:', error);
         throw error;
@@ -432,19 +473,19 @@ export const isAuthenticated = async () => {
  * @returns {Promise<void>}
  */
 export const logout = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
-      method: 'GET',
-      credentials: 'include', // Ensure the session cookie is sent
-    });
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+            method: 'GET',
+            credentials: 'include', // Ensure the session cookie is sent
+        });
 
-    if (!response.ok) {
-      throw new Error('Logout failed');
+        if (!response.ok) {
+            throw new Error('Logout failed');
+        }
+
+        console.log('Logout successful');
+    } catch (error) {
+        console.error('Error during logout:', error);
+        throw error;
     }
-
-    console.log('Logout successful');
-  } catch (error) {
-    console.error('Error during logout:', error);
-    throw error;
-  }
 };

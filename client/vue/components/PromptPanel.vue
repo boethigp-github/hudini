@@ -69,6 +69,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import {fetchPrompts, deletePromptById} from "@/vue/services/api.js";
 
 const { t } = useI18n();
 const previousPrompts = ref([]);
@@ -103,39 +104,14 @@ const copyToClipboard = (text) => {
 };
 
 const loadPrompts = () => {
-  fetch(`${serverUrl}/prompts`)
-    .then(res => {
-      if (!res.ok) {
-        throw new Error("Failed to load prompts");
-      }
-      return res.json();
-    })
-    .then(data => {
-      previousPrompts.value = data;
-    })
-    .catch(error => {
-      console.error("Error loading prompts:", error);
-      // Replace with Vuetify snackbar or notification system
-      console.error(t('failed_to_prompts'));
-    });
+   fetchPrompts().then(response => {
+     previousPrompts.value = response;
+   })
 };
 
-const deletePrompt = (id) => {
-  fetch(`${serverUrl}/prompts/${id}`, {
-    method: "DELETE",
-  })
-    .then(res => {
-      if (res.ok) {
-        loadPrompts();  // Reload the prompts after deletion
-        // Replace with Vuetify snackbar or notification system
-        console.log(t('prompt_deleted'));
-      } else {
-        throw new Error("Failed to delete prompt");
-      }
-    })
-    .catch(error => {
-      console.error("Error deleting prompt", error);
-    });
+const deletePrompt = async (id) => {
+    await deletePromptById(id)
+    loadPrompts()
 };
 
 const rerunPrompt = (prompt) => {

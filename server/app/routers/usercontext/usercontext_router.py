@@ -12,7 +12,7 @@ from typing import List
 import openpyxl
 from io import BytesIO
 from fastapi.responses import StreamingResponse
-from server.app.utils.check_user_session import check_user_session
+from server.app.utils.auth import auth
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
@@ -31,11 +31,9 @@ from pydantic import ValidationError
 async def save_user_context(
         user_contexts: List[UserContextPostRequestModel],
         db: AsyncSession = Depends(get_db),
-        access_token: str = Depends(check_user_session)  # Session check dependency
+        _: str = Depends(auth)  # Session check dependency
 ):
     try:
-        logger.debug(f"Received request to save user contexts from user with access_token: {access_token}")
-
         saved_contexts = []
         for user_context in user_contexts:
             if not user_context.prompt.context_data:
@@ -80,7 +78,7 @@ async def get_user_contexts(
         user: str,
         thread_id: int,
         db: AsyncSession = Depends(get_db),
-        access_token: str = Depends(check_user_session)  # Session check dependency
+        access_token: str = Depends(auth)  # Session check dependency
 ):
     logger.debug(f"Fetching contexts for user {user} with access_token: {access_token}")
 
@@ -105,7 +103,7 @@ async def get_user_contexts(
 async def delete_user_context(
         thread_id: int,
         db: AsyncSession = Depends(get_db),
-        access_token: str = Depends(check_user_session)  # Session check dependency
+        access_token: str = Depends(auth)  # Session check dependency
 ):
     try:
         logger.debug(f"Deleting contexts for thread {thread_id} with access_token: {access_token}")
@@ -135,7 +133,7 @@ async def export_user_context_to_excel(
         user: str = Query(..., description="UUID of the user"),
         thread_id: int = Query(..., description="ID of the thread"),
         db: AsyncSession = Depends(get_db),
-        access_token: str = Depends(check_user_session)  # Session check dependency
+        access_token: str = Depends(auth)  # Session check dependency
 ):
     try:
         logger.debug(f"Exporting Excel for user {user} with access_token: {access_token}")

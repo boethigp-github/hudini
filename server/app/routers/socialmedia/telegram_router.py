@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from telethon import TelegramClient
 from telethon.errors import SessionPasswordNeededError
 from telethon.tl.functions.messages import SendMessageRequest
-from server.app.utils.check_user_session import check_user_session
+from server.app.utils.auth import auth
 from server.app.config.settings import Settings
 
 settings = Settings()
@@ -32,7 +32,7 @@ class TelegramPublishResponseModel(BaseModel):
 
 
 @router.post("/socialmedia/telegram/message/send", response_model=TelegramPublishResponseModel,status_code=status.HTTP_201_CREATED, tags=["socialmedia"])
-async def publish_to_telegram(publish_request: TelegramPublishRequestModel,_: str = Depends(check_user_session)):
+async def publish_to_telegram(publish_request: TelegramPublishRequestModel,_: str = Depends(auth)):
     """
     Publish a message to a specified Telegram group using a userbot.
 
@@ -131,7 +131,7 @@ class TelegramAccount(BaseModel):
 
 
 @router.get("/socialmedia/telegram/accounts", tags=["socialmedia"])
-async def get_telegram_accounts():
+async def get_telegram_accounts(_: str = Depends(auth)):
     """
     Fetch available Telegram accounts from the configuration.
     Returns a list of accounts with display names, associated groups, and provider.

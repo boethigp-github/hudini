@@ -9,7 +9,7 @@ from server.app.config.settings import Settings
 from server.app.models.users.users_get_response import UsersGetResponseModel
 from server.app.models.users.users_post_request import UserPostRequestModel  # For user creation
 from server.app.models.users.user import User
-from server.app.utils.check_user_session import check_user_session
+from server.app.utils.auth import auth
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -23,7 +23,7 @@ async def get_db():
         yield session
 
 @router.get("/users", response_model=List[UsersGetResponseModel], tags=["users"])
-async def get_users(db: AsyncSession = Depends(get_db), _: str = Depends(check_user_session)):
+async def get_users(db: AsyncSession = Depends(get_db), _: str = Depends(auth)):
     """
     Retrieves all users from the database and returns them as a list.
 
@@ -39,7 +39,7 @@ async def get_users(db: AsyncSession = Depends(get_db), _: str = Depends(check_u
         raise HTTPException(status_code=500, detail=f"An error occurred while retrieving users: {str(e)}")
 
 @router.get("/users/{id}", response_model=UsersGetResponseModel, tags=["users"])
-async def get_user(id: int, db: AsyncSession = Depends(get_db),_: str = Depends(check_user_session)):
+async def get_user(id: int, db: AsyncSession = Depends(get_db),_: str = Depends(auth)):
     """
     Retrieves a single user by ID from the database.
 
@@ -64,7 +64,7 @@ async def get_user(id: int, db: AsyncSession = Depends(get_db),_: str = Depends(
         raise HTTPException(status_code=500, detail=f"An error occurred while retrieving the user: {str(e)}")
 
 @router.post("/users", response_model=UsersGetResponseModel, tags=["users"])
-async def create_user(user_data: UserPostRequestModel, db: AsyncSession = Depends(get_db), _: str = Depends(check_user_session)):
+async def create_user(user_data: UserPostRequestModel, db: AsyncSession = Depends(get_db), _: str = Depends(auth)):
     """
     Creates a new user in the database.
 
@@ -89,7 +89,7 @@ async def create_user(user_data: UserPostRequestModel, db: AsyncSession = Depend
         raise HTTPException(status_code=500, detail=f"An error occurred while creating the user: {str(e)}")
 
 @router.delete("/users/{id}", tags=["users"])
-async def delete_user(id: int, db: AsyncSession = Depends(get_db), _: str = Depends(check_user_session)):
+async def delete_user(id: int, db: AsyncSession = Depends(get_db), _: str = Depends(auth)):
     """
     Deletes a user by ID from the database.
 

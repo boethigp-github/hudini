@@ -8,7 +8,7 @@ from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel
 from telethon import TelegramClient
 from telethon.errors import SessionPasswordNeededError
-from server.app.utils.check_user_session import check_user_session
+from server.app.utils.auth import auth
 from urllib.parse import urlparse
 import random
 import string
@@ -39,7 +39,7 @@ class TelegramImagePublishResponseModel(BaseModel):
 @router.post("/socialmedia/telegram/image/send", response_model=TelegramImagePublishResponseModel,status_code=status.HTTP_201_CREATED, tags=["socialmedia"])
 async def publish_image_to_telegram(
         publish_request: PublishRequestModel,
-        _: str = Depends(check_user_session)
+        _: str = Depends(auth)
 
 ):
     """

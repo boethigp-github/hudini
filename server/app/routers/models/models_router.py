@@ -6,7 +6,7 @@ from server.app.clients.anthropic.anthropic_client import AnthropicClient
 from server.app.clients.googleai.google_ai_client import GoogleAICLient
 import logging
 from server.app.models.models.models_get_response import ModelGetResponseModel
-from server.app.utils.check_user_session import check_user_session
+from server.app.utils.auth import auth
 import os
 
 # Initialize the logger
@@ -36,7 +36,7 @@ def get_active_providers():
 @router.get("/models", response_model=List[ModelGetResponseModel], tags=["models"])
 async def get_models(
     cache=Depends(get_cache),
-    _: str = Depends(check_user_session)
+    _: str = Depends(auth)
 ):
     """
     Retrieves available models from the activated providers,

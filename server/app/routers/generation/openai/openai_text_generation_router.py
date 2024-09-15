@@ -15,6 +15,7 @@ from server.app.models.generation.generation_request import GenerationRequest
 from server.app.models.generation.success_generation_model import SuccessGenerationModel
 from sqlalchemy import select
 from server.app.models.usercontext.user_context import UserContextModel
+from server.app.utils.auth import auth
 import json
 router = APIRouter()
 settings = Settings()
@@ -145,7 +146,7 @@ async def get_user_context(db: AsyncSession, thread_id: int = 1) -> str:
             "If the configuration is invalid or the platform is not supported, a `400 Bad Request` error is raised."
     ),
 )
-async def stream_route(request: GenerationRequest, db: AsyncSession = Depends(get_db)):
+async def stream_route(request: GenerationRequest, db: AsyncSession = Depends(get_db),  _: str = Depends(auth) ):
     """
     Stream AI-generated content based on the provided prompt and model configurations.
 
