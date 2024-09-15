@@ -16,3 +16,7 @@ class ApiKey(Base):
 
     # Define the relationship back to User
     user_relationship = relationship("User", back_populates="api_keys")
+
+    @staticmethod
+    def get_class_name():
+        return "ApiKey"

@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 from server.app.db.base import Base
 import uuid
 from datetime import datetime
-
+from server.app.models.api_key.api_key import ApiKey
 class User(Base):
     __tablename__ = 'users'
 
@@ -17,7 +17,11 @@ class User(Base):
     password = Column(String(128), nullable=False)
 
     # Relationship to ApiKey
-    api_keys = relationship("ApiKey", back_populates="user_relationship", cascade="all, delete", lazy="selectin")
+    api_keys = relationship(ApiKey.get_class_name(), back_populates="user_relationship", cascade="all, delete", lazy="selectin")
+
+    @staticmethod
+    def get_class_name():
+        return "User"
 
     def to_dict(self):
         return {
