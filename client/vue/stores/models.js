@@ -3,7 +3,7 @@ import localforage from 'localforage'
 
 // Initialize localforage
 localforage.config({
-    name: 'MyApp',
+    name: 'Hudini',
     storeName: 'models' // This is the name of our IndexedDB database
 })
 

@@ -1,24 +1,44 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import ChatForm from './components/ChatForm.vue';
 import Login from './components/Auth/LoginForm.vue';
-import { isAuthenticated } from '@/vue/services/api'; // Import the API-based authentication check
-
+import { fetchAccessToken } from '@/vue/services/api';
+import { useAuthStore } from '@/vue/stores/currentUser.js';
 
 let sessionCheckInterval = null;
 
+async function checkAndUpdateAccessToken() {
+  const authStore = useAuthStore();
+  const accessToken = await fetchAccessToken();
+  authStore.setUser({ accessToken });
+  return accessToken;
+}
+
+function handleAuthRedirect(accessToken, currentPath, next) {
+  if (!accessToken && currentPath !== '/login') {
+    console.log('User not authenticated, redirecting to login');
+    next('/login');
+  } else if (accessToken && currentPath === '/login') {
+    console.log('User already authenticated, redirecting to Home');
+    next('/');
+  } else {
+    next();
+  }
+}
+
 const startSessionCheck = () => {
-  console.log('Performing interval-based session check...');
   if (!sessionCheckInterval) {
     sessionCheckInterval = setInterval(async () => {
       console.log('Performing interval-based session check...');
-      const authenticated = await isAuthenticated();
-      if (!authenticated) {
+      const accessToken = await checkAndUpdateAccessToken();
+      if (!accessToken) {
         console.log('Session expired, redirecting to login');
+        const authStore = useAuthStore();
+        await authStore.removeUser();
         window.location.href = '/login';
       } else {
         console.log('Session is still valid.');
       }
-    }, 30000); // Check session every 30 seconds
+    }, 30000);
   }
 };
 
@@ -29,38 +49,16 @@ const stopSessionCheck = () => {
   }
 };
 
-startSessionCheck(); // Start session checks when authenticated
-
 const routes = [
   {
     path: '/',
     name: 'Home',
     component: ChatForm,
-    beforeEnter: async (to, from, next) => {
-      console.log('Checking if user is authenticated from server...');
-      const authenticated = await isAuthenticated(); // Call the server to check authentication
-      if (!authenticated) {
-        console.log('User not authenticated, redirecting to login');
-        stopSessionCheck(); // Stop session checks when logged out
-        next('/login');
-      } else {
-        next();
-      }
-    },
   },
   {
     path: '/login',
     name: 'Login',
     component: Login,
-    beforeEnter: async (to, from, next) => {
-      const authenticated = await isAuthenticated(); // Check if the user is already authenticated
-      if (authenticated) {
-        console.log('User already authenticated, redirecting to Home');
-        next('/');
-      } else {
-        next();
-      }
-    },
   },
 ];
 
@@ -69,19 +67,17 @@ const router = createRouter({
   routes,
 });
 
-// Global navigation guard
 router.beforeEach(async (to, from, next) => {
   console.log(`Navigating from ${from.path} to ${to.path}`);
 
-  // Start session check when navigating to Home or other protected routes
-  if (to.path === '/' && !sessionCheckInterval) {
+  const accessToken = await checkAndUpdateAccessToken();
+  handleAuthRedirect(accessToken, to.path, next);
+
+  if (to.path === '/' && accessToken && !sessionCheckInterval) {
     startSessionCheck();
   }
-
-  next();
 });
 
-// Stop the session check when leaving the protected routes (optional)
 router.afterEach((to) => {
   if (to.path !== '/') {
     stopSessionCheck();

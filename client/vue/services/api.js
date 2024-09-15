@@ -445,7 +445,7 @@ export const initiateGoogleAuth = async () => {
     }
 };
 
-export const isAuthenticated = async () => {
+export const fetchAccessToken = async () => {
     try {
         const response = await fetch(`${API_BASE_URL}/auth/session-info`, {
             method: 'GET',
@@ -459,8 +459,7 @@ export const isAuthenticated = async () => {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json();
-        return !!data.user_info;
+        return await response.json();
     } catch (error) {
         console.error('Error checking authentication:', error);
         return false;
