@@ -41,18 +41,23 @@ async def get_gripsbox(db: AsyncSession = Depends(get_db),  _: str = Depends(aut
 async def create_gripsbox(
     name: str = Form(...),
     size: int = Form(...),
-    type: str = Form(...),
+    type: str = Form("application/octet-stream"),
     active: bool = Form(...),
-    tags: str = Form(...),
-    models: str = Form(...),
+    tags: str = Form(None),  # Allow tags to be optional
+    models: str = Form(None),  # Allow models to be optional
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     user: User = Depends(auth)
 ):
     logger.info(f"Gripsbox user info: username={user.username}, uuid={user.uuid}")
 
-    tags_list = json.loads(tags)
-    models_list = json.loads(models)
+    # Convert JSON strings to lists, default to empty list if None or empty
+    try:
+        tags_list = json.loads(tags) if tags and tags.strip() else []
+        models_list = json.loads(models) if models and models.strip() else []
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Tags and models must be valid JSON arrays")
+
     # Prepare the input data for validation
     data = {
         "name": name,
@@ -63,7 +68,7 @@ async def create_gripsbox(
         "models": models_list
     }
 
-    # Validate using model_validate without try-except
+    # Validate using model_validate
     gripsbox_data = GripsboxPostRequestModel.model_validate(data)
 
     # Pass the validated request model and other necessary arguments to the service
