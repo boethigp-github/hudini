@@ -1,8 +1,11 @@
 import unittest
 import requests
 import os
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
 from server.app.config.settings import Settings
 from server.app.models.gripsbox.gripsbox_post_request import GripsboxPostRequestModel
+from server.app.models.users.user import User
 
 
 class TestGripsbox(unittest.TestCase):
@@ -11,8 +14,33 @@ class TestGripsbox(unittest.TestCase):
         cls.settings = Settings()
         cls.BASE_URL = cls.settings.get("default").get("SERVER_URL")
         cls.APP_STORAGE = cls.settings.get("default").get("APP_STORAGE")
+        cls.APP_DEFAULT_ADMIN_USERNAME = cls.settings.get("default").get("APP_DEFAULT_ADMIN_USERNAME")
         cls.TEST_FILE = "test_file.txt"
+
+        # Setup DB connection and session
+        cls.engine = create_engine(cls.settings.get("default").get("DATABASE_URL"))
+        cls.Session = sessionmaker(bind=cls.engine)
+        cls.session = cls.Session()
+
+        # Retrieve the API key for the default admin user
+        cls.api_key = cls.get_api_key_for_admin()
+
         cls.create_test_file()
+
+    @classmethod
+    def get_api_key_for_admin(cls):
+        """Helper method to retrieve API key for the default admin user."""
+        # Query the admin user by username
+        admin_user = cls.session.query(User).filter_by(username=cls.APP_DEFAULT_ADMIN_USERNAME).first()
+        if not admin_user:
+            raise ValueError(f"Admin user {cls.APP_DEFAULT_ADMIN_USERNAME} not found.")
+
+        # Get the active API key via the relationship
+        api_key = admin_user.api_keys.filter_by(active=True).first()
+        if not api_key:
+            raise ValueError(f"No active API key found for user {cls.APP_DEFAULT_ADMIN_USERNAME}.")
+
+        return api_key.key
 
     @classmethod
     def create_test_file(cls):
@@ -36,6 +64,9 @@ class TestGripsbox(unittest.TestCase):
             if os.path.isfile(file_path):
                 os.remove(file_path)
 
+        # Close the session
+        cls.session.close()
+
     def create_test_gripsbox(self):
         """Create a test gripsbox using the model and return its UUID."""
         # Create the payload with GripsboxPostRequestModel
@@ -53,10 +84,12 @@ class TestGripsbox(unittest.TestCase):
         # Prepare files for the POST request
         with open(self.TEST_FILE, "rb") as file:
             files = {"file": (self.TEST_FILE, file, "text/plain")}
+            headers = {"X-API-Key": self.api_key}
             response = requests.post(
                 f"{self.BASE_URL}/gripsbox",
                 files=files,
-                data=payload_dict
+                data=payload_dict,
+                headers=headers
             )
 
         if response.status_code != 201:
@@ -71,7 +104,8 @@ class TestGripsbox(unittest.TestCase):
         new_id = self.create_test_gripsbox()
 
         # Validate gripsbox creation by checking if it appears in the list of gripsboxes
-        response = requests.get(f"{self.BASE_URL}/gripsbox")
+        headers = {"X-API-Key": self.api_key}
+        response = requests.get(f"{self.BASE_URL}/gripsbox", headers=headers)
         if response.status_code != 200:
             self.fail(f"Failed to get gripsboxes after creation: {response.text}")
         gripsboxes = response.json()
@@ -81,7 +115,7 @@ class TestGripsbox(unittest.TestCase):
         self.delete_gripsbox(new_id)
 
         # Validate gripsbox deletion by checking if it's removed from the list
-        response = requests.get(f"{self.BASE_URL}/gripsbox")
+        response = requests.get(f"{self.BASE_URL}/gripsbox", headers=headers)
         if response.status_code != 200:
             self.fail(f"Failed to get gripsboxes after deletion: {response.text}")
         gripsboxes = response.json()
@@ -90,7 +124,8 @@ class TestGripsbox(unittest.TestCase):
 
     def delete_gripsbox(self, gripsbox_id):
         """Delete the given gripsbox by UUID."""
-        delete_response = requests.delete(f"{self.BASE_URL}/gripsbox/{gripsbox_id}")
+        headers = {"X-API-Key": self.api_key}
+        delete_response = requests.delete(f"{self.BASE_URL}/gripsbox/{gripsbox_id}", headers=headers)
         if delete_response.status_code != 200:
             self.fail(f"Failed to delete gripsbox: {delete_response.text}")
         delete_data = delete_response.json()

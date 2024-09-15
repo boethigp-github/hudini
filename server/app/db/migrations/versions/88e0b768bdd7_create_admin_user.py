@@ -9,7 +9,10 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.sql import table, column
 from sqlalchemy import String
-import bcrypt
+import sys, os
+# Add the project root to sys.path so Python can find 'server'
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../../')))
+
 from server.app.utils.password_generator import generate_password
 # revision identifiers, used by Alembic.
 revision: str = '88e0b768bdd7'

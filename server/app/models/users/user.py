@@ -1,8 +1,10 @@
-from sqlalchemy import Column, String, DateTime, BigInteger
+from sqlalchemy import DateTime
 from datetime import datetime
-from server.app.db.base import Base  # Import Base from the shared module
-from sqlalchemy.dialects.postgresql import UUID
 import uuid
+from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String
+from sqlalchemy.dialects.postgresql import UUID
+from server.app.db.base import Base
 # SQLAlchemy model
 class User(Base):  # Use the Base directly
     __tablename__ = 'users'
@@ -12,7 +14,8 @@ class User(Base):  # Use the Base directly
     email = Column(String(100), nullable=False, unique=True)
     created = Column(DateTime, default=datetime.utcnow)
     last_login = Column(DateTime, nullable=True)
-
+    # Relationship to ApiKey
+    api_keys = relationship("ApiKey", backref="user", cascade="all, delete", lazy="dynamic")
     def to_dict(self):
         return {
             "id": str(self.uuid),
