@@ -1,14 +1,18 @@
-from sqlalchemy import Column, String, Boolean, TIMESTAMP, ForeignKey
+from sqlalchemy import Column, String, Boolean, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from server.app.db.base import Base
+from datetime import datetime
 import uuid
-from server.app.db.base import Base  # Passe den Importpfad ggf. an
 
 class ApiKey(Base):
-    __tablename__ = "api_keys"
+    __tablename__ = 'api_keys'
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, nullable=False)
-    user = Column(UUID(as_uuid=True), ForeignKey("users.uuid", ondelete="CASCADE"), nullable=False)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user = Column(UUID(as_uuid=True), ForeignKey('users.uuid', ondelete='CASCADE'), nullable=False)  # This should match your table definition
     key = Column(String(64), nullable=False)
-    created = Column(TIMESTAMP(timezone=True), server_default=func.now(), nullable=False)
-    active = Column(Boolean, nullable=False, default=False)
+    created = Column(DateTime, default=datetime.utcnow, nullable=False)
+    active = Column(Boolean, default=False, nullable=False)
+
+    # Define the relationship back to User
+    user_relationship = relationship("User", back_populates="api_keys")
