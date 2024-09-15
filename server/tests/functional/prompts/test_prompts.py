@@ -1,23 +1,28 @@
 import unittest
 import requests
-import random
-import string
 import uuid
 from server.app.config.settings import Settings
 from server.app.models.prompts.prompt_post_request_model import PromptPostRequestModel
-
-
-class TestPrompts(unittest.TestCase):
+from server.tests.test_abstract import TestAbstract  # Assuming test_abstract contains API key logic
+import asyncio
+class TestPrompts(TestAbstract):
     @classmethod
     def setUpClass(cls):
+        """Synchronous setup, including the API key retrieval."""
         cls.settings = Settings()
         cls.BASE_URL = cls.settings.get("default").get("SERVER_URL")
+        cls.APP_DEFAULT_ADMIN_USERNAME = cls.settings.get("default").get("APP_DEFAULT_ADMIN_USERNAME")
+
+        # Manually run async initialization using asyncio.run() to retrieve API key
+        asyncio.run(cls.async_init())
+
+        # Fetch the first user UUID
         cls.TEST_USER_UUID = cls.get_first_user_uuid()
 
     @classmethod
     def get_first_user_uuid(cls):
         """Fetch the first user from the database."""
-        response = requests.get(f"{cls.BASE_URL}/users")
+        response = requests.get(f"{cls.BASE_URL}/users?api_key={cls.api_key}")
         if response.status_code != 200:
             raise AssertionError(f"Failed to fetch users: {response.text}")
 
@@ -28,7 +33,7 @@ class TestPrompts(unittest.TestCase):
         return str(users[0]['uuid'])  # Ensure UUID is a string
 
     def create_test_prompt(self):
-        """Create a test prompt with UUID properly serialized as string."""
+        """Create a test prompt with UUID properly serialized as a string."""
         if not self.TEST_USER_UUID:
             raise AssertionError("TEST_USER_UUID is None, cannot create test prompt")
 
@@ -44,8 +49,8 @@ class TestPrompts(unittest.TestCase):
         payload_dict = create_payload.model_dump()
         payload_dict = {k: str(v) if isinstance(v, uuid.UUID) else v for k, v in payload_dict.items()}
 
-        # Send the POST request
-        create_response = requests.post(f"{self.BASE_URL}/prompts", json=payload_dict)
+        # Send the POST request with the API key as a query parameter
+        create_response = requests.post(f"{self.BASE_URL}/prompts?api_key={self.api_key}", json=payload_dict)
 
         # Check for successful creation
         if create_response.status_code != 201:
@@ -60,7 +65,7 @@ class TestPrompts(unittest.TestCase):
         new_uuid = self.create_test_prompt()
 
         # Validate prompt creation by checking if it appears in the list of prompts
-        response = requests.get(f"{self.BASE_URL}/prompts")
+        response = requests.get(f"{self.BASE_URL}/prompts?api_key={self.api_key}")
         if response.status_code != 200:
             raise AssertionError(f"Failed to get prompts after creation: {response.text}")
         prompts = response.json()
@@ -70,7 +75,7 @@ class TestPrompts(unittest.TestCase):
         self.delete_prompt(new_uuid)
 
         # Validate prompt deletion by checking if it's removed from the list
-        response = requests.get(f"{self.BASE_URL}/prompts")
+        response = requests.get(f"{self.BASE_URL}/prompts?api_key={self.api_key}")
         if response.status_code != 200:
             raise AssertionError(f"Failed to get prompts after deletion: {response.text}")
         prompts = response.json()
@@ -78,13 +83,12 @@ class TestPrompts(unittest.TestCase):
 
     def delete_prompt(self, prompt_uuid):
         """Delete the given prompt by UUID."""
-        delete_response = requests.delete(f"{self.BASE_URL}/prompts/{prompt_uuid}")
+        delete_response = requests.delete(f"{self.BASE_URL}/prompts/{prompt_uuid}?api_key={self.api_key}")
         if delete_response.status_code != 200:
             raise AssertionError(f"Failed to delete prompt: {delete_response.text}")
         delete_data = delete_response.json()
         if delete_data.get('status') != "Prompt deleted successfully":
             raise AssertionError(f"Unexpected response for prompt deletion: {delete_data}")
-
 
 if __name__ == '__main__':
     unittest.main()

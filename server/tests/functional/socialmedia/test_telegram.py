@@ -1,7 +1,8 @@
 import pytest
 import requests
-import json
 from server.app.config.settings import Settings
+from server.tests.test_abstract import TestAbstract  # Assuming this contains API key logic
+import asyncio
 
 
 @pytest.fixture(scope='module')
@@ -40,14 +41,69 @@ def telegram_publish_payload_with_2fa(telegram_publish_payload):
     return telegram_publish_payload
 
 
-def test_publish_with_2fa(base_url, telegram_publish_payload_with_2fa):
-    """
-    Test sending a message to an authorized Telegram group with 2FA enabled.
-    """
-    response = requests.post(f"{base_url}/socialmedia/telegram/message/send", json=telegram_publish_payload_with_2fa)
+class TestTelegramPublish(TestAbstract):
+    @classmethod
+    def setUpClass(cls):
+        """
+        Synchronous setup, including the API key retrieval.
+        This method runs async initialization from the base class (TestAbstract).
+        """
+        cls.settings = Settings()
+        cls.BASE_URL = cls.settings.get("default").get("SERVER_URL")
+        cls.APP_DEFAULT_ADMIN_USERNAME = cls.settings.get("default").get("APP_DEFAULT_ADMIN_USERNAME")
+        # Manually run async initialization to retrieve the API key
+        asyncio.run(cls.async_init())
 
-    assert response.status_code == 201
-    data = response.json()
-    assert "status" in data
-    assert data["status"] == "Message sent successfully"
-    assert "message_id" in data
+    def test_publish_with_2fa(self):
+        """
+        Test sending a message to an authorized Telegram group with 2FA enabled.
+        This uses the API key from the abstract test class.
+        """
+        # Manually inject the base_url and telegram_publish_payload_with_2fa fixtures
+        base_url = self.BASE_URL
+        telegram_publish_payload_with_2fa = {
+            "user": "JohnDoe",
+            "api_id": 23915104,  # Match your SOCIALMEDIA_USER API ID
+            "group_id": "@hudinitests",  # Use the group ID directly
+            "message": "Test message from pytest",
+            "password": "8300"  # Assuming this is your 2FA password
+        }
+
+        # Use the API key from the TestAbstract class
+        response = requests.post(
+            f"{base_url}/socialmedia/telegram/message/send?api_key={self.api_key}",
+            json=telegram_publish_payload_with_2fa
+        )
+
+        # Asserting the response status and structure
+        assert response.status_code == 201, f"Unexpected status code: {response.status_code}"
+        data = response.json()
+        assert "status" in data, "Response is missing 'status' field"
+        assert data["status"] == "Message sent successfully", f"Unexpected status: {data['status']}"
+        assert "message_id" in data, "Response is missing 'message_id'"
+
+    def test_publish_without_2fa(self):
+        """
+        Test sending a message to an authorized Telegram group without 2FA enabled.
+        """
+        # Manually inject the base_url and telegram_publish_payload fixtures
+        base_url = self.BASE_URL
+        telegram_publish_payload = {
+            "user": "JohnDoe",
+            "api_id": 23915104,  # Match your SOCIALMEDIA_USER API ID
+            "group_id": "@hudinitests",  # Use the group ID directly
+            "message": "Test message from pytest"
+        }
+
+        # Use the API key from the TestAbstract class
+        response = requests.post(
+            f"{base_url}/socialmedia/telegram/message/send?api_key={self.api_key}",
+            json=telegram_publish_payload
+        )
+
+        # Asserting the response status and structure
+        assert response.status_code == 201, f"Unexpected status code: {response.status_code}"
+        data = response.json()
+        assert "status" in data, "Response is missing 'status' field"
+        assert data["status"] == "Message sent successfully", f"Unexpected status: {data['status']}"
+        assert "message_id" in data, "Response is missing 'message_id'"
