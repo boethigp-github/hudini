@@ -13,24 +13,17 @@ import time
 router = APIRouter()
 oauth = OAuth()
 settings = Settings()
-from fastapi.responses import RedirectResponse
 from server.app.models.users.user import User
-from server.app.utils.password_generator import generate_password
-import logging
-from fastapi import APIRouter, Request, HTTPException, Depends
-from authlib.integrations.starlette_client import OAuth
+from fastapi import Request, HTTPException, Depends
 from authlib.oauth2.rfc6749.errors import OAuth2Error
-from server.app.config.settings import Settings
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from server.app.db.get_db import get_db as get_async_session
 from fastapi.responses import RedirectResponse
-import random
-import string
-from datetime import datetime
-import string
-import random
+
+
+from server.app.services.user_service import UserService
 
 from datetime import datetime
 
@@ -119,20 +112,12 @@ async def auth_google_callback(request: Request, db: AsyncSession = Depends(get_
         user = result.scalar_one_or_none()
 
         if not user:
-            # User doesn't exist, create a new one
-            random_password = ''.join(random.choices(string.ascii_letters + string.digits, k=16))
-            hashed_password = generate_password(random_password)
-
-            new_user = User(
-                username=user_info.get('name', email.split('@')[0]),
+            # User doesn't exist, create a new one using UserService
+            user_service = UserService(db)
+            user = await user_service.create_user(
                 email=email,
-                password=hashed_password  # Note: You might want to add a password field to your User model
+                username=user_info.get('name', email.split('@')[0])
             )
-            db.add(new_user)
-            await db.commit()
-            await db.refresh(new_user)
-            user = new_user
-            logger.info(f"Created new user with email: {email}")
         else:
             logger.info(f"Found existing user with email: {email}")
 
