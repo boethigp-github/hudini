@@ -77,6 +77,7 @@ import {
 import {v4 as uuidv4} from 'uuid';
 import {UserContext} from '../models/UserContext.js';
 import AppBar from "@/vue/components/AppBar/AppBar.vue";
+import {useAuthStore} from "@/vue/stores/currentUser.js";
 
 export default {
   name: 'ChatForm',
@@ -91,7 +92,37 @@ export default {
     ThemeSwitch
   },
   setup() {
-    const user = "5baab051-0c32-42cf-903d-035ec6912a91";
+
+    const authStore = useAuthStore();
+
+    /**
+     * Inits the user and its context
+     */
+    const initUserContext = ()=>{
+
+      authStore.loadFromStorage().then(userData => {
+        if (!userData) {
+          console.error("No user in pinia storage");
+        }
+
+        user = userData?.accessToken?.user_info.uuid;
+
+        fetchUserContext(user, thread_id)
+            .then(fetchUserContextCallback)
+            .catch((error) => {
+              showMessage(t('failed_to_retrieve_user_context'), 'error');
+              console.error('Error retrieving user context:', error);
+            })
+            .finally(() => {
+              hideLoader();
+              triggerPromptPanelUpdate();
+            });
+      });
+    }
+
+    let user = null;
+
+
     const thread_id = 1;
 
     const streamRequestModel = {
@@ -242,20 +273,6 @@ export default {
       }
     }
 
-    /**
-     * Fetches stored user contexts
-     */
-    fetchUserContext(user, thread_id)
-        .then(fetchUserContextCallback)
-        .catch((error) => {
-          showMessage(t('failed_to_retrieve_user_context'), 'error');
-          console.error('Error retrieving user context:', error);
-        })
-        .finally(() => {
-          hideLoader();
-          triggerPromptPanelUpdate();
-        });
-
 
     /**
      * Creates a prompt object
@@ -315,7 +332,10 @@ export default {
       }
     };
 
-    onMounted(() => {
+    onMounted(async () => {
+
+      initUserContext();
+
       window.addEventListener('delete-thread', deleteThreadEvent);
       window.addEventListener('rerun-prompt', rerunPrompt);
       window.addEventListener('comparison-open', showComparisonView);
@@ -333,7 +353,7 @@ export default {
       window.removeEventListener('show-message', onShowMessage);
     });
 
-    const onShowMessage = (event)=>{
+    const onShowMessage = (event) => {
       showMessage(event.detail.message, event.detail.color);
     }
 
@@ -343,12 +363,12 @@ export default {
      * @returns {Promise<void>}
      */
     const exportToExcel = async () => {
-        const user = userContextList.value[0]?.prompt.user;
-        const thread_id = userContextList.value[0]?.thread_id;
-        if (!user || !thread_id) {
-          throw new Error("User or Thread ID not available.");
-        }
-        await exportUserContextToExel(user, thread_id)
+      const user = userContextList.value[0]?.prompt.user;
+      const thread_id = userContextList.value[0]?.thread_id;
+      if (!user || !thread_id) {
+        throw new Error("User or Thread ID not available.");
+      }
+      await exportUserContextToExel(user, thread_id)
     };
 
     /**

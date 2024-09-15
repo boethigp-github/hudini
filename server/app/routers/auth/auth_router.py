@@ -6,12 +6,7 @@ from starlette.responses import RedirectResponse
 from pydantic import BaseModel
 from typing import Dict, Any
 from datetime import datetime
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-
 from server.app.config.settings import Settings
-from server.app.models.users.user import User
-from server.app.db.get_db import get_db as get_async_session
 from server.app.services.user_service import UserService
 
 # Configure logging
@@ -137,7 +132,7 @@ async def auth_google_callback(request: Request, db: AsyncSession = Depends(get_
 
         # Prepare user info for session
         user_dict = {}
-        for attr in ['id', 'username', 'email', 'created', 'updated', 'last_login']:
+        for attr in ['uuid', 'username', 'email', 'created', 'updated', 'last_login']:
             if hasattr(user, attr):
                 value = getattr(user, attr)
                 user_dict[attr] = str(value) if value is not None else None
