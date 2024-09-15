@@ -1,5 +1,5 @@
 import logging
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from server.app.models.usercontext.user_context import UserContextModel
@@ -11,27 +11,24 @@ from datetime import datetime
 from typing import List
 import openpyxl
 from io import BytesIO
+from pydantic import ValidationError
 from fastapi.responses import StreamingResponse
 from server.app.utils.auth import auth
+from server.app.models.users.user import User
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
 
 # Dependency to get database session
 async def get_db():
     async with async_session_maker() as session:
         yield session
 
-
-from pydantic import ValidationError
-
-
 # Route to save user context
 @router.post("/usercontext", tags=["usercontext"], response_model=List[UserContextResponseModel])
 async def save_user_context(
-        user_contexts: List[UserContextPostRequestModel],
-        db: AsyncSession = Depends(get_db),
-        _: str = Depends(auth)  # Session check dependency
+    user_contexts: List[UserContextPostRequestModel],
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(auth)  # Get user from auth dependency
 ):
     try:
         saved_contexts = []
@@ -39,9 +36,10 @@ async def save_user_context(
             if not user_context.prompt.context_data:
                 raise HTTPException(status_code=400, detail="Context data must not be empty")
 
+            # Use user.uuid from the authenticated user
             existing_context = await db.get(UserContextModel, user_context.uuid)
             if existing_context:
-                existing_context.user = user_context.user
+                existing_context.user = user.uuid  # Update with authenticated user's UUID
                 existing_context.thread_id = user_context.thread_id
                 existing_context.context_data = jsonable_encoder(user_context.dict())
                 existing_context.updated = datetime.now()
@@ -49,7 +47,7 @@ async def save_user_context(
             else:
                 new_user_context = UserContextModel(
                     uuid=user_context.uuid,
-                    user=user_context.user,
+                    user=user.uuid,  # Set to authenticated user's UUID
                     thread_id=user_context.thread_id,
                     context_data=jsonable_encoder(user_context.dict()),
                     updated=datetime.now()
@@ -75,20 +73,15 @@ async def save_user_context(
 # Route to get user context
 @router.get("/usercontext", tags=["usercontext"], response_model=List[UserContextResponseModel])
 async def get_user_contexts(
-        user: str,
-        thread_id: int,
-        db: AsyncSession = Depends(get_db),
-        access_token: str = Depends(auth)  # Session check dependency
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(auth)  # Get user from auth dependency
 ):
-    logger.debug(f"Fetching contexts for user {user} with access_token: {access_token}")
+    logger.debug(f"Fetching contexts for user {user.uuid}")
 
     result = await db.execute(
         select(UserContextModel)
-        .where(
-            UserContextModel.user == user,
-            UserContextModel.thread_id == thread_id
-        )
-        .order_by(UserContextModel.created.asc())
+        .where(UserContextModel.user == user.uuid)
+        .order_by(UserContextModel.created.desc())
     )
     user_contexts = result.scalars().all()
 
@@ -101,15 +94,16 @@ async def get_user_contexts(
 # Route to delete user context
 @router.delete("/usercontext/{thread_id}", tags=["usercontext"])
 async def delete_user_context(
-        thread_id: int,
-        db: AsyncSession = Depends(get_db),
-        access_token: str = Depends(auth)  # Session check dependency
+    thread_id: int,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(auth)  # Get user from auth dependency
 ):
     try:
-        logger.debug(f"Deleting contexts for thread {thread_id} with access_token: {access_token}")
+        logger.debug(f"Deleting contexts for thread {thread_id} of user {user.uuid}")
 
         result = await db.execute(
-            select(UserContextModel).where(UserContextModel.thread_id == thread_id)
+            select(UserContextModel)
+            .where(UserContextModel.thread_id == thread_id, UserContextModel.user == user.uuid)
         )
         user_contexts = result.scalars().all()
 
@@ -130,18 +124,17 @@ async def delete_user_context(
 # Route to export user context to Excel
 @router.get("/usercontext/export/excel", tags=["usercontext"])
 async def export_user_context_to_excel(
-        user: str = Query(..., description="UUID of the user"),
-        thread_id: int = Query(..., description="ID of the thread"),
-        db: AsyncSession = Depends(get_db),
-        access_token: str = Depends(auth)  # Session check dependency
+    thread_id: int = Query(..., description="ID of the thread"),
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(auth)  # Get user from auth dependency
 ):
     try:
-        logger.debug(f"Exporting Excel for user {user} with access_token: {access_token}")
+        logger.debug(f"Exporting Excel for user {user.uuid}")
 
         result = await db.execute(
             select(UserContextModel)
             .where(
-                UserContextModel.user == user,
+                UserContextModel.user == user.uuid,  # Filter by authenticated user's UUID
                 UserContextModel.thread_id == thread_id
             )
             .order_by(UserContextModel.created.asc())
@@ -149,7 +142,7 @@ async def export_user_context_to_excel(
         user_contexts = result.scalars().all()
 
         if not user_contexts:
-            logger.error(f"No contexts found for user {user} and thread_id {thread_id}")
+            logger.error(f"No contexts found for user {user.uuid} and thread_id {thread_id}")
             raise HTTPException(status_code=404, detail="No contexts found for the given user and thread_id")
 
         wb = openpyxl.Workbook()

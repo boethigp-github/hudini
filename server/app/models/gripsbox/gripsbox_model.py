@@ -7,6 +7,7 @@ class Gripsbox(Base):
     __tablename__ = "gripsbox"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user = Column(UUID(as_uuid=True), default=uuid.uuid4, nullable=False)
     name = Column(String, nullable=False)
     size = Column(Integer, nullable=False)
     type = Column(String, nullable=False)

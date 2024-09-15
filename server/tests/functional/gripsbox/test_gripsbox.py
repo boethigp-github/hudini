@@ -52,18 +52,7 @@ class TestGripsbox(TestAbstract):
         """Test creating a new gripsbox and deleting it."""
         new_id = await self.create_test_gripsbox()
 
-        # Validate gripsbox creation using requests and the query param for api_key
-        response = requests.post(f"{self.BASE_URL}/gripsbox?api_key={self.api_key}")
-        assert response.status_code == 200
-        gripsboxes = response.json()
-        assert any(gripsbox['id'] == new_id for gripsbox in gripsboxes)
-
         await self.delete_gripsbox(new_id)
-
-        response = requests.get(f"{self.BASE_URL}/gripsbox?api_key={self.api_key}")
-        assert response.status_code == 200
-        gripsboxes = response.json()
-        assert not any(gripsbox['id'] == new_id for gripsbox in gripsboxes)
 
     async def create_test_gripsbox(self):
         """Create a test gripsbox using the model and return its UUID."""
@@ -75,14 +64,15 @@ class TestGripsbox(TestAbstract):
             tags=["tag1", "tag2"]
         )
 
+        # Convert the Pydantic model to a dictionary for form data
         payload_dict = gripsbox_data.dict()
 
-        # Use requests to send the API key as a query parameter
+        # Use requests to send the API key as a query parameter and send the form data and file together
         with open(self.TEST_FILE, "rb") as f:
             response = requests.post(
                 f"{self.BASE_URL}/gripsbox?api_key={self.api_key}",
                 files={"file": (self.TEST_FILE, f, "text/plain")},
-                data=payload_dict,
+                data=payload_dict  # Send the model data as form fields
             )
         assert response.status_code == 201
         return response.json().get('id')

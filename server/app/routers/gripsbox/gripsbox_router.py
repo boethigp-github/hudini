@@ -1,9 +1,6 @@
-import logging
 import json
-from fastapi import APIRouter, HTTPException, Depends, status, File, UploadFile, Form
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException
 from sqlalchemy.future import select
-from server.app.db.get_db import get_db
 from server.app.models.gripsbox.gripsbox_model import Gripsbox
 from server.app.models.users.user import User
 from typing import List
@@ -16,6 +13,7 @@ from server.app.services.gripsbox_service import create_gripsbox_service
 from server.app.models.gripsbox.gripsbox_post_response import GripsboxPostResponseModel
 from server.app.utils.auth import auth
 from server.app.db.get_db import get_db
+from server.app.models.gripsbox.gripsbox_post_request import GripsboxPostRequestModel
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
@@ -25,7 +23,7 @@ router = APIRouter()
 settings = Settings()
 
 # Load allowed file extensions from environment variable
-allowed_file_extensions_str = settings.get("default").get("ALLOWED_FILE_EXTENSIONS", '[".jpg", ".png", ".pdf"]')
+allowed_file_extensions_str = settings.get("default").get("ALLOWED_FILE_EXTENSIONS")
 ALLOWED_FILE_EXTENSIONS = json.loads(allowed_file_extensions_str)
 
 @router.get("/gripsbox", response_model=List[GripsboxPostResponseModel], tags=["gripsbox"])
@@ -33,7 +31,7 @@ async def get_gripsbox(db: AsyncSession = Depends(get_db),  _: str = Depends(aut
     try:
         result = await db.execute(select(Gripsbox).order_by(Gripsbox.created.desc()))
         gripsbox_list = result.scalars().all()
-        return gripsbox_list  # FastAPI will automatically convert SQLAlchemy models to Pydantic models
+        return gripsbox_list
     except Exception as e:
         logger.error(f"Error retrieving gripsbox: {str(e)}")
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
@@ -41,23 +39,36 @@ async def get_gripsbox(db: AsyncSession = Depends(get_db),  _: str = Depends(aut
 
 @router.post("/gripsbox", response_model=GripsboxPostResponseModel, status_code=status.HTTP_201_CREATED, tags=["gripsbox"])
 async def create_gripsbox(
-    file: UploadFile = File(...),
     name: str = Form(...),
     size: int = Form(...),
     type: str = Form(...),
     active: bool = Form(...),
-    tags: str = Form(...),
+    tags: str = Form(...),  # This will be passed as a comma-separated string
+    file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
-    user: User = Depends(auth)):
-
+    user: User = Depends(auth)
+):
     logger.info(f"Gripsbox user info: username={user.username}, uuid={user.uuid}")
+
+    # Convert comma-separated tags to list
+    tags_list = [tag.strip() for tag in tags.split(',')]
+
+    # Prepare the input data for validation
+    data = {
+        "name": name,
+        "size": size,
+        "type": type,
+        "active": active,
+        "tags": tags_list
+    }
+
+    # Validate using model_validate without try-except
+    gripsbox_data = GripsboxPostRequestModel.model_validate(data)
+
+    # Pass the validated request model and other necessary arguments to the service
     new_gripsbox = await create_gripsbox_service(
         file=file,
-        name=name,
-        size=size,
-        type=type,
-        active=active,
-        tags=tags,
+        gripsbox_post_data=gripsbox_data,
         db=db,
         user=user
     )
