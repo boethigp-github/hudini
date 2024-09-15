@@ -14,9 +14,19 @@ logger = logging.getLogger(__name__)
 ALLOWED_FILE_EXTENSIONS = settings.get("default").get("ALLOWED_FILE_EXTENSIONS")
 
 
+async def delete_user_gripsbox_folder(user_uuid):
+    """Delete the user's gripsbox folder using the helper function."""
+    gripsbox_folder = get_users_gripsbox_folder(user_uuid)
+
+    if os.path.exists(gripsbox_folder):
+        for file_name in os.listdir(gripsbox_folder):
+            file_path = os.path.join(gripsbox_folder, file_name)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
+        os.rmdir(gripsbox_folder)
+
 # The extracted function for creating the user folder
-def create_user_gripsbox_folder(user_uuid: str) -> str:
-    # Get storage path from settings and create a user-specific folder
+def get_users_gripsbox_folder(user_uuid: str) -> str:
     storage_path = settings.get("default").get("APP_STORAGE")
     return os.path.join(storage_path, "gripsbox", user_uuid)
 
@@ -34,7 +44,7 @@ async def create_gripsbox_service(
         raise HTTPException(status_code=400, detail=f"File type '{file_extension}' is not allowed")
 
     # Use the extracted function to get the folder path
-    user_gripsbox_path = create_user_gripsbox_folder(str(user.uuid))
+    user_gripsbox_path = get_users_gripsbox_folder(str(user.uuid))
 
     # Create the directory if it doesn't exist
     os.makedirs(user_gripsbox_path, exist_ok=True)
@@ -66,3 +76,4 @@ async def create_gripsbox_service(
     await db.refresh(new_gripsbox)
 
     return new_gripsbox
+

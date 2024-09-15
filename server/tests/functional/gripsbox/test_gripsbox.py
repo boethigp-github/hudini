@@ -4,6 +4,7 @@ import requests
 from server.app.config.settings import Settings
 from server.app.models.gripsbox.gripsbox_post_request import GripsboxPostRequestModel
 from server.tests.test_abstract import TestAbstract
+from server.app.services import gripsbox_service  # Import function
 
 
 class TestGripsbox(TestAbstract):
@@ -50,9 +51,13 @@ class TestGripsbox(TestAbstract):
 
     async def async_test_create_and_delete_gripsbox(self):
         """Test creating a new gripsbox and deleting it."""
-        new_id = await self.create_test_gripsbox()
+        new_id, user_uuid = await self.create_test_gripsbox()
 
+        # Delete the gripsbox after creating
         await self.delete_gripsbox(new_id)
+
+        # Delete the user's gripsbox folder
+        await gripsbox_service.delete_user_gripsbox_folder(user_uuid)
 
     async def create_test_gripsbox(self):
         """Create a test gripsbox using the model and return its UUID."""
@@ -75,10 +80,18 @@ class TestGripsbox(TestAbstract):
                 data=payload_dict  # Send the model data as form fields
             )
         assert response.status_code == 201
-        return response.json().get('id')
+
+        # Parse response to extract the UUIDs
+        response_data = response.json()
+        new_id = response_data.get('id')
+        user_uuid = response_data.get('user')
+
+        return new_id, user_uuid
 
     async def delete_gripsbox(self, gripsbox_id):
         """Delete the given gripsbox by UUID."""
         # Use requests to delete the gripsbox using the API key as a query parameter
         response = requests.delete(f"{self.BASE_URL}/gripsbox/{gripsbox_id}?api_key={self.api_key}")
         assert response.status_code == 200
+
+
