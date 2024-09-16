@@ -176,14 +176,6 @@ export default {
     const prompt = ref(UserContext.PromptPostRequestModel);
 
     /**
-     * The userContext variable represents the context of the user.
-     * It is initially set to null.
-     *
-     * @type {any}
-     * @since 1.0.0
-     */
-    const userContext = ref(null);
-    /**
      * Represents a list of user context objects.
      *
      * @type {Array}
@@ -247,7 +239,7 @@ export default {
     /**
      * All tooling executions gets stored here
      *
-     * @type {Array}
+     * @type {Ref<UnwrapRef<*[]>>}
      */
     const toolCallRegister=ref([]);
 
@@ -314,12 +306,7 @@ const hideComparisonView = () => {
     isComparisonViewVisible.value = false;
 };
 
-/**
- * Resets the userContext to a new instance of UserContextPostRequestModel.
- */
-const resetUserContext = () => {
-    userContext.value = new UserContext.UserContextPostRequestModel();
-};
+
 
 /**
  * Shows the delete confirmation dialog.
@@ -375,9 +362,8 @@ const fetchUserContextCallback = async (userContextPostResponse) => {
 
 /**
  * Saves the user context to the server by calling the saveUserContext function.
- * @param {Object} promptPostResponse - The response object after the prompt post request.
  */
-const saveUserContextServerside = (promptPostResponse) => {
+const saveUserContextServerside = () => {
     const callback = async (UserContextPostResponseModel) => {
         // Handle the response if needed
     };
@@ -397,7 +383,7 @@ async function streamGeneration(promptPostRequest) {
         stream(
             model.stream_url,
             getStreamPostRequestModel(promptPostRequest, [model], "fetch_completion"),
-            (chunk, buffer) => processChunk(chunk, buffer, userContext, userContextList, toolCallRegister),
+            (chunk, buffer) => processChunk(chunk, buffer, userContextList),
             buffer,
             (error) => {
                 console.error('Stream error:', error);
@@ -481,8 +467,10 @@ async function streamGeneration(promptPostRequest) {
     };
 
     onMounted(async () => {
-
+      setTimeout(()=>{
       initUserContext();
+      }, 200)
+
 
       window.addEventListener('delete-thread', deleteThreadEvent);
       window.addEventListener('rerun-prompt', rerunPrompt);
@@ -528,7 +516,6 @@ async function streamGeneration(promptPostRequest) {
     const deleteThreadEvent = async (event) => {
       try {
         await deleteUserContext(event.detail.thread_id);
-        resetUserContext();
         showMessage(t('thread_deleted_successfully'), 'success');
       } catch (error) {
         showMessage(t('failed_to_delete_thread'), 'error');
@@ -542,7 +529,6 @@ async function streamGeneration(promptPostRequest) {
       handleSubmit,
       promptPanelUpdateTrigger,
       t,
-      userContext,
       prompt,
       loading,
       modelsStore,
@@ -559,19 +545,3 @@ async function streamGeneration(promptPostRequest) {
 };
 </script>
 
-<style>
-.v-app-bar {
-  max-height: 48px;
-  padding-top: 3px;
-}
-
-.theme-switch-container,
-.language-switch-container {
-  display: flex;
-  align-items: center;
-}
-
-.theme-switch-container {
-  margin-top: 15px;
-}
-</style>

@@ -4,12 +4,13 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from typing import List
-from server.app.db.base import async_session_maker
+
 from server.app.config.settings import Settings
 from server.app.models.users.users_get_response import UsersGetResponseModel
 from server.app.models.users.users_post_request import UserPostRequestModel  # For user creation
 from server.app.models.users.user import User
 from server.app.utils.auth import auth
+from server.app.db.get_db import get_db
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -17,10 +18,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 settings = Settings()
 
-# Dependency to get the database session
-async def get_db():
-    async with async_session_maker() as session:
-        yield session
 
 @router.get("/users", response_model=List[UsersGetResponseModel], tags=["users"])
 async def get_users(db: AsyncSession = Depends(get_db), _: str = Depends(auth)):

@@ -135,12 +135,30 @@ export const fetchUserContext = () => {
     }
 };
 
-
-
-export const processChunk = async (chunk, buffer, userContext, userContextList, toolCallRegister) => {
-    buffer.value += chunk; // Add chunk to buffer
+/**
+ * Process a chunk of data, adding it to a buffer and extracting complete JSON objects.
+ *
+ * @param {string} chunk - The chunk of data to process.
+ * @param {Object} buffer - The buffer object that stores the accumulated data.
+ * @param {Object[]} userContextList - The list of UserContext objects to update with the extracted JSON objects.
+ * @returns {Promise<void>} - A promise that resolves when the processing is complete.
+ *
+ * @throws {Error} - If there is an error parsing a JSON chunk.
+ *
+ * @example
+ * // Usage example
+ * const chunk = '{"id": "1", "model": "example", "completion": 0.75}';
+ * const buffer = { value: '' };
+ * const userContextList = { value: [] };
+ *
+ * processChunk(chunk, buffer, userContextList).catch(error => {
+ *   console.error('Error processing chunk:', error);
+ * });
+ */
+export const processChunk = async (chunk, buffer, userContextList) => {
+    buffer.value += chunk;
     let boundary;
-    // Loop to process all complete JSON objects in the buffer
+
     while ((boundary = buffer.value.indexOf('}\n' + '{')) !== -1) {  // Find boundary between JSON objects
         const jsonString = buffer.value.slice(0, boundary + 1);
         buffer.value = buffer.value.slice(boundary + 1);
@@ -148,9 +166,6 @@ export const processChunk = async (chunk, buffer, userContext, userContextList, 
         let responseModel;
         try {
             responseModel = JSON.parse(jsonString);
-
-
-            await collectToolsToCall(responseModel, toolCallRegister);
 
 
             // Find the correct UserContext in the list
@@ -181,24 +196,67 @@ export const processChunk = async (chunk, buffer, userContext, userContextList, 
 };
 
 
-export const collectToolsToCall = async (responseModel, toolCallRegister) => {
+/**
+ * Represents a tag used in a tool call.
+ *
+ * The TOOL_CALL_TAG constant represents a specific string value, '<tool_call>', which can be used as a tag
+ * within a tool call. This tag can be used to identify specific parts of the tool call or to differentiate
+ * it from other types of tags.
+ *
+ * @constant {string} TOOL_CALL_TAG - The value of the tool call tag.
+ */
+const TOOL_CALL_TAG = '<tool_call>';
+/**
+ * The TOOL_CALL_END_TAG represents the end tag used to delimit the completion of a tool call.
+ *
+ * @constant {string} TOOL_CALL_END_TAG - The end tag string '</tool_call>'.
+ */
+const TOOL_CALL_END_TAG = '</tool_call>';
+/**
+ * Specifies the length of the content in the TOOL_CALL_TAG.
+ *
+ * The TOOL_CALL_CONTENT_LENGTH variable represents the length of the content within the TOOL_CALL_TAG.
+ * It is derived from the length of the TOOL_CALL_TAG.
+ *
+ * @type {number}
+ * @readonly
+ */
+const TOOL_CALL_CONTENT_LENGTH = TOOL_CALL_TAG.length;
+
+/**
+ * Extracts the tool call string from the given content.
+ *
+ * @param {string} content - The content to extract the tool call string from.
+ * @returns {string|null} - The extracted tool call string, or null if it cannot be found.
+ */
+const extractToolCallString = (content) => {
+    const toolCallStart = content.indexOf(TOOL_CALL_TAG);
+    const toolCallEnd = content.indexOf(TOOL_CALL_END_TAG);
+    if (toolCallStart === -1 || toolCallEnd === -1) return null;
+
+    const toolCallString = content.slice(toolCallStart + TOOL_CALL_CONTENT_LENGTH, toolCallEnd).trim();
+    return toolCallString.replace(/[\n\r]/g, '');
+};
+
+/**
+ * Extracts the tool call string from the content and executes the specified tool with the provided parameters.
+ *
+ * @async
+ * @param {string} content - The content from which to extract the tool call string.
+ * @returns {void} - Returns nothing.
+ *
+ * @throws {Error} - Throws an error if there is an issue processing the tool call.
+ */
+export const collectToolsToCall = async (content) => {
     try {
-        const content = responseModel?.completion?.choices[0]?.message?.content;
-        const toolCallStart = content.indexOf('<tool_call>');
-        const toolCallEnd = content.indexOf('</tool_call>');
+        const cleanedToolCallString = extractToolCallString(content);
+        if (!cleanedToolCallString) return;
 
-        if (toolCallStart !== -1 && toolCallEnd !== -1) {
-            const toolCallString = content.slice(toolCallStart + 11, toolCallEnd).trim();
-            const cleanedToolCallString = toolCallString.replace(/\n/g, '').replace(/\r/g, '');
-            const toolCall = JSON.parse(cleanedToolCallString);
-
-            if (toolCall?.tool_call) {
-                const { tool, parameters } = toolCall.tool_call;
-                //await runActions(tool, parameters);
-                console.log(`Tool ${tool} executed successfully with parameters`, parameters, "responseModel:", responseModel);
-
-                toolCallRegister.value[responseModel.id] = toolCall;
-            }
+        const toolCall = JSON.parse(cleanedToolCallString);
+        if (toolCall?.tool_call) {
+            const { tool, parameters } = toolCall.tool_call;
+            await runActions(tool, parameters);
+            console.log(`Tool ${tool} executed successfully with parameters`, parameters);
         }
     } catch (error) {
         console.error("Error processing tool_call:", error);

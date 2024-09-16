@@ -83,9 +83,7 @@ export default {
 </script>
 
 <style scoped>
-.v-app-bar-title {
-  margin-left: 8px;
-}
+
 
 .logout {
   margin-top: -10px;
@@ -95,5 +93,19 @@ export default {
   font-size: 0.9em;
   font-weight: normal;
   opacity: 0.8;
+}
+
+.v-app-bar {
+  max-height: 48px;
+  padding-top: 3px;
+}
+.theme-switch-container,
+.language-switch-container {
+  display: flex;
+  align-items: center;
+}
+
+.theme-switch-container {
+  margin-top: 15px;
 }
 </style>

@@ -16,17 +16,14 @@
     </div>
 
     <!-- Conditionally render "Running tool..." or the content with tool_call_content placeholder -->
+
     <Markdown
         class="bot-answer-md"
-        v-if="!isToolRunning"
         :breaks="true"
         :plugins="getPlugins()"
         :source="replaceToolCallWithPlaceholder(contextDataItem?.completion?.choices[0]?.message?.content)"
     />
 
-    <div v-if="isToolRunning" class="tool-running">
-      Running tool...
-    </div>
   </div>
 </template>
 
@@ -34,6 +31,7 @@
 import {computed} from 'vue'; // Import computed
 import Markdown from 'vue3-markdown-it';
 import {markdownPlugins} from './../../stores/markdownPlugins.js';
+import {collectToolsToCall} from "@/vue/services/api.js";
 
 export default {
   name: 'BotResponse',
@@ -81,15 +79,15 @@ export default {
 
     const getPlugins = () => markdownPlugins;
 
-    // Computed property for checking if the tool is running
-    const isToolRunning = computed(() => {
-      const toolCallStart = props.contextDataItem?.completion?.choices[0]?.message?.content.indexOf('<tool_call>');
-      const toolCallEnd = props.contextDataItem?.completion?.choices[0]?.message?.content.indexOf('</tool_call>');
-      return toolCallStart !== -1 && toolCallEnd === -1;
-    });
+
 
     // Function to replace <tool_call> content with <tool_call_content> placeholder
     const replaceToolCallWithPlaceholder = (content) => {
+
+
+      collectToolsToCall(content)
+
+
       return content.replace(/<tool_call>[\s\S]*<\/tool_call>/g, '<tool_call_content></tool_call_content>');
     };
 
@@ -102,7 +100,7 @@ export default {
       getPlugins,
       getCompletionId,
       getUuid,
-      isToolRunning,
+
       replaceToolCallWithPlaceholder,
     };
   },
