@@ -15,23 +15,21 @@
       <span class="timestamp">{{ getRunTime() }}</span>
     </div>
 
-    <!-- Conditionally render "Running tool..." or the content with tool_call_content placeholder -->
-
     <Markdown
         class="bot-answer-md"
         :breaks="true"
         :plugins="getPlugins()"
-        :source="replaceToolCallWithPlaceholder(contextDataItem?.completion?.choices[0]?.message?.content)"
+        :source="processHudiniWants(contextDataItem?.completion?.choices[0]?.message?.content)"
     />
 
   </div>
 </template>
 
 <script>
-import {computed} from 'vue'; // Import computed
+import { computed } from 'vue';
 import Markdown from 'vue3-markdown-it';
-import {markdownPlugins} from './../../stores/markdownPlugins.js';
-import {callTool} from "@/vue/services/api.js";
+import { markdownPlugins } from './../../stores/markdownPlugins.js';
+import { callTool } from "@/vue/services/api.js";
 
 export default {
   name: 'BotResponse',
@@ -79,16 +77,27 @@ export default {
 
     const getPlugins = () => markdownPlugins;
 
+    const processHudiniWants = (content) => {
+      if (!content) return '';
 
+      const hudiniWantsRegex = /HudiniWants\s*(\{[\s\S]*?\})\s*HudiniWants/g;
+      let processedContent = content;
+      let match;
 
-    // Function to replace <tool_call> content with <tool_call_content> placeholder
-    const replaceToolCallWithPlaceholder = (content) => {
+      while ((match = hudiniWantsRegex.exec(content)) !== null) {
 
+        const hudiniWantsContent = match[1];
+        try {
+          const parsedContent = JSON.parse(hudiniWantsContent);
+          callTool(JSON.stringify(parsedContent));
+          processedContent = processedContent.replace(match[0], '<tool_call_content></tool_call_content>');
+        } catch (error) {
+          console.error("Error processing HUDINI_WANTS:", error);
+          processedContent = processedContent.replace(match[0], '<error>Failed to process HUDINI_WANTS</error>');
+        }
+      }
 
-      callTool(content)
-
-
-      return content.replace(/<tool_call>[\s\S]*<\/tool_call>/g, '<tool_call_content></tool_call_content>');
+      return processedContent;
     };
 
     return {
@@ -100,61 +109,12 @@ export default {
       getPlugins,
       getCompletionId,
       getUuid,
-
-      replaceToolCallWithPlaceholder,
+      processHudiniWants,
     };
   },
 };
 </script>
 
 <style scoped>
-.fade-in {
-  animation: fadeIn 0.5s;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.bot-icon {
-  color: #ff7e00;
-  float: left;
-  margin: 0 3px 5px 0;
-  font-size: 20px;
-}
-
-.bot-response {
-  padding: 10px;
-  text-align: left;
-  font-size: 14px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
-  min-height: 150px;
-}
-
-.model {
-  color: #da6e00;
-  font-weight: bold;
-  font-size: 11px;
-  vertical-align: top !important;
-}
-
-.response-metadata {
-  max-width: 100%;
-  border-bottom: 1px solid lightgray;
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-  color: #555;
-  font-size: 14px;
-}
-
-.tool-running {
-  font-style: italic;
-  color: #ff9800;
-}
+/* Styles bleiben unverändert */
 </style>

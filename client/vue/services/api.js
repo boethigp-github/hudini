@@ -249,18 +249,12 @@ const extractToolCallString = (content) => {
  */
 export const callTool = async (content) => {
     try {
-        const cleanedToolCallString = extractToolCallString(content);
-        if (!cleanedToolCallString) return;
 
-        const toolCall = JSON.parse(cleanedToolCallString);
-        if (toolCall?.tool_call) {
-            const { tool, parameters } = toolCall.tool_call;
-            console.log(`Tool ${tool} executed successfully with parameters`, parameters);
-            return await runActions(tool, parameters);
-
-        }
+        content = JSON.parse(content);
+        return await runActions(content.some, content.parameters);
     } catch (error) {
-        console.error("Error processing tool_call:", error);
+        console.error("Error processing HUDINI_WANTS content:", error);
+        throw error;
     }
 };
 
