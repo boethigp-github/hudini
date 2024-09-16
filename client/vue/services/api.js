@@ -205,13 +205,13 @@ export const processChunk = async (chunk, buffer, userContextList) => {
  *
  * @constant {string} TOOL_CALL_TAG - The value of the tool call tag.
  */
-const TOOL_CALL_TAG = '<tool_call>';
+const TOOL_CALL_TAG = 'tool_call*';
 /**
  * The TOOL_CALL_END_TAG represents the end tag used to delimit the completion of a tool call.
  *
  * @constant {string} TOOL_CALL_END_TAG - The end tag string '</tool_call>'.
  */
-const TOOL_CALL_END_TAG = '</tool_call>';
+const TOOL_CALL_END_TAG = '*tool_call';
 /**
  * Specifies the length of the content in the TOOL_CALL_TAG.
  *
@@ -247,7 +247,7 @@ const extractToolCallString = (content) => {
  *
  * @throws {Error} - Throws an error if there is an issue processing the tool call.
  */
-export const collectToolsToCall = async (content) => {
+export const callTool = async (content) => {
     try {
         const cleanedToolCallString = extractToolCallString(content);
         if (!cleanedToolCallString) return;
@@ -255,8 +255,9 @@ export const collectToolsToCall = async (content) => {
         const toolCall = JSON.parse(cleanedToolCallString);
         if (toolCall?.tool_call) {
             const { tool, parameters } = toolCall.tool_call;
-            await runActions(tool, parameters);
             console.log(`Tool ${tool} executed successfully with parameters`, parameters);
+            return await runActions(tool, parameters);
+
         }
     } catch (error) {
         console.error("Error processing tool_call:", error);
@@ -265,6 +266,7 @@ export const collectToolsToCall = async (content) => {
 
 /**
  * Sendet einen Tool-Call an den Server und führt die entsprechende Funktion aus.
+ *
  * @param {string} tool - Der Name des Tools/Funktion, das/die aufgerufen werden soll.
  * @param {Object} parameters - Die Parameter, die an das Tool/Funktion übergeben werden.
  * @returns {Promise<Object>} - Die Antwort vom Server.
@@ -272,11 +274,9 @@ export const collectToolsToCall = async (content) => {
 export const runActions = async (tool, parameters) => {
     try {
         const requestBody = {
-            tool_call: {
                 tool: tool,
                 parameters: parameters
             }
-        };
 
 
         const response = await fetch(`${API_BASE_URL}/tools/call`, {

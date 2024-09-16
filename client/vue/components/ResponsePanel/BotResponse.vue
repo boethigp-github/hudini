@@ -31,7 +31,7 @@
 import {computed} from 'vue'; // Import computed
 import Markdown from 'vue3-markdown-it';
 import {markdownPlugins} from './../../stores/markdownPlugins.js';
-import {collectToolsToCall} from "@/vue/services/api.js";
+import {callTool} from "@/vue/services/api.js";
 
 export default {
   name: 'BotResponse',
@@ -85,7 +85,7 @@ export default {
     const replaceToolCallWithPlaceholder = (content) => {
 
 
-      collectToolsToCall(content)
+      callTool(content)
 
 
       return content.replace(/<tool_call>[\s\S]*<\/tool_call>/g, '<tool_call_content></tool_call_content>');
