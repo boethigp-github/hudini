@@ -120,11 +120,27 @@ export default {
       });
     }
 
+    /**
+     * Current user
+     *
+     * @type {null}
+     */
     let user = null;
 
-
+    /**
+     * The identifier of a thread.
+     *
+     * @type {number}
+     */
     const thread_id = 1;
 
+    /**
+     * @typedef {Object} StreamRequestModel
+     * @property {null} id - The ID of the request. (Default: null)
+     * @property {string} prompt - The prompt for the request. (Default: '')
+     * @property {Array} models - The models to be used for the request. (Default: [])
+     * @property {string} method_name - The name of the method to be used for fetching completion. (Default: 'fetch_completion')
+     */
     const streamRequestModel = {
       id: null,
       prompt: '',
@@ -132,6 +148,14 @@ export default {
       method_name: 'fetch_completion',
     };
 
+    /**
+     * Represents a function that retrieves a Stream Post Request Model.
+     *
+     * @param {object} promptPostRequest - The Prompt Post Request object.
+     * @param {object} models - The models object.
+     * @param {string} [method_name='fetch_completion'] - The method name.
+     * @returns {object} The Stream Post Request Model.
+     */
     const getStreamPostRequestModel = (promptPostRequest, models, method_name = 'fetch_completion') => {
       const {uuid: id, prompt} = promptPostRequest;
       return {...streamRequestModel, id, prompt, models, method_name};
@@ -141,18 +165,91 @@ export default {
       return new UserContext.PromptPostRequestModel(uuid, prompt, user, status);
     };
 
-
+    /**
+     * The `prompt` variable is a reference to the `PromptPostRequestModel` class
+     * defined in the `UserContext` module.
+     *
+     * Use this variable to access and manipulate prompt post requests for user actions.
+     *
+     * @type {UserContext.PromptPostRequestModel}
+     */
     const prompt = ref(UserContext.PromptPostRequestModel);
+
+    /**
+     * The userContext variable represents the context of the user.
+     * It is initially set to null.
+     *
+     * @type {any}
+     * @since 1.0.0
+     */
     const userContext = ref(null);
+    /**
+     * Represents a list of user context objects.
+     *
+     * @type {Array}
+     */
     const userContextList = ref([]);
+    /**
+     * The `modelsStore` is a variable that represents a store for models.
+     *
+     * This variable is created by calling the `useModelsStore` function, which is expected to return the store for models.
+     * The purpose of this store is to manage and store information about models in the application.
+     *
+     * The `modelsStore` variable should be used to access and manipulate models in the application.
+     * It provides methods and properties to add, update, delete, and retrieve models from the store.
+     *
+     * Note that the specific implementation of the store will depend on the `useModelsStore` function.
+     * It is recommended to check the documentation of the `useModelsStore` function for more details on how to work with the `modelsStore`.
+     */
     const modelsStore = useModelsStore();
+
+    /**
+     * A variable representing a buffer reference.
+     *
+     * @type {string}
+     * @name buffer
+     * @memberOf module:buffer
+     * @instance
+     * @description
+     * The `buffer` variable is a reference to a string value. It represents a buffer that can be used
+     * to store and manipulate string data. The buffer is mutable, meaning its value can be changed
+     * during the execution of the program.
+     *
+     * @example
+     * // Assign a value to the buffer
+     * buffer = 'This is a buffer';
+     *
+     * // Modify the buffer value
+     * buffer = 'Updated buffer value';
+     */
     const buffer = ref('');
+    /**
+     * Represents the current loading state.
+     * @type {boolean}
+     */
     const loading = ref(false);
+
+    /**
+     * Variable for tracking the number of times the prompt panel is updated.
+     *
+     * @type {number}
+     * @name promptPanelUpdateTrigger
+     * @default 0
+     * @since 1.0.0
+     */
     const promptPanelUpdateTrigger = ref(0);
+
     const {t} = useI18n();
     const valid = ref(false);
     const isComparisonViewVisible = ref(false);
     const deleteDialog = ref(false);
+
+    /**
+     * All tooling executions gets stored here
+     *
+     * @type {Array}
+     */
+    const toolCallRegister=ref([]);
 
     const snackbar = ref({
       show: false,
@@ -161,117 +258,168 @@ export default {
       timeout: 10000
     });
 
+    /**
+     * Displays a message in a snackbar with the specified text and color.
+     *
+     * @param {string} text - The text to display in the snackbar.
+     * @param {string} [color='info'] - The color of the snackbar. Defaults to 'info'.
+     *                                  Possible values are: 'info', 'success', 'error', 'warning'.
+     */
     const showMessage = (text, color = 'info') => {
       snackbar.value.show = true;
       snackbar.value.text = text;
       snackbar.value.color = color;
     };
 
-    watch(loading, (newValue) => {
-      if (!newValue) {
+    /**
+ * Watches the `loading` variable and resets the prompt if loading is completed.
+ * @param {Boolean} newValue - New value of the loading state.
+ */
+watch(loading, (newValue) => {
+    if (!newValue) {
         prompt.value.prompt = '';
-      }
-    });
+    }
+});
 
-    const updateUserContextList = (value) => {
-      userContextList.value = value;
-    };
+/**
+ * Updates the userContextList with the provided value.
+ * @param {Object} value - New value for the userContextList.
+ */
+const updateUserContextList = (value) => {
+    userContextList.value = value;
+};
 
-    const handleKeydown = (event) => {
-      if (event.key === 'Enter' && !event.shiftKey) {
+/**
+ * Handles the keydown event and submits the form when the Enter key is pressed (without Shift).
+ * @param {Event} event - The keyboard event.
+ */
+const handleKeydown = (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
         event.preventDefault();
         handleSubmit();
-      }
-    };
+    }
+};
 
-    const showComparisonView = () => {
-      isComparisonViewVisible.value = true;
-    };
+/**
+ * Shows the comparison view.
+ */
+const showComparisonView = () => {
+    isComparisonViewVisible.value = true;
+};
 
-    const hideComparisonView = () => {
-      isComparisonViewVisible.value = false;
-    };
+/**
+ * Hides the comparison view.
+ */
+const hideComparisonView = () => {
+    isComparisonViewVisible.value = false;
+};
 
-    const resetUserContext = () => {
-      userContext.value = new UserContext.UserContextPostRequestModel();
-    };
+/**
+ * Resets the userContext to a new instance of UserContextPostRequestModel.
+ */
+const resetUserContext = () => {
+    userContext.value = new UserContext.UserContextPostRequestModel();
+};
 
-    const showDeleteConfirmation = () => {
-      deleteDialog.value = true;
-    };
+/**
+ * Shows the delete confirmation dialog.
+ */
+const showDeleteConfirmation = () => {
+    deleteDialog.value = true;
+};
 
+/**
+ * Reruns the prompt based on the event's detail.
+ * @param {Event} event - The event containing the prompt details.
+ */
+const rerunPrompt = async (event) => {
+    prompt.value.prompt = event.detail.prompt;
+    handleSubmit();
+};
 
-    const rerunPrompt = async (event) => {
-      prompt.value.prompt = event.detail.prompt;
-      handleSubmit();
-    };
+/**
+ * Dispatches a custom "stream-complete" event when the streaming process is finished.
+ */
+const dispatchOnCompleteEvent = () => {
+    const event = new CustomEvent("stream-complete", {});
+    window.dispatchEvent(event);
+};
 
-    const dispatchOnCompleteEvent = () => {
-      const event = new CustomEvent("stream-complete", {});
-      window.dispatchEvent(event);
-    };
+/**
+ * Triggers an update on the prompt panel by incrementing the update trigger value.
+ */
+const triggerPromptPanelUpdate = () => {
+    promptPanelUpdateTrigger.value++;
+};
 
-    const triggerPromptPanelUpdate = () => {
-      promptPanelUpdateTrigger.value++;
-    };
-
-    const fetchUserContextCallback = async (userContextPostResponse) => {
-      try {
+/**
+ * Fetches the user context using the provided callback and processes the response.
+ * @param {Object} userContextPostResponse - The response from the user context API.
+ */
+const fetchUserContextCallback = async (userContextPostResponse) => {
+    try {
         const userContextData = await userContextPostResponse.json();
         if (userContextPostResponse.status === 200) {
-          updateUserContextList(userContextData);
+            updateUserContextList(userContextData);
         } else if (userContextPostResponse.status === 404) {
-          // Handle 404 if needed
+            // Handle 404 if needed
         } else {
-          showMessage(t('failed_to_retrieve_user_context'), 'error');
-          console.error(t('failed_to_retrieve_user_context'));
+            showMessage(t('failed_to_retrieve_user_context'), 'error');
+            console.error(t('failed_to_retrieve_user_context'));
         }
-      } catch (error) {
+    } catch (error) {
         showMessage(t('error_processing_user_context'), 'error');
         console.error('Error processing user context:', error);
-      }
+    }
+};
+
+/**
+ * Saves the user context to the server by calling the saveUserContext function.
+ * @param {Object} promptPostResponse - The response object after the prompt post request.
+ */
+const saveUserContextServerside = (promptPostResponse) => {
+    const callback = async (UserContextPostResponseModel) => {
+        // Handle the response if needed
     };
 
-    const saveUserContextServerside = (promptPostResponse) => {
-      const callback = async (UserContextPostResponseModel) => {
-        // Handle the response if needed
-      };
-
-
-      saveUserContext(JSON.stringify(userContextList.value), callback).catch((error) => {
+    saveUserContext(JSON.stringify(userContextList.value), callback).catch((error) => {
         showMessage(t('error_saving_user_context'), 'error');
         console.error('Error sending responses to /usercontext:', error);
-      });
-    };
+    });
+};
 
-    async function streamGeneration(promptPostRequest) {
-      for (const model of await modelsStore.getSelectedModelsWithMetaData()) {
+/**
+ * Handles the stream generation process for a prompt post request.
+ * @param {Object} promptPostRequest - The request data for the prompt.
+ */
+async function streamGeneration(promptPostRequest) {
+    for (const model of await modelsStore.getSelectedModelsWithMetaData()) {
         stream(
             model.stream_url,
             getStreamPostRequestModel(promptPostRequest, [model], "fetch_completion"),
-            (chunk, buffer) => processChunk(chunk, buffer, userContext, userContextList),
+            (chunk, buffer) => processChunk(chunk, buffer, userContext, userContextList, toolCallRegister),
             buffer,
             (error) => {
-              console.error('Stream error:', error);
-              showMessage(t('stream_error'), 'error');
-              hideLoader();
+                console.error('Stream error:', error);
+                showMessage(t('stream_error'), 'error');
+                hideLoader();
             },
             () => {
-              hideLoader();
+                hideLoader();
             },
             () => {
-              createPromptServerside(promptPostRequest).then(() => {
-                setTimeout(() => {
-                  saveUserContextServerside();
-                  dispatchOnCompleteEvent();
-                }, 200)
-              });
+                createPromptServerside(promptPostRequest).then(() => {
+                    setTimeout(() => {
+                        saveUserContextServerside();
+                        dispatchOnCompleteEvent();
+                    }, 200)
+                });
 
-              hideLoader();
+                hideLoader();
             }
         );
-      }
     }
+}
 
 
     /**

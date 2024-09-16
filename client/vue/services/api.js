@@ -1,5 +1,3 @@
-import {UserContext} from "@/vue/models/UserContext.js";
-
 const API_BASE_URL = import.meta.env.SERVER_URL || 'http://localhost:8000';
 
 /**
@@ -98,8 +96,6 @@ export const createPrompt = async (promptRequest) => {
  */
 export const saveUserContext = async (userContextList, callback = null) => {
     try {
-
-
         const response = await fetch(`${API_BASE_URL}/usercontext`, {
             method: 'POST',
             credentials: 'include',
@@ -121,14 +117,10 @@ export const saveUserContext = async (userContextList, callback = null) => {
 
 /**
  * Fetches the user context from the server based on the provided user and thread ID.
- * @param {string} user - The UUID of the user.
- * @param {number} threadId - The ID of the thread.
  * @returns {Promise<Object>} A promise that resolves to the user context data.
  */
 export const fetchUserContext = () => {
     try {
-
-
         const url = new URL(`${API_BASE_URL}/usercontext`);
         return fetch(url.toString(), {
             method: 'GET',
@@ -143,25 +135,23 @@ export const fetchUserContext = () => {
     }
 };
 
-const cloneUserContext = (userContext) => {
-    const userContextPostRequestModel = new UserContext.UserContextPostRequestModel()
-    userContextPostRequestModel.uuid = userContext.value.uuid
-    userContextPostRequestModel.prompt = userContext.value.prompt
-    userContextPostRequestModel.thread_id = userContext.value.thread_id
-    userContextPostRequestModel.user = userContext.value.user
-    return userContextPostRequestModel
-}
 
 
-export const processChunk = (chunk, buffer, userContext, userContextList) => {
+export const processChunk = async (chunk, buffer, userContext, userContextList, toolCallRegister) => {
     buffer.value += chunk; // Add chunk to buffer
     let boundary;
+    // Loop to process all complete JSON objects in the buffer
     while ((boundary = buffer.value.indexOf('}\n' + '{')) !== -1) {  // Find boundary between JSON objects
         const jsonString = buffer.value.slice(0, boundary + 1);
         buffer.value = buffer.value.slice(boundary + 1);
+
         let responseModel;
         try {
             responseModel = JSON.parse(jsonString);
+
+
+            await collectToolsToCall(responseModel, toolCallRegister);
+
 
             // Find the correct UserContext in the list
             const userContextIndex = userContextList.value.findIndex(
@@ -189,6 +179,94 @@ export const processChunk = (chunk, buffer, userContext, userContextList) => {
         }
     }
 };
+
+
+export const collectToolsToCall = async (responseModel, toolCallRegister) => {
+    try {
+        const content = responseModel?.completion?.choices[0]?.message?.content;
+        const toolCallStart = content.indexOf('<tool_call>');
+        const toolCallEnd = content.indexOf('</tool_call>');
+
+        if (toolCallStart !== -1 && toolCallEnd !== -1) {
+            const toolCallString = content.slice(toolCallStart + 11, toolCallEnd).trim();
+            const cleanedToolCallString = toolCallString.replace(/\n/g, '').replace(/\r/g, '');
+            const toolCall = JSON.parse(cleanedToolCallString);
+
+            if (toolCall?.tool_call) {
+                const { tool, parameters } = toolCall.tool_call;
+                //await runActions(tool, parameters);
+                console.log(`Tool ${tool} executed successfully with parameters`, parameters, "responseModel:", responseModel);
+
+                toolCallRegister.value[responseModel.id] = toolCall;
+            }
+        }
+    } catch (error) {
+        console.error("Error processing tool_call:", error);
+    }
+};
+
+/**
+ * Sendet einen Tool-Call an den Server und führt die entsprechende Funktion aus.
+ * @param {string} tool - Der Name des Tools/Funktion, das/die aufgerufen werden soll.
+ * @param {Object} parameters - Die Parameter, die an das Tool/Funktion übergeben werden.
+ * @returns {Promise<Object>} - Die Antwort vom Server.
+ */
+export const runActions = async (tool, parameters) => {
+    try {
+        const requestBody = {
+            tool_call: {
+                tool: tool,
+                parameters: parameters
+            }
+        };
+
+
+        const response = await fetch(`${API_BASE_URL}/tools/call`, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to call tool: ${tool}, status: ${response.status}`);
+        }
+
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error calling tool:', error);
+        throw error;
+    }
+};
+
+
+/**
+ * Extrahiert den Tool-Call-Block aus dem Buffer
+ * @param {string} buffer - Der Textpuffer, der die gestreamten Daten enthält.
+ * @returns {object|null} - Gibt das Tool-Call-Objekt zurück, falls es gefunden wird, oder null.
+ */
+export const extractToolCall = (buffer) => {
+    const toolCallStart = buffer.indexOf('<tool_call>');
+    const toolCallEnd = buffer.indexOf('</tool_call>');
+
+    if (toolCallStart !== -1 && toolCallEnd !== -1) {
+        const toolCallString = buffer.slice(toolCallStart + 11, toolCallEnd);
+        try {
+            return JSON.parse(toolCallString);
+        } catch (error) {
+            console.error("Error parsing tool_call JSON:", error);
+            return null;
+        }
+    }
+    return null;
+};
+
+
+
+
 /**
  * Deletes a user context by thread ID.
  * @param {number} threadId - The ID of the thread.

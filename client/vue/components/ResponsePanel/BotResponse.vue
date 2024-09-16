@@ -3,25 +3,35 @@
        @mouseover="$emit('mouseover', contextDataItem.id)"
        @mouseout="$emit('mouseout', contextDataItem.id)">
     <div class="response-metadata">
-      <span class="model"> <v-btn size="x-small" class="panel-menu-button" icon="mdi-robot-happy" :title="$t('open_account', 'Open Account')" key="open_account"></v-btn>{{ getModel() }} </span>
-      <span class="timestamp">{{getCompletionId()}} </span>
-      <span class="timestamp">{{getUuid()}} </span>
+      <span class="model">
+        <v-btn size="x-small" class="panel-menu-button" icon="mdi-robot-happy" :title="$t('open_account', 'Open Account')" key="open_account"></v-btn>
+        {{ getModel() }}
+      </span>
+      <span class="timestamp">{{ getCompletionId() }} </span>
+      <span class="timestamp">{{ getUuid() }} </span>
       <span class="timestamp">{{ getPromptTokens() }}</span>
       <span class="timestamp">{{ getCompletionTokens() }}</span>
       <span class="timestamp">{{ getTotalTokens() }}</span>
       <span class="timestamp">{{ getRunTime() }}</span>
     </div>
+
+    <!-- Conditionally render "Running tool..." or the content with tool_call_content placeholder -->
     <Markdown
         class="bot-answer-md"
+        v-if="!isToolRunning"
         :breaks="true"
         :plugins="getPlugins()"
-        :source="contextDataItem?.completion?.choices[0].message.content"
+        :source="replaceToolCallWithPlaceholder(contextDataItem?.completion?.choices[0]?.message?.content)"
     />
 
+    <div v-if="isToolRunning" class="tool-running">
+      Running tool...
+    </div>
   </div>
 </template>
 
 <script>
+import {computed} from 'vue'; // Import computed
 import Markdown from 'vue3-markdown-it';
 import {markdownPlugins} from './../../stores/markdownPlugins.js';
 
@@ -37,12 +47,6 @@ export default {
     },
   },
   setup(props) {
-    // Definiere actions-Liste korrekt in setup()
-    const actions = [
-
-    ];
-
-
     const getModel = () => {
       return `Model: ${props.contextDataItem.completion?.model}`;
     };
@@ -55,21 +59,17 @@ export default {
       return `Completion ID: ${props.contextDataItem.completion.id}`;
     };
 
-
     const getPromptTokens = () => {
       return `Prompt Tokens: ${props.contextDataItem.completion?.usage?.prompt_tokens}`;
     };
-
 
     const getCompletionTokens = () => {
       return `Completion Tokens: ${props.contextDataItem.completion?.usage?.completion_tokens}`;
     };
 
-
     const getTotalTokens = () => {
       return `Total Tokens: ${props.contextDataItem.completion?.usage?.total_tokens}`;
     };
-
 
     const getRunTime = () => {
       const start = props.contextDataItem.completion?.usage?.started;
@@ -79,11 +79,21 @@ export default {
       return `Run Time: ${seconds} s`;
     };
 
-
     const getPlugins = () => markdownPlugins;
 
+    // Computed property for checking if the tool is running
+    const isToolRunning = computed(() => {
+      const toolCallStart = props.contextDataItem?.completion?.choices[0]?.message?.content.indexOf('<tool_call>');
+      const toolCallEnd = props.contextDataItem?.completion?.choices[0]?.message?.content.indexOf('</tool_call>');
+      return toolCallStart !== -1 && toolCallEnd === -1;
+    });
+
+    // Function to replace <tool_call> content with <tool_call_content> placeholder
+    const replaceToolCallWithPlaceholder = (content) => {
+      return content.replace(/<tool_call>[\s\S]*<\/tool_call>/g, '<tool_call_content></tool_call_content>');
+    };
+
     return {
-      actions,
       getModel,
       getPromptTokens,
       getCompletionTokens,
@@ -91,15 +101,15 @@ export default {
       getRunTime,
       getPlugins,
       getCompletionId,
-      getUuid
+      getUuid,
+      isToolRunning,
+      replaceToolCallWithPlaceholder,
     };
   },
 };
 </script>
 
 <style scoped>
-
-
 .fade-in {
   animation: fadeIn 0.5s;
 }
@@ -145,5 +155,8 @@ export default {
   font-size: 14px;
 }
 
-
+.tool-running {
+  font-style: italic;
+  color: #ff9800;
+}
 </style>
