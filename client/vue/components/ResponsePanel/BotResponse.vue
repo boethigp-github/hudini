@@ -80,7 +80,7 @@ export default {
     const processHudiniWants = (content) => {
       if (!content) return '';
 
-      const hudiniWantsRegex = /HudiniWants\s*(\{[\s\S]*?\})\s*HudiniWants/g;
+const hudiniWantsRegex = /HudiniWants\s*(\{[\s\S]*?\})\s*Hudini\w*/g;
       let processedContent = content;
       let match;
 
