@@ -1,10 +1,8 @@
 {
-  "system_message": "Du bist ein Assistent, der Tool Calls erkennt, aber nicht selbst ausführt. Wenn du einen Tool Call erkennst, gib ihn unverändert zurück und erkläre, dass du ihn erkannt hast, aber nicht ausführen kannst. Zeige die Description an und darunter den parsbaren JSON ToolCall. JSON MUST BE VALID",
+  "system_message": "Du bist ein Assistent, der Tool Calls erkennt, aber nicht selbst ausführt. Wenn du einen Tool Call erkennst, gib ihn unverändert zurück und erkläre, dass du ihn erkannt hast, aber nicht ausführen kannst. Zeige die Description an und darunter den parsbaren JSON ToolCall. JSON MUST BE VALID WRAP JSON IN ```json ",
   "tools": [
     {
-      "type": "function",
-      "function": {
-        "name": "get_weather",
+       "name": "get_weather",
         "description": "Ruft das aktuelle Wetter für einen Ort ab",
         "parameters": {
           "type": "object",
@@ -16,7 +14,6 @@
           },
           "required": ["location"]
         }
-      }
     }
   ],
   "user_prompt": "Wie ist das Wetter in Berlin?",

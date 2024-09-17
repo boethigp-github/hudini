@@ -196,47 +196,7 @@ export const processChunk = async (chunk, buffer, userContextList) => {
 };
 
 
-/**
- * Represents a tag used in a tool call.
- *
- * The TOOL_CALL_TAG constant represents a specific string value, '<tool_call>', which can be used as a tag
- * within a tool call. This tag can be used to identify specific parts of the tool call or to differentiate
- * it from other types of tags.
- *
- * @constant {string} TOOL_CALL_TAG - The value of the tool call tag.
- */
-const TOOL_CALL_TAG = 'tool_call*';
-/**
- * The TOOL_CALL_END_TAG represents the end tag used to delimit the completion of a tool call.
- *
- * @constant {string} TOOL_CALL_END_TAG - The end tag string '</tool_call>'.
- */
-const TOOL_CALL_END_TAG = '*tool_call';
-/**
- * Specifies the length of the content in the TOOL_CALL_TAG.
- *
- * The TOOL_CALL_CONTENT_LENGTH variable represents the length of the content within the TOOL_CALL_TAG.
- * It is derived from the length of the TOOL_CALL_TAG.
- *
- * @type {number}
- * @readonly
- */
-const TOOL_CALL_CONTENT_LENGTH = TOOL_CALL_TAG.length;
 
-/**
- * Extracts the tool call string from the given content.
- *
- * @param {string} content - The content to extract the tool call string from.
- * @returns {string|null} - The extracted tool call string, or null if it cannot be found.
- */
-const extractToolCallString = (content) => {
-    const toolCallStart = content.indexOf(TOOL_CALL_TAG);
-    const toolCallEnd = content.indexOf(TOOL_CALL_END_TAG);
-    if (toolCallStart === -1 || toolCallEnd === -1) return null;
-
-    const toolCallString = content.slice(toolCallStart + TOOL_CALL_CONTENT_LENGTH, toolCallEnd).trim();
-    return toolCallString.replace(/[\n\r]/g, '');
-};
 
 /**
  * Extracts the tool call string from the content and executes the specified tool with the provided parameters.
@@ -248,30 +208,12 @@ const extractToolCallString = (content) => {
  * @throws {Error} - Throws an error if there is an issue processing the tool call.
  */
 export const callTool = async (content) => {
-    try {
-        return content;
-        content = JSON.parse(content);
-        return await runActions(content.some, content.parameters);
-    } catch (error) {
-        console.error("Error processing HUDINI_WANTS content:", error);
-        throw error;
-    }
-};
-
-/**
- * Sendet einen Tool-Call an den Server und führt die entsprechende Funktion aus.
- *
- * @param {string} tool - Der Name des Tools/Funktion, das/die aufgerufen werden soll.
- * @param {Object} parameters - Die Parameter, die an das Tool/Funktion übergeben werden.
- * @returns {Promise<Object>} - Die Antwort vom Server.
- */
-export const runActions = async (tool, parameters) => {
-    try {
+   try {
         const requestBody = {
-                tool: tool,
-                parameters: parameters
+                tool: content.name,
+                parameters: content.parameters
             }
-
+            console.log("callTool:", requestBody);
 
         const response = await fetch(`${API_BASE_URL}/tools/call`, {
             method: 'POST',
@@ -283,7 +225,7 @@ export const runActions = async (tool, parameters) => {
         });
 
         if (!response.ok) {
-            throw new Error(`Failed to call tool: ${tool}, status: ${response.status}`);
+            throw new Error(`Failed to call tool: ${requestBody}, status: ${response.status}`);
         }
 
 
@@ -292,28 +234,6 @@ export const runActions = async (tool, parameters) => {
         console.error('Error calling tool:', error);
         throw error;
     }
-};
-
-
-/**
- * Extrahiert den Tool-Call-Block aus dem Buffer
- * @param {string} buffer - Der Textpuffer, der die gestreamten Daten enthält.
- * @returns {object|null} - Gibt das Tool-Call-Objekt zurück, falls es gefunden wird, oder null.
- */
-export const extractToolCall = (buffer) => {
-    const toolCallStart = buffer.indexOf('<tool_call>');
-    const toolCallEnd = buffer.indexOf('</tool_call>');
-
-    if (toolCallStart !== -1 && toolCallEnd !== -1) {
-        const toolCallString = buffer.slice(toolCallStart + 11, toolCallEnd);
-        try {
-            return JSON.parse(toolCallString);
-        } catch (error) {
-            console.error("Error parsing tool_call JSON:", error);
-            return null;
-        }
-    }
-    return null;
 };
 
 
