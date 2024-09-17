@@ -32,7 +32,7 @@
 import {ref, watchEffect} from 'vue';
 import Markdown from 'vue3-markdown-it';
 import {markdownPlugins} from './../../stores/markdownPlugins.js';
-import {callTool, parseCallContent} from "@/vue/services/api.js";
+import {processToolCalling} from "@/vue/services/TokenStreamListener.js";
 
 export default {
   name: 'BotResponse',
@@ -81,57 +81,6 @@ export default {
     };
 
     const getPlugins = () => markdownPlugins;
-
-
-    const objectToMarkdownString = (obj, indent = '') => {
-      if (typeof obj !== 'object' || obj === null) {
-        return `\`${String(obj)}\``;
-      }
-
-      let markdown = '';
-      for (const [key, value] of Object.entries(obj)) {
-        markdown += `${indent} ${key}: `;
-        if (typeof value === 'object' && value !== null) {
-          markdown += '\n' + objectToMarkdownString(value, indent + '  ');
-        } else {
-          markdown += `\`${String(value)}\``;
-        }
-        markdown += '\n';
-      }
-      return markdown.trim();
-    };
-
-const processToolCalling = async (content) => {
-  let processedContent = parseCallContent(content);
-
-  console.log("111111111111", processedContent);
-
-  if (!processedContent || !processedContent.tool) {
-    return content;
-  }
-
-  try {
-    let response = await callTool(processedContent);
-    if (!response) {
-      return content;
-    }
-
-    console.log("response", response);
-
-    // Convert the response object to a Markdown string
-    const markdownString = objectToMarkdownString(response);
-
-      // Replace the original JSON in the content with the Markdown string, removing the ```json prefix
-    const updatedContent = "<div>"+content.replace(/```json\s*\{[\s\S]*\}\s*/, markdownString).replace(/```/g, "")+"</div>"
-
-    return updatedContent;
-  } catch (error) {
-    console.error("Error processing tool call:", error);
-  }
-
-  return content;
-};
-
 
     watchEffect(async () => {
       const content = props.contextDataItem?.completion?.choices[0]?.message?.content;
