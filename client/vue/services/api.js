@@ -210,7 +210,7 @@ export const processChunk = async (chunk, buffer, userContextList) => {
 export const callTool = async (content) => {
    try {
         const requestBody = {
-                tool: content.name,
+                tool: content.tool,
                 parameters: content.parameters
             }
             console.log("callTool:", requestBody);
@@ -265,6 +265,36 @@ export const deleteUserContext = async (threadId) => {
     }
 };
 
+
+/**
+ * Parses the input to extract JSON content within triple backticks ```json ```
+ *
+ * @param {string} input - The input string to parse
+ *
+ * @return {Object|string|null} - The parsed JSON content, or the input string if no JSON content is found, or null if there is an error parsing the JSON content
+ */
+export  const parseCallContent = (input) => {
+  // Regex to match a JSON object, accounting for possible whitespace
+  const regex = /\s*(\{[\s\S]*\})\s*/;
+
+  // Extract the content
+  const match = input.match(regex);
+
+  if (match && match[1]) {
+    try {
+      // Attempt to parse the extracted content as JSON
+      const jsonContent = JSON.parse(match[1]);
+      console.log("jsonContent", jsonContent);
+      return jsonContent;
+    } catch (error) {
+      console.error("Error parsing JSON:", error);
+      return null;
+    }
+  } else {
+    console.log("No JSON content found");
+    return null;
+  }
+};
 /**
  * Exports to excel
  * @param user

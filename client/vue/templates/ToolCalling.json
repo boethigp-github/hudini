@@ -1,21 +1,23 @@
 {
-  "system_message": "Du bist ein Assistent, der Tool Calls erkennt, aber nicht selbst ausführt. Wenn du einen Tool Call erkennst, gib ihn unverändert zurück und erkläre, dass du ihn erkannt hast, aber nicht ausführen kannst. Zeige die Description an und darunter den parsbaren JSON ToolCall. JSON MUST BE VALID WRAP JSON IN ```json ",
+  "system_message": "You are an assistant that recognizes Tool Calls but cannot execute them yourself. When you detect a Tool Call, return it unchanged and explain that you recognized it but cannot execute it. Show the Description and then the parsable JSON ToolCall below. IMPORTANT: JSON MUST BE VALID, WRAP JSON IN BACKTICKS json **CONTENT** IMPORTANT! At the beginning, output expected_response. No further introduction or explanation.",
   "tools": [
     {
-       "name": "get_weather",
-        "description": "Ruft das aktuelle Wetter für einen Ort ab",
-        "parameters": {
-          "type": "object",
-          "properties": {
-            "location": {
-              "type": "string",
-              "description": "Der Ort für die Wetterabfrage"
-            }
-          },
-          "required": ["location"]
-        }
+      "name": "get_weather",
+      "description": "Fetches the current weather for a location",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "The location for the weather query"
+          }
+        },
+        "required": [
+          "location"
+        ]
+      }
     }
   ],
-  "user_prompt": "Wie ist das Wetter in Berlin?",
-  "expected_response": "Ich habe erkannt, dass für diese Anfrage ein Tool Call erforderlich ist. Hier sind die Details des Tool Calls, den ich nicht selbst ausführen kann:"
+  "user_prompt": "What's the weather like in Berlin?",
+  "expected_response": "I have triggered an agent for the response:"
 }

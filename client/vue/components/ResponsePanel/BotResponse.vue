@@ -20,6 +20,7 @@
         v-if="typeof processedContent === 'string'"
         class="bot-answer-md"
         :breaks="true"
+        :html="true"
         :plugins="getPlugins()"
         :source="processedContent"
     />
@@ -31,7 +32,7 @@
 import {ref, watchEffect} from 'vue';
 import Markdown from 'vue3-markdown-it';
 import {markdownPlugins} from './../../stores/markdownPlugins.js';
-import {callTool} from "@/vue/services/api.js";
+import {callTool, parseCallContent} from "@/vue/services/api.js";
 
 export default {
   name: 'BotResponse',
@@ -81,57 +82,61 @@ export default {
 
     const getPlugins = () => markdownPlugins;
 
-    const processHudiniWants = async (content) => {
 
-
-      let processedContent = parseCallContent(content)
-
-      if (!processedContent || !processedContent.name) {
-        return content;
+    const objectToMarkdownString = (obj, indent = '') => {
+      if (typeof obj !== 'object' || obj === null) {
+        return `\`${String(obj)}\``;
       }
 
-      try {
-        let response = await callTool(processedContent);
-
-        if (!response) {
-          return content;
+      let markdown = '';
+      for (const [key, value] of Object.entries(obj)) {
+        markdown += `${indent} ${key}: `;
+        if (typeof value === 'object' && value !== null) {
+          markdown += '\n' + objectToMarkdownString(value, indent + '  ');
+        } else {
+          markdown += `\`${String(value)}\``;
         }
-
-        return response
-      } catch (error) {
-        console.error("Error processing HUDINI_WANTS:", error);
-
+        markdown += '\n';
       }
-
-      return processedContent;
+      return markdown.trim();
     };
 
+const processToolCalling = async (content) => {
+  let processedContent = parseCallContent(content);
 
-    function parseCallContent(input) {
-      // Updated regex to match JSON content within ```json ``` backticks
-      const regex = /```json\s*([\s\S]*?)\s*```/;
+  console.log("111111111111", processedContent);
 
-      // Extract the content
-      const match = input.match(regex);
+  if (!processedContent || !processedContent.tool) {
+    return content;
+  }
 
-      if (match && match[1]) {
-        try {
-          // Parse the extracted content as JSON
-          return JSON.parse(match[1]);
-        } catch (error) {
-          console.error("Error parsing JSON:", error);
-          return null;
-        }
-      } else {
-        console.log("No JSON content found");
-        return input;
-      }
+  try {
+    let response = await callTool(processedContent);
+    if (!response) {
+      return content;
     }
+
+    console.log("response", response);
+
+    // Convert the response object to a Markdown string
+    const markdownString = objectToMarkdownString(response);
+
+      // Replace the original JSON in the content with the Markdown string, removing the ```json prefix
+    const updatedContent = "<div>"+content.replace(/```json\s*\{[\s\S]*\}\s*/, markdownString).replace(/```/g, "")+"</div>"
+
+    return updatedContent;
+  } catch (error) {
+    console.error("Error processing tool call:", error);
+  }
+
+  return content;
+};
+
 
     watchEffect(async () => {
       const content = props.contextDataItem?.completion?.choices[0]?.message?.content;
       if (content) {
-        processedContent.value = await processHudiniWants(content);
+        processedContent.value = await processToolCalling(content);
       }
     });
 
@@ -151,5 +156,53 @@ export default {
 </script>
 
 <style scoped>
-/* Styles remain unchanged */
+.fade-in {
+  animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.bot-icon {
+  color: #ff7e00;
+  float: left;
+  margin: 0 3px 5px 0;
+  font-size: 20px;
+}
+
+.bot-response {
+  padding: 10px;
+  text-align: left;
+  font-size: 14px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  min-height: 150px;
+}
+
+.model {
+  color: #da6e00;
+  font-weight: bold;
+  font-size: 11px;
+  vertical-align: top !important;
+}
+
+.response-metadata {
+  max-width: 100%;
+  border-bottom: 1px solid lightgray;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  color: #555;
+  font-size: 14px;
+}
+
+.tool-running {
+  font-style: italic;
+  color: #ff9800;
+}
 </style>
