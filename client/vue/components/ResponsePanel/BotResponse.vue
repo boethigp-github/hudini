@@ -19,14 +19,14 @@
         class="bot-answer-md"
         :breaks="true"
         :plugins="getPlugins()"
-        :source="processHudiniWants(contextDataItem?.completion?.choices[0]?.message?.content)"
+        :source="processedContent"
     />
 
   </div>
 </template>
 
 <script>
-import { computed } from 'vue';
+import { ref, watchEffect } from 'vue';
 import Markdown from 'vue3-markdown-it';
 import { markdownPlugins } from './../../stores/markdownPlugins.js';
 import { callTool } from "@/vue/services/api.js";
@@ -43,6 +43,8 @@ export default {
     },
   },
   setup(props) {
+    const processedContent = ref('');
+
     const getModel = () => {
       return `Model: ${props.contextDataItem.completion?.model}`;
     };
@@ -77,20 +79,26 @@ export default {
 
     const getPlugins = () => markdownPlugins;
 
-    const processHudiniWants = (content) => {
+    const processHudiniWants = async (content) => {
       if (!content) return '';
 
-const hudiniWantsRegex = /HudiniWants\s*(\{[\s\S]*?\})\s*Hudini\w*/g;
+      const hudiniWantsRegex = /HudiniWants\s*(\{[\s\S]*?\})\s*HudiniWants/g;
       let processedContent = content;
       let match;
 
       while ((match = hudiniWantsRegex.exec(content)) !== null) {
-
         const hudiniWantsContent = match[1];
         try {
           const parsedContent = JSON.parse(hudiniWantsContent);
-          callTool(JSON.stringify(parsedContent));
-          processedContent = processedContent.replace(match[0], '<tool_call_content></tool_call_content>');
+          let response = await callTool(JSON.stringify(parsedContent));
+
+          if (!response) {
+            return content;
+          }
+
+          console.log(response);
+
+          processedContent = processedContent.replace(match[0], response.result.message);
         } catch (error) {
           console.error("Error processing HUDINI_WANTS:", error);
           processedContent = processedContent.replace(match[0], '<error>Failed to process HUDINI_WANTS</error>');
@@ -99,6 +107,13 @@ const hudiniWantsRegex = /HudiniWants\s*(\{[\s\S]*?\})\s*Hudini\w*/g;
 
       return processedContent;
     };
+
+    watchEffect(async () => {
+      const content = props.contextDataItem?.completion?.choices[0]?.message?.content;
+      if (content) {
+        processedContent.value = await processHudiniWants(content);
+      }
+    });
 
     return {
       getModel,
@@ -109,12 +124,12 @@ const hudiniWantsRegex = /HudiniWants\s*(\{[\s\S]*?\})\s*Hudini\w*/g;
       getPlugins,
       getCompletionId,
       getUuid,
-      processHudiniWants,
+      processedContent,
     };
   },
 };
 </script>
 
 <style scoped>
-/* Styles bleiben unverändert */
+/* Styles remain unchanged */
 </style>
