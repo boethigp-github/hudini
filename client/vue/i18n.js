@@ -84,6 +84,8 @@ const messages = {
         save: "Save",
         error_uploading_files: "Error uploading files",
         logout: 'Logout',
+        open_model_selection: 'Open Model Selection',
+        selected_models: 'Selected Models',
 
     },
     de: {
@@ -169,6 +171,8 @@ const messages = {
         save: "Speichern",
         error_uploading_files: "Fehler beim Hochladen der Dateien",
         logout: "Abmelden",
+        open_model_selection: 'Modellauswahl öffnen',
+        selected_models: 'Ausgewählte Modelle',
 
     },
     fr: {
@@ -253,7 +257,9 @@ const messages = {
         close: "Fermer",
         save: "Sauvegarder",
         error_uploading_files: "Erreur lors du téléchargement des fichiers",
-        logout: "Déconnexion"
+        logout: "Déconnexion",
+        open_model_selection: 'Ouvrir la sélection de modèle',
+        selected_models: 'Modèles sélectionnés',
 
     },
     ru: {
@@ -339,6 +345,8 @@ const messages = {
         save: "Сохранить",
         error_uploading_files: "Ошибка загрузки файлов",
         logout: "Выйти",
+        open_model_selection: 'Открыть выбор модели',
+        selected_models: 'Выбранные модели',
     },
     zh: {
         hudini_title: 'Hudini - CPU 魔术师在 SLM',
@@ -421,6 +429,8 @@ const messages = {
         save: "保存",
         error_uploading_files: "上传文件时出错",
         logout: '退出登录',
+        open_model_selection: '打开模型选择',
+        selected_models: '已选择的模型',
     },
     // Add other languages as needed
 };

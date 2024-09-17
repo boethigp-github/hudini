@@ -33,13 +33,13 @@
 
 <script>
 import {nextTick, watch, ref, onMounted} from 'vue';
-import './ResponsePanel/response_panel.css';
-import ResponsePanelMenu from './ResponsePanel/ResponsePanelMenu.vue';
-import {markdownPlugins} from './../stores/markdownPlugins.js';
+import './response_panel.css';
+import ResponsePanelMenu from './ResponsePanelMenu.vue';
+import {markdownPlugins} from '../../stores/markdownPlugins.js';
 import 'highlight.js/styles/googlecode.css';
-import './ResponsePanel/Highlite.css';
-import UserPrompt from './ResponsePanel/UserPrompt.vue';
-import BotResponse from './ResponsePanel/BotResponse.vue';
+import './Highlite.css';
+import UserPrompt from './UserPrompt.vue';
+import BotResponse from './BotResponse.vue';
 
 export default {
   name: 'ResponsePanel',
@@ -106,12 +106,14 @@ export default {
 
 <style scoped>
 .response {
-  height: 80vh;
-  overflow-y: auto;
-  scroll-behavior: smooth;
+    height: 82.5vh!important;
+    max-height:82.5vh;
+    overflow-y: auto; /* Ermöglicht vertikales Scrollen */
+    font-family: 'Georgia', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    scroll-behavior: smooth;
+    flex-direction: column-reverse; /* Damit neuer Text unten erscheint */
 }
-
-
 
 .response-content {
   display: flex;

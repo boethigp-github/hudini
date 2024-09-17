@@ -45,7 +45,7 @@ import {markdownPlugins} from './../../stores/markdownPlugins.js';
 import botResponse from "@/vue/components/ResponsePanel/BotResponse.vue";
 
 export default {
-  name: 'ComparisonDrawer',
+  name: 'ComparisonTable',
   components: {
     Markdown
   },

@@ -80,33 +80,56 @@ export default {
     const getPlugins = () => markdownPlugins;
 
     const processHudiniWants = async (content) => {
-      if (!content) return '';
 
-      const hudiniWantsRegex = /HudiniWants\s*(\{[\s\S]*?\})\s*HudiniWants/g;
-      let processedContent = content;
-      let match;
 
-      while ((match = hudiniWantsRegex.exec(content)) !== null) {
-        const hudiniWantsContent = match[1];
-        try {
-          const parsedContent = JSON.parse(hudiniWantsContent);
-          let response = await callTool(JSON.stringify(parsedContent));
+      let processedContent = parseCallContent(content)
+
+      if (!processedContent) {
+        return content;
+      }
+
+       try {
+          let response = await callTool(processedContent);
 
           if (!response) {
             return content;
           }
 
-          console.log(response);
-
-          processedContent = processedContent.replace(match[0], response.result.message);
+          return response
         } catch (error) {
           console.error("Error processing HUDINI_WANTS:", error);
-          processedContent = processedContent.replace(match[0], '<error>Failed to process HUDINI_WANTS</error>');
+
         }
-      }
 
       return processedContent;
     };
+
+
+    function parseCallContent(input) {
+
+
+  // Regular expression to match content between __**** and ****call__
+  const regex = /__\*\*\*\*(.*?)\*\*\*\*wants__/s;
+
+  // Extract the content
+  const match = input.match(regex);
+
+  if (match && match[1]) {
+    try {
+      // Parse the extracted content as JSON
+      const jsonContent = JSON.parse(match[1]);
+      console.log("jsonContent",jsonContent)
+
+      return jsonContent;
+    } catch (error) {
+      console.error("Error parsing JSON:", error);
+      return null;
+    }
+  } else {
+
+    return input;
+  }
+}
 
     watchEffect(async () => {
       const content = props.contextDataItem?.completion?.choices[0]?.message?.content;

@@ -5,7 +5,7 @@ import { createI18n } from 'vue-i18n';
 import Antd from 'ant-design-vue';
 import { nextTick } from 'vue';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { useModelsStore } from './../stores/models';
+import { useModelsStore } from '../../stores/models.js';
 
 // Mock window.matchMedia
 window.matchMedia = window.matchMedia || function () {

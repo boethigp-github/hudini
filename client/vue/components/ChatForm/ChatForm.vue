@@ -1,29 +1,28 @@
 <template>
   <v-layout ref="app">
     <AppBar/>
-    <v-navigation-drawer location="end" name="drawer" permanent>
-      <div class="d-flex justify-center align-top h-100">
-        <PromptPanel :key="promptPanelUpdateTrigger"/>
-      </div>
-    </v-navigation-drawer>
     <v-main>
       <v-row>
         <v-col :cols="11">
+          <ModelSelectionDrawer/>
           <ResponsePanel v-if="!isComparisonViewVisible" :userContextList="userContextList" :loading="loading"/>
-          <ComparisonDrawer v-if="isComparisonViewVisible" :userContextList="userContextList"/>
+          <ComparisonTable v-if="isComparisonViewVisible" :userContextList="userContextList"/>
         </v-col>
         <v-col :cols="1">
           <ResponsePanelMenu :userContextList="userContextList" @delete-thread="showDeleteConfirmation"/>
         </v-col>
       </v-row>
+
     </v-main>
+    <v-navigation-drawer location="end" name="drawer" permanent>
+      <div class="d-flex justify-center align-top h-100">
+        <PromptPanel :key="promptPanelUpdateTrigger"/>
+      </div>
+    </v-navigation-drawer>
     <v-footer name="footer" app>
       <v-container>
         <v-row>
-          <ModelSelection/>
-        </v-row>
-        <v-row>
-          <v-col cols="12" md="12" style="margin: 0;padding: 0">
+          <v-col cols="11" md="9" sm="12" style="margin: 0;padding: 0">
             <v-form v-model="valid">
               <v-textarea
                   v-model="prompt.prompt"
@@ -35,14 +34,24 @@
               ></v-textarea>
             </v-form>
           </v-col>
+          <v-col cols="3" md="3" sm="0">
+            <div style="margin: -15px 0 0 10px;padding:0" class="text-primary">
+              <v-btn
+                  variant="text"
+                  @click="showModelSelection"
+              >
+                {{ $t('selected_models', 'Selected Models') }}
+              </v-btn>
+              <ListModelSelection/>
+            </div>
+          </v-col>
         </v-row>
       </v-container>
     </v-footer>
     <v-snackbar
         v-model="snackbar.show"
         :color="snackbar.color"
-        :timeout="snackbar.timeout"
-    >
+        :timeout="snackbar.timeout">
       {{ snackbar.text }}
       <template v-slot:actions>
         <v-btn
@@ -57,13 +66,13 @@
 <script>
 import {onBeforeUnmount, onMounted, ref, watch, reactive} from 'vue';
 import {useI18n} from 'vue-i18n';
-import {useModelsStore} from './../stores/models';
-import PromptPanel from './PromptPanel.vue';
-import ResponsePanel from './ResponsePanel.vue';
-import LanguageSwitch from './LanguageSwitch.vue';
-import ModelSelection from './ModelSelection.vue';
-import ComparisonDrawer from './ResponsePanel/ComparisonTable.vue';
-import ThemeSwitch from './ThemeSwitch.vue';
+import {useModelsStore} from '../../stores/models.js';
+import PromptPanel from '../ResponsePanel/PromptPanel.vue';
+import ResponsePanel from '../ResponsePanel/ResponsePanel.vue';
+import LanguageSwitch from '../LanguageSelection/LanguageSwitch.vue';
+import ModelSelection from '../ModelSelection/ModelSelection.vue';
+import ComparisonTable from '../ResponsePanel/ComparisonTable.vue';
+import ThemeSwitch from '../ThemeSwitch/ThemeSwitch.vue';
 import ResponsePanelMenu from "@/vue/components/ResponsePanel/ResponsePanelMenu.vue";
 import {
   createPrompt,
@@ -73,22 +82,26 @@ import {
   saveUserContext,
   stream,
   exportUserContextToExel
-} from './../services/api';
+} from '../../services/api.js';
 import {v4 as uuidv4} from 'uuid';
-import {UserContext} from '../models/UserContext.js';
+import {UserContext} from '../../models/UserContext.js';
 import AppBar from "@/vue/components/AppBar/AppBar.vue";
 import {useAuthStore} from "@/vue/stores/currentUser.js";
+import ModelSelectionDrawer from "@/vue/components/ModelSelection/ModelSelectionDrawer.vue";
+import ListModelSelection from "@/vue/components/ModelSelection/ListModelSelection.vue";
 
 export default {
   name: 'ChatForm',
   components: {
+    ModelSelectionDrawer,
+    ListModelSelection,
     AppBar,
     ResponsePanelMenu,
     PromptPanel,
     ResponsePanel,
     LanguageSwitch,
     ModelSelection,
-    ComparisonDrawer,
+    ComparisonTable: ComparisonTable,
     ThemeSwitch
   },
   setup() {
@@ -98,15 +111,12 @@ export default {
     /**
      * Inits the user and its context
      */
-    const initUserContext = ()=>{
-
+    const initUserContext = () => {
       authStore.loadFromStorage().then(userData => {
         if (!userData) {
           console.error("No user in pinia storage");
         }
-
         user = userData?.accessToken?.user_info.uuid;
-
         fetchUserContext()
             .then(fetchUserContextCallback)
             .catch((error) => {
@@ -241,7 +251,7 @@ export default {
      *
      * @type {Ref<UnwrapRef<*[]>>}
      */
-    const toolCallRegister=ref([]);
+    const toolCallRegister = ref([]);
 
     const snackbar = ref({
       show: false,
@@ -264,148 +274,147 @@ export default {
     };
 
     /**
- * Watches the `loading` variable and resets the prompt if loading is completed.
- * @param {Boolean} newValue - New value of the loading state.
- */
-watch(loading, (newValue) => {
-    if (!newValue) {
+     * Watches the `loading` variable and resets the prompt if loading is completed.
+     * @param {Boolean} newValue - New value of the loading state.
+     */
+    watch(loading, (newValue) => {
+      if (!newValue) {
         prompt.value.prompt = '';
-    }
-});
+      }
+    });
 
-/**
- * Updates the userContextList with the provided value.
- * @param {Object} value - New value for the userContextList.
- */
-const updateUserContextList = (value) => {
-    userContextList.value = value;
-};
-
-/**
- * Handles the keydown event and submits the form when the Enter key is pressed (without Shift).
- * @param {Event} event - The keyboard event.
- */
-const handleKeydown = (event) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-        event.preventDefault();
-        handleSubmit();
-    }
-};
-
-/**
- * Shows the comparison view.
- */
-const showComparisonView = () => {
-    isComparisonViewVisible.value = true;
-};
-
-/**
- * Hides the comparison view.
- */
-const hideComparisonView = () => {
-    isComparisonViewVisible.value = false;
-};
-
-
-
-/**
- * Shows the delete confirmation dialog.
- */
-const showDeleteConfirmation = () => {
-    deleteDialog.value = true;
-};
-
-/**
- * Reruns the prompt based on the event's detail.
- * @param {Event} event - The event containing the prompt details.
- */
-const rerunPrompt = async (event) => {
-    prompt.value.prompt = event.detail.prompt;
-    handleSubmit();
-};
-
-/**
- * Dispatches a custom "stream-complete" event when the streaming process is finished.
- */
-const dispatchOnCompleteEvent = () => {
-    const event = new CustomEvent("stream-complete", {});
-    window.dispatchEvent(event);
-};
-
-/**
- * Triggers an update on the prompt panel by incrementing the update trigger value.
- */
-const triggerPromptPanelUpdate = () => {
-    promptPanelUpdateTrigger.value++;
-};
-
-/**
- * Fetches the user context using the provided callback and processes the response.
- * @param {Object} userContextPostResponse - The response from the user context API.
- */
-const fetchUserContextCallback = async (userContextPostResponse) => {
-    try {
-        const userContextData = await userContextPostResponse.json();
-        if (userContextPostResponse.status === 200) {
-            updateUserContextList(userContextData);
-        } else if (userContextPostResponse.status === 404) {
-            // Handle 404 if needed
-        } else {
-            showMessage(t('failed_to_retrieve_user_context'), 'error');
-            console.error(t('failed_to_retrieve_user_context'));
-        }
-    } catch (error) {
-        showMessage(t('error_processing_user_context'), 'error');
-        console.error('Error processing user context:', error);
-    }
-};
-
-/**
- * Saves the user context to the server by calling the saveUserContext function.
- */
-const saveUserContextServerside = () => {
-    const callback = async (UserContextPostResponseModel) => {
-        // Handle the response if needed
+    /**
+     * Updates the userContextList with the provided value.
+     * @param {Object} value - New value for the userContextList.
+     */
+    const updateUserContextList = (value) => {
+      userContextList.value = value;
     };
 
-    saveUserContext(JSON.stringify(userContextList.value), callback).catch((error) => {
+    /**
+     * Handles the keydown event and submits the form when the Enter key is pressed (without Shift).
+     * @param {Event} event - The keyboard event.
+     */
+    const handleKeydown = (event) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        handleSubmit();
+      }
+    };
+
+    /**
+     * Shows the comparison view.
+     */
+    const onShowComparisonView = () => {
+      isComparisonViewVisible.value = true;
+    };
+
+    /**
+     * Hides the comparison view.
+     */
+    const onHideComparisonView = () => {
+      isComparisonViewVisible.value = false;
+    };
+
+
+    /**
+     * Shows the delete confirmation dialog.
+     */
+    const showDeleteConfirmation = () => {
+      deleteDialog.value = true;
+    };
+
+    /**
+     * Reruns the prompt based on the event's detail.
+     * @param {Event} event - The event containing the prompt details.
+     */
+    const onRerunPrompt = async (event) => {
+      prompt.value.prompt = event.detail.prompt;
+      handleSubmit();
+    };
+
+    /**
+     * Dispatches a custom "stream-complete" event when the streaming process is finished.
+     */
+    const dispatchOnCompleteEvent = () => {
+      const event = new CustomEvent("stream-complete", {});
+      window.dispatchEvent(event);
+    };
+
+    /**
+     * Triggers an update on the prompt panel by incrementing the update trigger value.
+     */
+    const triggerPromptPanelUpdate = () => {
+      promptPanelUpdateTrigger.value++;
+    };
+
+    /**
+     * Fetches the user context using the provided callback and processes the response.
+     * @param {Object} userContextPostResponse - The response from the user context API.
+     */
+    const fetchUserContextCallback = async (userContextPostResponse) => {
+      try {
+        const userContextData = await userContextPostResponse.json();
+        if (userContextPostResponse.status === 200) {
+          updateUserContextList(userContextData);
+        } else if (userContextPostResponse.status === 404) {
+          // Handle 404 if needed
+        } else {
+          showMessage(t('failed_to_retrieve_user_context'), 'error');
+          console.error(t('failed_to_retrieve_user_context'));
+        }
+      } catch (error) {
+        showMessage(t('error_processing_user_context'), 'error');
+        console.error('Error processing user context:', error);
+      }
+    };
+
+    /**
+     * Saves the user context to the server by calling the saveUserContext function.
+     */
+    const saveUserContextServerside = () => {
+      const callback = async (UserContextPostResponseModel) => {
+        // Handle the response if needed
+      };
+
+      saveUserContext(JSON.stringify(userContextList.value), callback).catch((error) => {
         showMessage(t('error_saving_user_context'), 'error');
         console.error('Error sending responses to /usercontext:', error);
-    });
-};
+      });
+    };
 
-/**
- * Handles the stream generation process for a prompt post request.
- * @param {Object} promptPostRequest - The request data for the prompt.
- */
-async function streamGeneration(promptPostRequest) {
-    for (const model of await modelsStore.getSelectedModelsWithMetaData()) {
+    /**
+     * Handles the stream generation process for a prompt post request.
+     * @param {Object} promptPostRequest - The request data for the prompt.
+     */
+    async function streamGeneration(promptPostRequest) {
+      for (const model of await modelsStore.getSelectedModelsWithMetaData()) {
         stream(
             model.stream_url,
             getStreamPostRequestModel(promptPostRequest, [model], "fetch_completion"),
             (chunk, buffer) => processChunk(chunk, buffer, userContextList),
             buffer,
             (error) => {
-                console.error('Stream error:', error);
-                showMessage(t('stream_error'), 'error');
-                hideLoader();
+              console.error('Stream error:', error);
+              showMessage(t('stream_error'), 'error');
+              hideLoader();
             },
             () => {
-                hideLoader();
+              hideLoader();
             },
             () => {
-                createPromptServerside(promptPostRequest).then(() => {
-                    setTimeout(() => {
-                        saveUserContextServerside();
-                        dispatchOnCompleteEvent();
-                    }, 200)
-                });
+              createPromptServerside(promptPostRequest).then(() => {
+                setTimeout(() => {
+                  saveUserContextServerside();
+                  dispatchOnCompleteEvent();
+                }, 200)
+              });
 
-                hideLoader();
+              hideLoader();
             }
         );
+      }
     }
-}
 
 
     /**
@@ -467,25 +476,24 @@ async function streamGeneration(promptPostRequest) {
     };
 
     onMounted(async () => {
-      setTimeout(()=>{
-      initUserContext();
+      setTimeout(() => {
+        initUserContext();
       }, 200)
 
-
-      window.addEventListener('delete-thread', deleteThreadEvent);
-      window.addEventListener('rerun-prompt', rerunPrompt);
-      window.addEventListener('comparison-open', showComparisonView);
-      window.addEventListener('comparison-close', hideComparisonView);
-      window.addEventListener('usercontext-export-excel', exportToExcel);
+      window.addEventListener('delete-thread', onDeleteThreadEvent);
+      window.addEventListener('rerun-prompt', onRerunPrompt);
+      window.addEventListener('comparison-open', onShowComparisonView);
+      window.addEventListener('comparison-close', onHideComparisonView);
+      window.addEventListener('usercontext-export-excel', onExportToExcel);
       window.addEventListener('show-message', onShowMessage);
     });
 
     onBeforeUnmount(() => {
-      window.removeEventListener('delete-thread', deleteThreadEvent);
-      window.removeEventListener('rerun-prompt', rerunPrompt);
-      window.removeEventListener('comparison-open', showComparisonView);
-      window.removeEventListener('comparison-close', hideComparisonView);
-      window.removeEventListener('usercontext-export-excel', exportToExcel);
+      window.removeEventListener('delete-thread', onDeleteThreadEvent);
+      window.removeEventListener('rerun-prompt', onRerunPrompt);
+      window.removeEventListener('comparison-open', onShowComparisonView);
+      window.removeEventListener('comparison-close', onHideComparisonView);
+      window.removeEventListener('usercontext-export-excel', onExportToExcel);
       window.removeEventListener('show-message', onShowMessage);
     });
 
@@ -493,12 +501,17 @@ async function streamGeneration(promptPostRequest) {
       showMessage(event.detail.message, event.detail.color);
     }
 
+    const showModelSelection = ()=>{
+      const event = new CustomEvent("open-model-selection", {});
+      window.dispatchEvent(event);
+    }
+
     /**
      * Exports to excel
      *
      * @returns {Promise<void>}
      */
-    const exportToExcel = async () => {
+    const onExportToExcel = async () => {
       const user = userContextList.value[0]?.prompt.user;
       const thread_id = userContextList.value[0]?.thread_id;
       if (!user || !thread_id) {
@@ -513,16 +526,16 @@ async function streamGeneration(promptPostRequest) {
      * @param event
      * @returns {Promise<void>}
      */
-    const deleteThreadEvent = async (event) => {
+    const onDeleteThreadEvent = async (event) => {
       try {
         await deleteUserContext(event.detail.thread_id);
+        userContextList.value=[]
         showMessage(t('thread_deleted_successfully'), 'success');
       } catch (error) {
         showMessage(t('failed_to_delete_thread'), 'error');
         console.error('Error deleting thread:', error);
       }
     };
-
 
     return {
       handleKeydown,
@@ -539,7 +552,7 @@ async function streamGeneration(promptPostRequest) {
       showMessage,
       deleteDialog,
       showDeleteConfirmation,
-
+      showModelSelection
     };
   },
 };

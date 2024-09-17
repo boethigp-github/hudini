@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils';
-import PromptPanel from './PromptPanel.vue';
+import PromptPanel from '../ResponsePanel/PromptPanel.vue';
 import { createI18n } from 'vue-i18n';
 import { nextTick } from 'vue';
 

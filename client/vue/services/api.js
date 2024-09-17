@@ -249,7 +249,7 @@ const extractToolCallString = (content) => {
  */
 export const callTool = async (content) => {
     try {
-
+        return content;
         content = JSON.parse(content);
         return await runActions(content.some, content.parameters);
     } catch (error) {

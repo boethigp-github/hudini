@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils';
 import { describe, it, expect } from 'vitest';
 import { createI18n } from 'vue-i18n';
-import ResponsePanel from './ResponsePanel.vue';
+import ResponsePanel from '../ResponsePanel/ResponsePanel.vue';
 // Mock window.matchMedia
 window.matchMedia = window.matchMedia || function () {
     return {

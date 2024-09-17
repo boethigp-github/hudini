@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import ChatForm from './components/ChatForm.vue';
+import ChatForm from './components/ChatForm/ChatForm.vue';
 import Login from './components/Auth/LoginForm.vue';
 import { fetchAccessToken } from '@/vue/services/api';
 import { useAuthStore } from '@/vue/stores/currentUser.js';

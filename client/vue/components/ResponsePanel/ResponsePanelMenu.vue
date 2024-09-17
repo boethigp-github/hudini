@@ -42,6 +42,17 @@
       ></v-btn>
     </v-row>
 
+    <v-row>
+      <v-btn
+          size="small"
+          class="panel-menu-button"
+          icon="mdi mdi-cog-outline"
+          :title="$t('open_model_selection', 'Opens Model selection')"
+          key="open_model_selection"
+          @click="openModelSelection"
+      ></v-btn>
+    </v-row>
+
     <v-dialog v-model="deleteDialog" max-width="600px">
       <v-card>
         <v-card-title>{{
@@ -96,6 +107,12 @@ export default {
     const exportToExcel = () => {
       isComparisonOpen.value = !isComparisonOpen.value;
       const eventName = 'usercontext-export-excel'
+      const event = new CustomEvent(eventName, {});
+      window.dispatchEvent(event);
+    };
+
+    const openModelSelection = () => {
+      const eventName = 'open-model-selection'
       const event = new CustomEvent(eventName, {});
       window.dispatchEvent(event);
     };
@@ -157,7 +174,8 @@ export default {
       onSelectedBotResponse,
       publishSocialMedia,
       selectedBotResponses,
-      isSelectAccountsVisible
+      isSelectAccountsVisible,
+      openModelSelection
     };
   },
 };

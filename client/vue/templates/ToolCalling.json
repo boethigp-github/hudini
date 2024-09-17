@@ -1,0 +1,24 @@
+{
+  "system_message": "Du bist ein Assistent, der Tool Calls erkennt, aber nicht selbst ausführt. Wenn du einen Tool Call erkennst, gib ihn unverändert zurück und erkläre, dass du ihn erkannt hast, aber nicht ausführen kannst. Zeige die Description an und darunter den parsbaren JSON ToolCall. JSON MUST BE VALID",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "get_weather",
+        "description": "Ruft das aktuelle Wetter für einen Ort ab",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "location": {
+              "type": "string",
+              "description": "Der Ort für die Wetterabfrage"
+            }
+          },
+          "required": ["location"]
+        }
+      }
+    }
+  ],
+  "user_prompt": "Wie ist das Wetter in Berlin?",
+  "expected_response": "Ich habe erkannt, dass für diese Anfrage ein Tool Call erforderlich ist. Hier sind die Details des Tool Calls, den ich nicht selbst ausführen kann:"
+}

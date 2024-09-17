@@ -42,8 +42,8 @@
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/vue/stores/currentUser';
-import ThemeSwitch from "@/vue/components/ThemeSwitch.vue";
-import LanguageSwitch from "@/vue/components/LanguageSwitch.vue";
+import ThemeSwitch from "@/vue/components/ThemeSwitch/ThemeSwitch.vue";
+import LanguageSwitch from "@/vue/components/LanguageSelection/LanguageSwitch.vue";
 import FileManager from "@/vue/components/Gripsbox/Gripsbox.vue";
 import { logout } from '@/vue/services/api';
 
