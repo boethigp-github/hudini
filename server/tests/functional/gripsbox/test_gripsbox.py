@@ -4,7 +4,7 @@ import requests
 from server.app.config.settings import Settings
 from server.app.models.gripsbox.gripsbox_post_request import GripsboxPostRequestModel
 from server.tests.test_abstract import TestAbstract
-from server.app.services import gripsbox_service  # Import function
+from server.app.services import gripsbox_service
 import json
 
 class TestGripsbox(TestAbstract):
@@ -98,3 +98,21 @@ class TestGripsbox(TestAbstract):
         # Use requests to delete the gripsbox using the API key as a query parameter
         response = requests.delete(f"{self.BASE_URL}/gripsbox/{gripsbox_id}?api_key={self.api_key}")
         assert response.status_code == 200
+
+    def test_update_gripsbox_active_status(self):
+        """Run the async test to update the gripsbox active status."""
+        asyncio.run(self.async_test_update_gripsbox_active_status())
+
+    async def async_test_update_gripsbox_active_status(self):
+        """Test updating the active status of a gripsbox."""
+        # Create a test gripsbox
+        new_id, _ = await self.create_test_gripsbox()
+
+        # Update the active status to false
+        response = requests.patch(
+            f"{self.BASE_URL}/gripsbox/{new_id}/active?api_key={self.api_key}",
+            json={"active": False}
+        )
+        assert response.status_code == 200
+        assert response.json()["status"] == "Active status updated successfully"
+

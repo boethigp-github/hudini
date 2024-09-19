@@ -42,6 +42,18 @@ async def get_gripsbox(db: AsyncSession = Depends(get_db),  _: str = Depends(aut
 class GripsboxActiveUpdateModel(BaseModel):
     active: bool
 
+@router.delete("/gripsbox/{id}", tags=["gripsbox"])
+async def delete_gripsbox(id: UUID, db: AsyncSession = Depends(get_db), _: str = Depends(auth)):
+    gripsbox = await db.get(Gripsbox, id)
+    if gripsbox:
+        await db.delete(gripsbox)
+        await db.commit()
+        logger.info(f"Gripsbox deleted successfully: id={id}")
+        return {"status": "Gripsbox deleted successfully"}
+    else:
+        logger.warning(f"Gripsbox not found: id={id}")
+        raise HTTPException(status_code=404, detail=f"Gripsbox with id {id} not found")
+
 @router.patch("/gripsbox/{id}/active", response_model=dict, status_code=status.HTTP_200_OK, tags=["gripsbox"])
 async def update_gripsbox_active_status(id: UUID, update_data: GripsboxActiveUpdateModel,
                                         db: AsyncSession = Depends(get_db), _: str = Depends(auth)):
