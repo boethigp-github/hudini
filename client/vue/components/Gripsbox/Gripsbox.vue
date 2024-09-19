@@ -154,10 +154,10 @@
               <v-card-text> {{ t('delete_confirmation_message', 'Are you sure you want to delete this item?') }} </v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn color="green darken-1" text @click="deleteGripsbox(deleteId)">
+                <v-btn color="green darken-1"  @click="deleteGripsbox(deleteId)">
                   {{ t('yes', 'Yes') }}
                 </v-btn>
-                <v-btn color="red darken-1" text @click="confirmDeleteDialog = false">
+                <v-btn color="red darken-1"  @click="confirmDeleteDialog = false">
                   {{ t('no', 'No') }}
                 </v-btn>
               </v-card-actions>
@@ -206,6 +206,11 @@ const uniqueTags = computed(() => {
 const selectTag = (tag) => {
   selectedTag.value = tag;
   filterGripsBoxItems();
+};
+
+const removeTag = (file, tag) => {
+  const index = file.tags.indexOf(tag);
+  if (index >= 0) file.tags.splice(index, 1);
 };
 
 const filterGripsBoxItems = () => {
