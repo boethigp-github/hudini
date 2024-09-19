@@ -18,6 +18,21 @@ Brown Paper style from goldblog.com.ua (c) Zaripov Yura <yur4ik7@ukr.net>
     color: #ffffff;
 
 }
+
+.hljs-attr {
+    color: #d660f6;
+
+}
+
+.hljs-doctag {
+    color: #707070;
+
+}
+
+.hljs-subst {
+    color: #9ab571;
+
+}
 .hljs-keyword,
 .hljs-selector-tag,
 .hljs-literal {

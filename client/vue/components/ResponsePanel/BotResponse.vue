@@ -85,7 +85,8 @@ export default {
     watchEffect(async () => {
       const content = props.contextDataItem?.completion?.choices[0]?.message?.content;
       if (content) {
-        processedContent.value = await processToolCalling(content);
+        processedContent.value = props.contextDataItem?.completion?.choices[0]?.message?.content;
+        //processedContent.value = await processToolCalling(content);
       }
     });
 

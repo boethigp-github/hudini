@@ -496,3 +496,52 @@ export const logout = async () => {
         throw error;
     }
 };
+
+/**
+ * Fetches Gripsbox data from the server.
+ * @returns {Promise<Object>} A promise that resolves to the Gripsbox data.
+ */
+export const getGripsBox = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/gripsbox`, {
+            credentials: 'include', // Ensure session cookies are sent
+            method: 'GET',
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching Gripsbox data:', error);
+        throw error;
+    }
+};
+
+
+/**
+ * Updates the active status of a gripsbox item.
+ * @param {number} id - The ID of the gripsbox item.
+ * @param {boolean} active - The new active status.
+ * @returns {Promise<Object>} - The server response.
+ */
+export const updateGripsBoxActiveStatus = async (id, active) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/gripsbox/${id}/active`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ active }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error updating gripsbox active status:', error);
+    throw error;
+  }
+};

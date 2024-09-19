@@ -1,107 +1,77 @@
 <template>
   <div>
-    <v-btn
-      class="contextmanager-opener"
-      icon="mdi-head-snowflake"
-      color="primary"
-      size="small"
-      elevation="2"
-      :title="t('open_context_manager', 'Hudinis Brain')"
-      @click="isModalOpen = true"
-    ></v-btn>
+    <v-btn class="contextmanager-opener" icon="mdi-head-snowflake" color="primary" size="small" elevation="2"
+           :title="t('open_context_manager', 'Hudinis Brain')" @click="isModalOpen = true">
+    </v-btn>
 
-    <v-dialog v-model="isModalOpen" max-width="90%">
+    <v-dialog height="95%" v-model="isModalOpen">
       <v-card>
-        <v-card-title>
-          {{ t('hudinis_gripsbox', 'Hudinis Gripsbox') }}
-        </v-card-title>
+        <v-card-title> {{ t('hudinis_gripsbox', 'Hudinis Gripsbox') }}</v-card-title>
         <v-card-text>
-          <v-file-input
-            v-model="files"
-            counter
-            multiple
-            show-size
-            :label="t('upload_files', 'Upload Files')"
-            @change="handleFileUpload"
-          ></v-file-input>
-          <v-list>
-            <v-list-item v-for="(file, index) in uploadedFiles" :key="index">
-              <v-row align="center" no-gutters>
-                <v-col cols="12" sm="3" md="2">
-                  <v-list-item-title class="text-truncate">
-                    <v-icon start icon="mdi-file" size="small"></v-icon>
-                    {{ file.name }}
-                  </v-list-item-title>
-                  <v-list-item-subtitle class="text-truncate">{{ file.size }} bytes</v-list-item-subtitle>
-                </v-col>
-                <v-col cols="12" sm="2" md="4">
-                  <v-combobox
-                    v-model="file.tags"
-                    :items="availableTags"
-                    chips
-                    closable-chips
-                    multiple
-                    :label="t('assign_tags', 'Tags')"
-                    prepend-icon="mdi-tag-multiple"
-                    density="compact"
-                    hide-details
-                    class="tag-selector"
+          <!-- File input and other stuff -->
+          <v-file-input v-model="files" counter multiple show-size :label="t('upload_files', 'Upload Files')"
+                        @change="handleFileUpload">
+          </v-file-input>
+
+          <!-- Chip-based Navigation -->
+          <v-container max-width="90%" :style="{ textAlign: 'left', padding: '0', margin: 0, marginLeft: '35px' }">
+            <v-row>
+              <v-col cols="12" md="10" sm="12" style="text-align: left">
+                <v-chip-group
+                  v-model="selectedTag"
+                  class="chip-navigation"
+                  column
+                  multiple
+                >
+                  <v-chip
+                    v-for="(tag, index) in uniqueTags"
+                    :key="index"
+                    class="ma-1"
+                    size="small"
+                    :color="selectedTag === tag ? 'primary' : ''"
+                    @click="selectTag(tag)"
                   >
-                    <template v-slot:chip="{ props, item }">
-                      <v-chip
-                        v-bind="props"
-                        :text="item.raw"
-                        size="x-small"
-                        @click:close="removeTag(file, item.raw)"
-                      ></v-chip>
-                    </template>
-                  </v-combobox>
-                </v-col>
-                <v-col cols="12" sm="3" md="3" style="padding:5px">
-                  <v-combobox
-                    v-model="file.selectedModels"
-                    :items="modelsStore.models"
-                    item-title="id"
-                    item-value="id"
-                    :label="t('select_model_placeholder', 'Select one or more models')"
-                    chips
-                    multiple
-                    clearable
-                    density="compact"
-                    hide-details
-                    class="model-selector"
-                    @update:modelValue="updateModels(file)"
-                  >
-                    <template v-slot:chip="{ props, item }">
-                      <v-chip
-                        v-bind="props"
-                        :text="item.raw.id"
-                        size="x-small"
-                      ></v-chip>
-                    </template>
-                  </v-combobox>
-                </v-col>
-                <v-col cols="12" sm="2" md="2" class="text-sm-right">
-                  <v-switch
-                    class="active-file"
-                    v-model="file.active"
-                    :label="file.active ? t('active', 'Active') : t('inactive', 'Inactive')"
-                    @change="updateFileContext(file)"
-                    hide-details
-                  ></v-switch>
-                </v-col>
-              </v-row>
-            </v-list-item>
-          </v-list>
+                    {{ tag }}
+                  </v-chip>
+                </v-chip-group>
+              </v-col>
+              <v-col cols="2" md="2" sm="0">
+                <!-- Reset Filter Button -->
+                <v-btn
+                  v-if="selectedTag"
+                  color="error"
+                  @click="resetFilter"
+                >
+                  {{ t('reset_filter', 'Reset Filter') }}
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-container>
+
+          <!-- Render GripsBoxItems with DataTable -->
+          <v-data-table :items="filteredGripsBoxItems" item-value="id" density="compact">
+            <template v-slot:item.models="{ item }">
+              <v-chip-group multiple column>
+                <v-chip v-for="(model, index) in item.models" :key="index" size="x-small" class="ma-1">{{ model }}</v-chip>
+              </v-chip-group>
+            </template>
+            <template v-slot:item.tags="{ item }">
+              <v-chip-group multiple column>
+                <v-chip v-for="(tag, index) in item.tags" :key="index" size="x-small" class="ma-1">{{ tag }}</v-chip>
+              </v-chip-group>
+            </template>
+            <template v-slot:item.active="{ item }">
+              <v-switch hide-details
+                v-model="item.active"
+                @change="updateActiveStatus(item.id, item.active)"
+              ></v-switch>
+            </template>
+          </v-data-table>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn v-if="hasNewDocuments" color="primary" @click="saveAndUpload">
-            {{ t('save', 'Save') }}
-          </v-btn>
-          <v-btn color="secondary" @click="isModalOpen = false">
-            {{ t('close', 'Close') }}
-          </v-btn>
+          <v-btn v-if="hasNewDocuments" color="primary" @click="saveAndUpload"> {{ t('save', 'Save') }}</v-btn>
+          <v-btn color="secondary" @click="isModalOpen = false"> {{ t('close', 'Close') }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -109,20 +79,54 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted} from 'vue';
-import {useI18n} from 'vue-i18n';
-import {postToGripsbox} from '@/vue/services/api.js';
-import {useModelsStore} from '@/vue/stores';
+import { ref, computed, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { postToGripsbox, getGripsBox, updateGripsBoxActiveStatus } from '@/vue/services/api.js';
+import { useModelsStore } from '@/vue/stores';
+import { filterModels, loadModels } from "@/vue/services/models.js";
 
-const {t} = useI18n();
-const modelsStore = useModelsStore();
+const { t } = useI18n();
 const isModalOpen = ref(false);
 const files = ref([]);
 const uploadedFiles = ref([]);
 const availableTags = ref(['Work', 'Personal', 'Project A', 'Project B', 'Confidential', 'Public']);
 const newDocuments = ref([]);
-
 const hasNewDocuments = computed(() => newDocuments.value.length > 0);
+
+const gripsBoxItems = ref([]);
+const selectedTag = ref(null);
+const filteredGripsBoxItems = ref([]);
+
+// Unique tags from gripsBoxItems
+const uniqueTags = computed(() => {
+  const tagsSet = new Set();
+  gripsBoxItems.value.forEach(item => {
+    item.tags.forEach(tag => tagsSet.add(tag));
+  });
+  return Array.from(tagsSet);
+});
+
+// Handle tag selection and filtering
+const selectTag = (tag) => {
+  selectedTag.value = tag;
+  filterGripsBoxItems();
+};
+
+const filterGripsBoxItems = () => {
+  if (!selectedTag.value) {
+    filteredGripsBoxItems.value = gripsBoxItems.value;
+  } else {
+    filteredGripsBoxItems.value = gripsBoxItems.value.filter(item =>
+      item.tags.includes(selectedTag.value)
+    );
+  }
+};
+
+// Reset filter functionality
+const resetFilter = () => {
+  selectedTag.value = null;
+  filteredGripsBoxItems.value = gripsBoxItems.value;
+};
 
 const handleFileUpload = () => {
   newDocuments.value = files.value.map(file => ({
@@ -156,15 +160,13 @@ const uploadSingleFile = async (file) => {
   formData.append('type', file.type);
   formData.append('active', file.active);
   formData.append('tags', JSON.stringify(file.tags));
-  formData.append('models', JSON.stringify(file.selectedModels));
-
+  formData.append('models', JSON.stringify(file.selectedModels.map(item => item.id)));
   return await postToGripsbox(formData);
 };
 
 const saveAndUpload = async () => {
   let successCount = 0;
   let errorCount = 0;
-
   for (const file of newDocuments.value) {
     try {
       const result = await uploadSingleFile(file);
@@ -184,7 +186,6 @@ const saveAndUpload = async () => {
       }
     }));
   }
-
   if (errorCount > 0) {
     window.dispatchEvent(new CustomEvent('show-message', {
       detail: {
@@ -200,15 +201,48 @@ const saveAndUpload = async () => {
   }
 };
 
+const updateActiveStatus = async (id, active) => {
+  try {
+    await updateGripsBoxActiveStatus(id, active);
+    console.log(`Active status for item ${id} updated to ${active}`);
+  } catch (error) {
+    console.error('Failed to update active status:', error);
+  }
+};
+
+const modelsStore = useModelsStore();
+const models = ref([]);
+const filteredModels = ref([]);
+const selectedCategory = ref('');
+
+const loadAndFilterModels = async () => {
+  await modelsStore.loadFromStorage();
+  models.value = await loadModels();
+  onCategoryChange(selectedCategory.value);
+};
+
+const onCategoryChange = (category) => {
+  filteredModels.value = filterModels(models.value, category);
+};
+
 const updateModels = (file) => {
   console.log(`Updated selected models for ${file.name}:`, file.selectedModels);
 };
 
 onMounted(async () => {
-  await modelsStore.loadFromStorage();
-  if (modelsStore.loadModels) {
-    await modelsStore.loadModels();
-  }
+  loadAndFilterModels();
+  getGripsBox().then(response => {
+    gripsBoxItems.value = response.map(item => ({
+      id: item.id,
+      name: item.name,
+      size: item.size,
+      active: item.active,
+      tags: item.tags,
+      models: item.models,
+      created: item.created
+    }));
+    filteredGripsBoxItems.value = gripsBoxItems.value;
+  });
 });
 </script>
 
@@ -232,5 +266,13 @@ onMounted(async () => {
 
 .active-file {
   margin-left: 10px;
+}
+
+/* Chip-based Navigation */
+.chip-navigation {
+  width: 60%;
+  height: 100px;
+  margin-bottom: 20px;
+  overflow-x: auto;
 }
 </style>
