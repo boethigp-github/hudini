@@ -285,6 +285,7 @@ const uploadSingleFile = async (file) => {
 const saveAndUpload = async () => {
   let successCount = 0;
   let errorCount = 0;
+
   for (const file of newDocuments.value) {
     try {
       const result = await uploadSingleFile(file);
@@ -313,10 +314,13 @@ const saveAndUpload = async () => {
     }));
   }
 
+  // Clear documents and close modal if all files uploaded successfully
   if (successCount > 0 && errorCount === 0) {
     newDocuments.value = [];
-    isModalOpen.value = false;
+    uploadedFiles.value=[]
+    files.value=null
   }
+  loadGripspbox();
 };
 
 const modelsStore = useModelsStore();
@@ -338,8 +342,7 @@ const updateModels = (file) => {
   console.log(`Updated selected models for ${file.name}:`, file.selectedModels);
 };
 
-onMounted(async () => {
-  loadAndFilterModels();
+async function loadGripspbox() {
   const response = await getGripsBox();
   gripsBoxItems.value = response.map(item => ({
     id: item.id,
@@ -352,6 +355,11 @@ onMounted(async () => {
     actions: []
   }));
   filteredGripsBoxItems.value = gripsBoxItems.value;
+}
+
+onMounted(async () => {
+  loadAndFilterModels();
+  loadGripspbox();
 });
 </script>
 
