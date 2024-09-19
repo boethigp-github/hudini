@@ -15,6 +15,8 @@ from server.app.utils.auth import auth
 from server.app.db.get_db import get_db
 from server.app.models.gripsbox.gripsbox_post_request import GripsboxPostRequestModel
 
+from pydantic import BaseModel
+
 # Set up logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -34,6 +36,29 @@ async def get_gripsbox(db: AsyncSession = Depends(get_db),  _: str = Depends(aut
         return gripsbox_list
     except Exception as e:
         logger.error(f"Error retrieving gripsbox: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
+
+
+class GripsboxActiveUpdateModel(BaseModel):
+    active: bool
+
+@router.patch("/gripsbox/{id}/active", response_model=dict, status_code=status.HTTP_200_OK, tags=["gripsbox"])
+async def update_gripsbox_active_status(id: UUID, update_data: GripsboxActiveUpdateModel,
+                                        db: AsyncSession = Depends(get_db), _: str = Depends(auth)):
+    try:
+        gripsbox = await db.get(Gripsbox, id)
+        if not gripsbox:
+            logger.warning(f"Gripsbox not found: id={id}")
+            raise HTTPException(status_code=404, detail=f"Gripsbox with id {id} not found")
+
+        gripsbox.active = update_data.active
+        await db.commit()
+        logger.info(f"Gripsbox active status updated: id={id}, active={update_data.active}")
+
+        return {"status": "Active status updated successfully"}
+
+    except Exception as e:
+        logger.error(f"Error updating gripsbox active status: {str(e)}")
         raise HTTPException(status_code=500, detail=f"An unexpected error occurred: {str(e)}")
 
 
