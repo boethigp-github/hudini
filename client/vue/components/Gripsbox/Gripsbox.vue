@@ -22,6 +22,86 @@
             :label="t('upload_files', 'Upload Files')"
             @change="handleFileUpload"
           ></v-file-input>
+            <v-list>
+            <v-list-item v-for="(file, index) in uploadedFiles" :key="index">
+              <v-row align="center" no-gutters>
+                <v-col cols="12" sm="3" md="2">
+                  <v-list-item-title class="text-truncate">
+                    <v-icon start icon="mdi-file" size="small"></v-icon>
+                    {{ file.name }}
+                  </v-list-item-title>
+                  <v-list-item-subtitle class="text-truncate">{{ file.size }} bytes</v-list-item-subtitle>
+                </v-col>
+                <v-col cols="12" sm="2" md="4">
+                  <v-combobox
+                    v-model="file.tags"
+                    :items="availableTags"
+                    chips
+                    closable-chips
+                    multiple
+                    :placeholder="t('assign_tags', 'Tags')"
+                    prepend-icon="mdi-tag-multiple"
+                    density="compact"
+                    hide-details
+                    class="tag-selector"
+                  >
+                    <template v-slot:chip="{ props, item }">
+                      <v-chip
+                        v-bind="props"
+                        :text="item.raw"
+                        size="x-small"
+                        @click:close="removeTag(file, item.raw)"
+                      ></v-chip>
+                    </template>
+                  </v-combobox>
+                </v-col>
+                <v-col cols="12" sm="3" md="3" style="padding:5px">
+                  <v-combobox
+                    v-model="file.selectedModels"
+                    :items="filteredModels"
+                    item-title="id"
+                    item-value="id"
+                    :placeholder="t('restrict_to_models', 'Restrict to models')"
+                    chips
+                    multiple
+                    clearable
+                    closable-chips
+                    density="compact"
+                    hide-details
+                    class="model-selector"
+                    @update:modelValue="updateModels(file)"
+                  >
+                    <template v-slot:chip="{ props, item }">
+                      <v-chip
+                        v-bind="props"
+                        :text="item.raw.id"
+                        size="x-small"
+                      ></v-chip>
+                    </template>
+                  </v-combobox>
+                </v-col>
+                <v-col cols="12" sm="2" md="2" class="text-sm-right">
+                  <v-switch
+                    class="active-file"
+                    v-model="file.active"
+                    :label="file.active ? t('active', 'Active') : t('inactive', 'Inactive')"
+                    @change="updateFileContext(file)"
+                    hide-details
+                  ></v-switch>
+                </v-col>
+              </v-row>
+              <v-row >
+                 <v-col cols="10" sm="0" md="10" class="text-sm-right">
+                  </v-col>
+                  <v-col cols="2" sm="2" md="2" class="text-sm-right">
+                      <v-btn v-if="hasNewDocuments"  color="primary" @click="saveAndUpload"> {{ t('save', 'Save') }} </v-btn>
+                  </v-col>
+
+              </v-row>
+
+            </v-list-item>
+          </v-list>
+
 
           <!-- Chip-based Navigation -->
           <v-container max-width="90%" :style="{ textAlign: 'left', padding: '0', margin: 0, marginLeft: '35px' }">
@@ -87,7 +167,6 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn v-if="hasNewDocuments" color="primary" @click="saveAndUpload"> {{ t('save', 'Save') }} </v-btn>
           <v-btn color="secondary" @click="isModalOpen = false"> {{ t('close', 'Close') }} </v-btn>
         </v-card-actions>
       </v-card>

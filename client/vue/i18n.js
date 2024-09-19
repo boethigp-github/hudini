@@ -86,6 +86,9 @@ const messages = {
         logout: 'Logout',
         open_model_selection: 'Open Model Selection',
         selected_models: 'Selected Models',
+        delete_confirmation_message: "Are you sure you want to proceed with this action?",
+        yes: "Yes",
+        no: "No"
 
     },
     de: {
@@ -173,6 +176,9 @@ const messages = {
         logout: "Abmelden",
         open_model_selection: 'Modellauswahl öffnen',
         selected_models: 'Ausgewählte Modelle',
+        delete_confirmation_message: "Sind Sie sicher, dass Sie diese Aktion durchführen möchten?",
+        yes: "Ja",
+        no: "Nein"
 
     },
     fr: {
@@ -260,6 +266,9 @@ const messages = {
         logout: "Déconnexion",
         open_model_selection: 'Ouvrir la sélection de modèle',
         selected_models: 'Modèles sélectionnés',
+        delete_confirmation_message: "Êtes-vous sûr de vouloir procéder à cette action ?",
+        yes: "Oui",
+        no: "Non"
 
     },
     ru: {
@@ -347,6 +356,9 @@ const messages = {
         logout: "Выйти",
         open_model_selection: 'Открыть выбор модели',
         selected_models: 'Выбранные модели',
+        delete_confirmation_message: "Вы уверены, что хотите продолжить это действие?",
+        yes: "Да",
+        no: "Нет"
     },
     zh: {
         hudini_title: 'Hudini - CPU 魔术师在 SLM',
@@ -431,6 +443,9 @@ const messages = {
         logout: '退出登录',
         open_model_selection: '打开模型选择',
         selected_models: '已选择的模型',
+        delete_confirmation_message: "您确定要执行此操作吗？",
+        yes: "是",
+        no: "否"
     },
     // Add other languages as needed
 };
