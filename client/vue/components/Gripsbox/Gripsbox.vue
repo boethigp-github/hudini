@@ -22,7 +22,7 @@
             :label="t('upload_files', 'Upload Files')"
             @change="handleFileUpload"
           ></v-file-input>
-            <v-list>
+          <v-list>
             <v-list-item v-for="(file, index) in uploadedFiles" :key="index">
               <v-row align="center" no-gutters>
                 <v-col cols="12" sm="3" md="2">
@@ -90,18 +90,17 @@
                   ></v-switch>
                 </v-col>
               </v-row>
-              <v-row >
-                 <v-col cols="10" sm="0" md="10" class="text-sm-right">
-                  </v-col>
-                  <v-col cols="2" sm="2" md="2" class="text-sm-right">
-                      <v-btn v-if="hasNewDocuments"  color="primary" @click="saveAndUpload"> {{ t('save', 'Save') }} </v-btn>
-                  </v-col>
-
-              </v-row>
 
             </v-list-item>
           </v-list>
-
+          <v-container>
+             <v-row>
+                <v-col cols="11" sm="0" md="10" class="text-sm-right"></v-col>
+                <v-col cols="1" sm="2" md="2" class="text-sm-right">
+                  <v-btn v-if="hasNewDocuments" color="primary" @click="saveAndUpload"> {{ t('save', 'Save') }} </v-btn>
+                </v-col>
+              </v-row>
+          </v-container>
 
           <!-- Chip-based Navigation -->
           <v-container max-width="90%" :style="{ textAlign: 'left', padding: '0', margin: 0, marginLeft: '35px' }">
@@ -210,13 +209,15 @@ const selectTag = (tag) => {
 };
 
 const filterGripsBoxItems = () => {
-  if (!selectedTag.value) {
-    filteredGripsBoxItems.value = gripsBoxItems.value;
-  } else {
-    filteredGripsBoxItems.value = gripsBoxItems.value.filter(item =>
-      item.tags.includes(selectedTag.value)
-    );
-  }
+  filteredGripsBoxItems.value = selectedTag.value
+    ? gripsBoxItems.value.filter(item => item.tags.includes(selectedTag.value))
+    : gripsBoxItems.value;
+};
+
+const updateFileContext = (file) => {
+  console.log(`File ${file.name} is now ${file.active ? 'active' : 'inactive'}`);
+  console.log(`Tags for ${file.name}:`, file.tags);
+  console.log(`Selected models for ${file.name}:`, file.selectedModels);
 };
 
 // Reset filter functionality
@@ -235,7 +236,7 @@ const handleFileUpload = () => {
     tags: [],
     selectedModels: []
   }));
-  uploadedFiles.value = [...uploadedFiles.value, ...newDocuments.value];
+  uploadedFiles.value.push(...newDocuments.value);
 };
 
 const updateActiveStatus = async (id, active) => {
@@ -334,19 +335,18 @@ const updateModels = (file) => {
 
 onMounted(async () => {
   loadAndFilterModels();
-  getGripsBox().then(response => {
-    gripsBoxItems.value = response.map(item => ({
-      id: item.id,
-      name: item.name,
-      size: item.size,
-      active: item.active,
-      tags: item.tags,
-      models: item.models,
-      created: item.created,
-      actions: []
-    }));
-    filteredGripsBoxItems.value = gripsBoxItems.value;
-  });
+  const response = await getGripsBox();
+  gripsBoxItems.value = response.map(item => ({
+    id: item.id,
+    name: item.name,
+    size: item.size,
+    active: item.active,
+    tags: item.tags,
+    models: item.models,
+    created: item.created,
+    actions: []
+  }));
+  filteredGripsBoxItems.value = gripsBoxItems.value;
 });
 </script>
 

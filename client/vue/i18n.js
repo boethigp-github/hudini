@@ -86,9 +86,10 @@ const messages = {
         logout: 'Logout',
         open_model_selection: 'Open Model Selection',
         selected_models: 'Selected Models',
-        delete_confirmation_message: "Are you sure you want to proceed with this action?",
-        yes: "Yes",
-        no: "No"
+        reset_filter: "Reset Filter",
+        files_uploaded_successfully: "{count} file(s) uploaded successfully.",
+        restrict_to_models: "Restrict to models"
+
 
     },
     de: {
@@ -178,7 +179,12 @@ const messages = {
         selected_models: 'Ausgewählte Modelle',
         delete_confirmation_message: "Sind Sie sicher, dass Sie diese Aktion durchführen möchten?",
         yes: "Ja",
-        no: "Nein"
+        no: "Nein",
+        files_uploaded_successfully: "{count} Datei(en) erfolgreich hochgeladen.",
+        reset_filter: "Filter zurücksetzen",
+        restrict_to_models: "Einschränken auf Modelle"
+
+
 
     },
     fr: {
@@ -268,7 +274,12 @@ const messages = {
         selected_models: 'Modèles sélectionnés',
         delete_confirmation_message: "Êtes-vous sûr de vouloir procéder à cette action ?",
         yes: "Oui",
-        no: "Non"
+        no: "Non",
+        reset_filter: "Réinitialiser le filtre",
+        files_uploaded_successfully: "{count} fichier(s) téléchargé(s) avec succès.",
+        restrict_to_models: "Restreindre aux modèles"
+
+
 
     },
     ru: {
@@ -358,7 +369,10 @@ const messages = {
         selected_models: 'Выбранные модели',
         delete_confirmation_message: "Вы уверены, что хотите продолжить это действие?",
         yes: "Да",
-        no: "Нет"
+        no: "Нет",
+        files_uploaded_successfully: "{count} файл(ов) успешно загружен(о).",
+        reset_filter: "Сбросить фильтр",
+        restrict_to_models: "Ограничить по моделям"
     },
     zh: {
         hudini_title: 'Hudini - CPU 魔术师在 SLM',
@@ -445,7 +459,10 @@ const messages = {
         selected_models: '已选择的模型',
         delete_confirmation_message: "您确定要执行此操作吗？",
         yes: "是",
-        no: "否"
+        no: "否",
+        reset_filter: "重置过滤器",
+        files_uploaded_successfully: "成功上传 {count} 个文件。",
+        restrict_to_models: "限制为模型"
     },
     // Add other languages as needed
 };
