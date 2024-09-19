@@ -545,3 +545,27 @@ export const updateGripsBoxActiveStatus = async (id, active) => {
     throw error;
   }
 };
+
+/**
+ * Deletes a gripsbox item by ID.
+ * @param {number} id - The ID of the gripsbox item to delete.
+ * @returns {Promise<Object>} - The server response.
+ */
+export const deleteGripsBoxItem = async (id) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/gripsbox/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',  // Ensure session cookies are sent
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error deleting gripsbox item:', error);
+    throw error;
+  }
+};
+

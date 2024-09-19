@@ -1,28 +1,33 @@
 <template>
   <div>
-    <v-btn class="contextmanager-opener" icon="mdi-head-snowflake" color="primary" size="small" elevation="2"
-           :title="t('open_context_manager', 'Hudinis Brain')" @click="isModalOpen = true">
-    </v-btn>
+    <v-btn
+      class="contextmanager-opener"
+      icon="mdi-head-snowflake"
+      color="primary"
+      size="small"
+      elevation="2"
+      :title="t('open_context_manager', 'Hudinis Brain')"
+      @click="isModalOpen = true"
+    ></v-btn>
 
     <v-dialog height="95%" v-model="isModalOpen">
       <v-card>
-        <v-card-title> {{ t('hudinis_gripsbox', 'Hudinis Gripsbox') }}</v-card-title>
+        <v-card-title> {{ t('hudinis_gripsbox', 'Hudinis Gripsbox') }} </v-card-title>
         <v-card-text>
-          <!-- File input and other stuff -->
-          <v-file-input v-model="files" counter multiple show-size :label="t('upload_files', 'Upload Files')"
-                        @change="handleFileUpload">
-          </v-file-input>
+          <v-file-input
+            v-model="files"
+            counter
+            multiple
+            show-size
+            :label="t('upload_files', 'Upload Files')"
+            @change="handleFileUpload"
+          ></v-file-input>
 
           <!-- Chip-based Navigation -->
           <v-container max-width="90%" :style="{ textAlign: 'left', padding: '0', margin: 0, marginLeft: '35px' }">
             <v-row>
               <v-col cols="12" md="10" sm="12" style="text-align: left">
-                <v-chip-group
-                  v-model="selectedTag"
-                  class="chip-navigation"
-                  column
-                  multiple
-                >
+                <v-chip-group v-model="selectedTag" class="chip-navigation" column multiple>
                   <v-chip
                     v-for="(tag, index) in uniqueTags"
                     :key="index"
@@ -36,12 +41,7 @@
                 </v-chip-group>
               </v-col>
               <v-col cols="2" md="2" sm="0">
-                <!-- Reset Filter Button -->
-                <v-btn
-                  v-if="selectedTag"
-                  color="error"
-                  @click="resetFilter"
-                >
+                <v-btn v-if="selectedTag" color="error" @click="resetFilter">
                   {{ t('reset_filter', 'Reset Filter') }}
                 </v-btn>
               </v-col>
@@ -61,17 +61,34 @@
               </v-chip-group>
             </template>
             <template v-slot:item.active="{ item }">
-              <v-switch hide-details
-                v-model="item.active"
-                @change="updateActiveStatus(item.id, item.active)"
-              ></v-switch>
+              <v-switch hide-details v-model="item.active" @change="updateActiveStatus(item.id, item.active)"></v-switch>
+            </template>
+            <template v-slot:item.actions="{ item }">
+              <v-icon small @click="confirmDelete(item.id)" color="red">mdi-delete</v-icon>
             </template>
           </v-data-table>
+
+          <!-- Confirm Delete Dialog -->
+          <v-dialog v-model="confirmDeleteDialog" width="400">
+            <v-card>
+              <v-card-title class="headline"> {{ t('confirm_delete', 'Confirm Delete') }} </v-card-title>
+              <v-card-text> {{ t('delete_confirmation_message', 'Are you sure you want to delete this item?') }} </v-card-text>
+              <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn color="green darken-1" text @click="deleteGripsbox(deleteId)">
+                  {{ t('yes', 'Yes') }}
+                </v-btn>
+                <v-btn color="red darken-1" text @click="confirmDeleteDialog = false">
+                  {{ t('no', 'No') }}
+                </v-btn>
+              </v-card-actions>
+            </v-card>
+          </v-dialog>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn v-if="hasNewDocuments" color="primary" @click="saveAndUpload"> {{ t('save', 'Save') }}</v-btn>
-          <v-btn color="secondary" @click="isModalOpen = false"> {{ t('close', 'Close') }}</v-btn>
+          <v-btn v-if="hasNewDocuments" color="primary" @click="saveAndUpload"> {{ t('save', 'Save') }} </v-btn>
+          <v-btn color="secondary" @click="isModalOpen = false"> {{ t('close', 'Close') }} </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -81,7 +98,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { postToGripsbox, getGripsBox, updateGripsBoxActiveStatus } from '@/vue/services/api.js';
+import { postToGripsbox, getGripsBox, updateGripsBoxActiveStatus, deleteGripsBoxItem } from '@/vue/services/api.js';
 import { useModelsStore } from '@/vue/stores';
 import { filterModels, loadModels } from "@/vue/services/models.js";
 
@@ -92,10 +109,11 @@ const uploadedFiles = ref([]);
 const availableTags = ref(['Work', 'Personal', 'Project A', 'Project B', 'Confidential', 'Public']);
 const newDocuments = ref([]);
 const hasNewDocuments = computed(() => newDocuments.value.length > 0);
-
 const gripsBoxItems = ref([]);
 const selectedTag = ref(null);
 const filteredGripsBoxItems = ref([]);
+const confirmDeleteDialog = ref(false);
+const deleteId = ref(null);
 
 // Unique tags from gripsBoxItems
 const uniqueTags = computed(() => {
@@ -141,15 +159,30 @@ const handleFileUpload = () => {
   uploadedFiles.value = [...uploadedFiles.value, ...newDocuments.value];
 };
 
-const updateFileContext = (file) => {
-  console.log(`File ${file.name} is now ${file.active ? 'active' : 'inactive'}`);
-  console.log(`Tags for ${file.name}:`, file.tags);
-  console.log(`Selected models for ${file.name}:`, file.selectedModels);
+const updateActiveStatus = async (id, active) => {
+  try {
+    await updateGripsBoxActiveStatus(id, active);
+    console.log(`Active status for item ${id} updated to ${active}`);
+  } catch (error) {
+    console.error('Failed to update active status:', error);
+  }
 };
 
-const removeTag = (file, tag) => {
-  const index = file.tags.indexOf(tag);
-  if (index >= 0) file.tags.splice(index, 1);
+const confirmDelete = (id) => {
+  deleteId.value = id;
+  confirmDeleteDialog.value = true;
+};
+
+const deleteGripsbox = async (id) => {
+  try {
+    await deleteGripsBoxItem(id);
+    filteredGripsBoxItems.value = filteredGripsBoxItems.value.filter(item => item.id !== id);
+    console.log(`Item ${id} deleted successfully.`);
+  } catch (error) {
+    console.error('Failed to delete gripsbox:', error);
+  } finally {
+    confirmDeleteDialog.value = false; // Close the dialog
+  }
 };
 
 const uploadSingleFile = async (file) => {
@@ -201,15 +234,6 @@ const saveAndUpload = async () => {
   }
 };
 
-const updateActiveStatus = async (id, active) => {
-  try {
-    await updateGripsBoxActiveStatus(id, active);
-    console.log(`Active status for item ${id} updated to ${active}`);
-  } catch (error) {
-    console.error('Failed to update active status:', error);
-  }
-};
-
 const modelsStore = useModelsStore();
 const models = ref([]);
 const filteredModels = ref([]);
@@ -239,7 +263,8 @@ onMounted(async () => {
       active: item.active,
       tags: item.tags,
       models: item.models,
-      created: item.created
+      created: item.created,
+      actions: []
     }));
     filteredGripsBoxItems.value = gripsBoxItems.value;
   });
