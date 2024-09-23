@@ -1,22 +1,25 @@
 import unittest
 import requests
-import json
-import random
+import uuid
+import asyncio
 from server.app.config.settings import Settings
 from server.app.models.generation.generation_request import GenerationRequest, ModelConfig, ModelCategory, Platform
-from server.app.models.generation.success_generation_model import SuccessGenerationModel
-import uuid
-class TestGenerateAndStream(unittest.TestCase):
+from server.tests.test_abstract import TestAbstract
 
+
+class TestGenerateAndStream(TestAbstract):
     @classmethod
     def setUpClass(cls):
-        # Initialize settings
+        """Synchronous setup, but manually run async initialization."""
         cls.settings = Settings()
-        # Set SERVER_URL from loaded configuration
         cls.SERVER_URL = cls.settings.get("default").get("SERVER_URL")
+        cls.APP_DEFAULT_ADMIN_USERNAME = cls.settings.get("default").get("APP_DEFAULT_ADMIN_USERNAME")
+
+        # Manually run async initialization using asyncio.run()
+        asyncio.run(cls.async_init())
 
     def test_stream_success(self):
-        """Test the /stream/openai endpoint for a successful streaming response."""
+        """Test the /stream/openai endpoint for a successful streaming response with admin authorization."""
         model_config = ModelConfig(
             id='gpt-3.5-turbo',
             platform=Platform.OPENAI,
@@ -36,9 +39,10 @@ class TestGenerateAndStream(unittest.TestCase):
         ).model_dump_json()  # Serialize payload to JSON string
 
         try:
+            # Send a POST request to the /stream/openai endpoint with admin authorization (API key in URL)
             response = requests.post(
-                f"{self.SERVER_URL}/stream/openai",
-                data=stream_payload,  # Pass the JSON string
+                f"{self.SERVER_URL}/stream/openai?api_key={self.api_key}",  # Pass api_key as query parameter
+                data=stream_payload,
                 headers={"Content-Type": "application/json"},
                 stream=True,
                 timeout=10
@@ -46,11 +50,8 @@ class TestGenerateAndStream(unittest.TestCase):
             self.assertEqual(response.status_code, 200)  # Expect 200 OK
             self.assertEqual(response.headers['Content-Type'], 'application/json')
 
-
         except requests.RequestException as e:
             self.fail(f"Request failed: {str(e)}")
-
-
 
 
 if __name__ == '__main__':

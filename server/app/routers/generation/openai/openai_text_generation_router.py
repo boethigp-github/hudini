@@ -2,7 +2,7 @@ import logging
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 import asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
+
 from typing import List, Any, Dict, Type, Optional
 from pydantic import BaseModel, Field
 from server.app.config.settings import Settings
@@ -16,6 +16,8 @@ from server.app.models.generation.success_generation_model import SuccessGenerat
 from sqlalchemy import select
 from server.app.models.usercontext.user_context import UserContextModel
 from server.app.utils.auth import auth
+from server.app.services.gripsbox_service import add_gripsbox_content_to_llm_context
+from server.app.models.users.user import User
 import json
 router = APIRouter()
 settings = Settings()
@@ -117,21 +119,23 @@ def validate_models_and_clients(models: List[ModelConfig], method_name: str) -> 
     return valid_models
 
 
-async def get_user_context(db: AsyncSession, thread_id: int = 1) -> str:
-    result = await db.execute(
-        select(UserContextModel)
-        .where(UserContextModel.thread_id == thread_id)
-        .order_by(UserContextModel.created.asc())
-    )
-    user_contexts = result.scalars().all()
+async def get_user_context(thread_id: int = 1) -> str:
+    async for session in get_db():  # Correctly retrieve the session from the async generator
+        result = await session.execute(
+            select(UserContextModel)
+            .where(UserContextModel.thread_id == thread_id)
+            .order_by(UserContextModel.created.asc())
+        )
+        user_contexts = result.scalars().all()
 
-    # Extract context_data and convert to string
-    context_data_strings = [json.dumps(uc.context_data) for uc in user_contexts]
+        # Extract context_data and convert to string
+        context_data_strings = [json.dumps(uc.context_data) for uc in user_contexts]
 
-    # Add "You are a helpful assistant" as the first part of the context
-    combined_context = "You are a helpful assistant. " + " ".join(context_data_strings)
+        # Combine all context data into a single string
+        combined_context = " ".join(context_data_strings)
 
-    return combined_context
+        return combined_context
+
 
 @router.post(
     "/stream/openai",
@@ -146,7 +150,20 @@ async def get_user_context(db: AsyncSession, thread_id: int = 1) -> str:
             "If the configuration is invalid or the platform is not supported, a `400 Bad Request` error is raised."
     ),
 )
-async def stream_route(request: GenerationRequest, db: AsyncSession = Depends(get_db),  _: str = Depends(auth) ):
+@router.post(
+    "/stream/openai",
+    response_model=SuccessGenerationModel,
+    tags=["generation"],
+    summary="Stream OpenAI or Anthropic Model Generation",
+    description=(
+        "This endpoint streams AI-generated content based on the provided prompt and model configurations. "
+        "It supports models from OpenAI and Anthropic platforms. "
+        "The request must specify the platform and model configuration in the `models` field. "
+        "The method specified in the `method_name` field will be invoked on the selected models. "
+        "If the configuration is invalid or the platform is not supported, a `400 Bad Request` error is raised."
+    ),
+)
+async def stream_route(request: GenerationRequest, user: User = Depends(auth)):
     """
     Stream AI-generated content based on the provided prompt and model configurations.
 
@@ -163,16 +180,23 @@ async def stream_route(request: GenerationRequest, db: AsyncSession = Depends(ge
     logger.info("=" * 50)
 
     # Fetch user context from the database
-    user_context = await get_user_context(db, thread_id=1)
+    user_context = await get_user_context(thread_id=1)
 
+    # Fetch Gripsbox content for the user
+    gripsbox_context_messages = await add_gripsbox_content_to_llm_context(user)
+
+    # Combine user context and Gripsbox content into a single context
+    combined_context = user_context + " " + " ".join([msg.content for msg in gripsbox_context_messages])
+
+    # Validate models and clients
     valid_models = validate_models_and_clients(request.models, request.method_name)
 
     async def generate():
         tasks = []
 
         for model, client, method in valid_models:
-            # Pass the context from the database as a parameter to fetch_completion
-            async_task = method(model, request.prompt, request.id, context=user_context)
+            # Pass the combined context as a parameter to fetch_completion
+            async_task = method(model, request.prompt, request.id, context=combined_context)
             task = asyncio.create_task(async_task)
             tasks.append(task)
 
@@ -188,3 +212,4 @@ async def stream_route(request: GenerationRequest, db: AsyncSession = Depends(ge
                 yield success_model.model_dump_json().encode('utf-8') + b'\n'
 
     return StreamingResponse(generate(), media_type='application/json')
+

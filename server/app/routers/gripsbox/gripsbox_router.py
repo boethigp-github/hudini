@@ -112,7 +112,6 @@ async def create_gripsbox(
     new_gripsbox = await create_gripsbox_service(
         file=file,
         gripsbox_post_data=gripsbox_data,
-        db=db,
         user=user
     )
 
