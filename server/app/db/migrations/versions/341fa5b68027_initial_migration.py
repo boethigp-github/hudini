@@ -67,17 +67,16 @@ def upgrade() -> None:
             sa.Column('size', sa.Integer(), nullable=False),
             sa.Column('type', sa.String(), nullable=False),
             sa.Column('active', sa.Boolean(), nullable=False),
-            sa.Column('user', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.uuid', ondelete='CASCADE'),
-                      nullable=False),  # Added this explicitly
             sa.Column('tags', sa.JSON(), nullable=False),
             sa.Column('models', sa.JSON(), nullable=True),
             sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'),
                       nullable=False),
             sa.Column('updated', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'),
                       nullable=False),
+            sa.ForeignKeyConstraint(['user'], ['users.uuid'], ondelete='CASCADE'),
         )
 
-    # Add other tables similarly
+    # Add other tables
     if not table_exists('prompts'):
         op.create_table(
             'prompts',
