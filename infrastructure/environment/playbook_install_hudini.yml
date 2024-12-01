@@ -87,44 +87,6 @@
       debug:
         msg: "{{ postgresql_install }}"
 
-    - name: Set PostgreSQL authentication to peer
-      lineinfile:
-        path: "{{ pg_hba_conf_path }}"
-        regexp: '^local\s+all\s+postgres\s+.*$'
-        line: 'local   all             postgres                                peer'
-        backup: yes
-      notify: Restart PostgreSQL
-
-    - name: Restart PostgreSQL to apply peer authentication
-      service:
-        name: postgresql
-        state: restarted
-
-    - name: Revert PostgreSQL authentication to md5
-      lineinfile:
-        path: "{{ pg_hba_conf_path }}"
-        regexp: '^local\s+all\s+postgres\s+.*$'
-        line: 'local   all             postgres                                md5'
-        backup: yes
-      notify: Restart PostgreSQL
-
-    - name: Restart PostgreSQL to apply md5 authentication
-      service:
-        name: postgresql
-        state: restarted
-
-    - name: Test PostgreSQL login
-      shell: |
-        psql -U postgres -h localhost -c "\conninfo"
-      register: login_test
-      failed_when: "'Connected to' not in login_test.stdout"
-      args:
-        executable: /bin/bash
-
-    - name: Log PostgreSQL login test result
-      debug:
-        msg: "PostgreSQL login test passed: {{ login_test.stdout }}"
-
     - name: Ensure PostgreSQL service is running
       service:
         name: postgresql
@@ -135,6 +97,18 @@
     - name: Log PostgreSQL service status
       debug:
         msg: "{{ postgresql_service }}"
+
+    - name: Test PostgreSQL login with password
+      shell: |
+        PGPASSWORD="{{ database_password }}" psql -U postgres -h localhost -c "\conninfo"
+      register: login_test
+      failed_when: "'Connected to' not in login_test.stdout"
+      args:
+        executable: /bin/bash
+
+    - name: Log PostgreSQL login test result
+      debug:
+        msg: "PostgreSQL login test passed: {{ login_test.stdout }}"
 
     - name: Create PostgreSQL database
       postgresql_db:
