@@ -2,80 +2,126 @@ from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
-# revision identifiers, used by Alembic.
-revision = '341fa5b68027'
+# Revision identifiers, used by Alembic
+revision = 'initial_migration'
 down_revision = None
 branch_labels = None
 depends_on = None
 
 
 def upgrade() -> None:
-    # Create the uuid-ossp extension if it doesn't exist
+    # Create the uuid-ossp extension
     op.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
+    op.execute('CREATE EXTENSION IF NOT EXISTS "pgcrypto";')
 
-    # Creating the users table first with unique constraints on username and email
+    # Users table
     op.create_table(
         'users',
-        sa.Column('uuid', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"),
-                  primary_key=True),
-        sa.Column('username', sa.VARCHAR(length=50), nullable=False, unique=True),  # Unique constraint on username
-        sa.Column('email', sa.VARCHAR(length=100), nullable=False, unique=True),  # Unique constraint on email
+        sa.Column('uuid', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"), primary_key=True),
+        sa.Column('username', sa.String(length=50), nullable=False, unique=True),
+        sa.Column('email', sa.String(length=100), nullable=False, unique=True),
         sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
         sa.Column('updated', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
         sa.Column('last_login', sa.TIMESTAMP(timezone=True), nullable=True),
+        sa.Column('password', sa.String(length=128), nullable=False),
     )
 
-    # Creating the prompts table (dependent on users)
+    op.execute("""
+    CREATE OR REPLACE FUNCTION create_api_key_for_user()
+    RETURNS TRIGGER AS $$
+    DECLARE
+        new_api_key TEXT;
+    BEGIN
+        new_api_key := encode(gen_random_bytes(32), 'hex');
+        INSERT INTO api_keys("user", key, created)
+        VALUES (NEW.uuid, new_api_key, now());
+        RETURN NEW;
+    END;
+    $$ LANGUAGE plpgsql;
+    """)
+
+    op.execute("""
+    CREATE TRIGGER trigger_create_api_key
+    AFTER INSERT ON users
+    FOR EACH ROW EXECUTE FUNCTION create_api_key_for_user();
+    """)
+
+    # API Keys table
+    op.create_table(
+        'api_keys',
+        sa.Column('id', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"), primary_key=True),
+        sa.Column('user', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.uuid', ondelete='CASCADE'), nullable=False),
+        sa.Column('key', sa.String(length=64), nullable=False),
+        sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.Column('active', sa.Boolean(), server_default=sa.text('FALSE'), nullable=False),
+    )
+    op.create_index('ix_api_keys_key', 'api_keys', ['key'])
+
+    # Gripsbox table
+    op.create_table(
+        'gripsbox',
+        sa.Column('id', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"), primary_key=True),
+        sa.Column('name', sa.String(), nullable=False),
+        sa.Column('size', sa.Integer(), nullable=False),
+        sa.Column('type', sa.String(), nullable=False),
+        sa.Column('active', sa.Boolean(), nullable=False),
+        sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.Column('updated', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.Column('user', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.uuid', ondelete='CASCADE'), nullable=False),
+        sa.Column('tags', sa.JSON(), nullable=False),
+        sa.Column('models', sa.JSON(), nullable=True),
+    )
+
+    op.execute("""
+    CREATE OR REPLACE FUNCTION update_modified_column()
+    RETURNS TRIGGER AS $$
+    BEGIN
+        NEW.updated = now();
+        RETURN NEW;
+    END;
+    $$ language 'plpgsql';
+    """)
+
+    op.execute("""
+    CREATE TRIGGER update_gripsbox_modtime
+    BEFORE UPDATE ON gripsbox
+    FOR EACH ROW EXECUTE FUNCTION update_modified_column();
+    """)
+
+    # Prompts table
     op.create_table(
         'prompts',
-        sa.Column('uuid', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"),
-                  primary_key=True,  nullable=False, unique=True),
-        sa.Column('prompt', sa.TEXT(), nullable=False),
-        sa.Column('status', sa.VARCHAR(length=50), nullable=False),
+        sa.Column('uuid', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"), primary_key=True),
+        sa.Column('prompt', sa.Text(), nullable=False),
+        sa.Column('status', sa.String(length=50), nullable=False),
         sa.Column('user', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.uuid', ondelete='CASCADE'), nullable=False),
         sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     )
 
-    # Creating the user_context table (dependent on users)
+    # User Context table
     op.create_table(
         'user_context',
-        sa.Column('uuid', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"),
-                  primary_key=True),
-        sa.Column('context_data', postgresql.JSONB(), nullable=False),
+        sa.Column('uuid', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"), primary_key=True),
+        sa.Column('context_data', sa.JSONB(), nullable=False),
         sa.Column('user', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.uuid', ondelete='CASCADE'), nullable=False),
-        sa.Column('thread_id', sa.BIGINT(), nullable=False),
+        sa.Column('thread_id', sa.BigInteger(), nullable=False),
         sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
         sa.Column('updated', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
     )
 
-    # Insert the administrator user with the current timestamp
-    op.execute(
-        """
-        INSERT INTO users (uuid, username, email, last_login)
-        VALUES ('5baab051-0c32-42cf-903d-035ec6912a91', 'administrator', 'admin@hudini.eu', CURRENT_TIMESTAMP);
-        """
-    )
-
-
-def table_exists(table_name):
-    """Helper function to check if a table exists in the database."""
-    conn = op.get_bind()
-    result = conn.execute(
-        sa.text(
-            "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name=:table_name)"
-        ),
-        {"table_name": table_name}
-    )
-    return result.scalar()
-
 
 def downgrade() -> None:
-    # Check if the tables exist before dropping them
-    if table_exists('user_context'):
-        op.drop_table('user_context')
+    # Drop tables and triggers in reverse order
+    op.drop_table('user_context')
+    op.drop_table('prompts')
 
-    if table_exists('prompts'):
-        op.drop_table('prompts')
+    op.execute("DROP TRIGGER IF EXISTS update_gripsbox_modtime ON gripsbox;")
+    op.execute("DROP FUNCTION IF EXISTS update_modified_column;")
+    op.drop_table('gripsbox')
 
-    if table_exists('users'):
-        op.drop_table('users')
+    op.drop_index('ix_api_keys_key', table_name='api_keys')
+    op.drop_table('api_keys')
+
+    op.execute("DROP TRIGGER IF EXISTS trigger_create_api_key ON users;")
+    op.execute("DROP FUNCTION IF EXISTS create_api_key_for_user;")
+    op.drop_table('users')
