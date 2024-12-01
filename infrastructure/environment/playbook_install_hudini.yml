@@ -1,9 +1,11 @@
-- name: Deploy Hudini Project with Existing Anaconda
+- name: Deploy Hudini Project with Anaconda
   hosts: localhost
   become: true
 
   vars:
-    conda_path: "/root/anaconda3/bin"  # Update to match your Anaconda path
+    conda_path: "/root/anaconda3/bin"  # Path to your Anaconda installation
+    project_path: "/var/www/hudini"   # Path to the project directory
+    requirements_path: "/var/www/hudini/server/requirements.txt"  # Path to the requirements.txt
 
   tasks:
     - name: Ensure the hudini user exists
@@ -17,37 +19,35 @@
     - name: Ensure system dependencies are installed
       apt:
         name:
-          - git
           - python3  # Optional, for non-Conda tasks
         state: present
         update_cache: yes
 
-    - name: Create the hudini Conda environment
+    - name: Check if the hudini Conda environment exists
+      shell: |
+        {{ conda_path }}/conda env list | grep -w hudini
+      register: conda_env_check
+      failed_when: false
+
+    - name: Create the hudini Conda environment if it doesn't exist
       shell: |
         {{ conda_path }}/conda create -n hudini python=3.10 -y
-      args:
-        creates: "/root/anaconda3/envs/hudini"
-
-    - name: Clone Hudini repository
-      git:
-        repo: "https://github.com/boethigp-github/chatbot.git"
-        dest: "/var/www/hudini"
-        version: "main"
+      when: conda_env_check.rc != 0
 
     - name: Install Python dependencies in the hudini Conda environment
       shell: |
-        source {{ conda_path }}/activate hudini && pip install -r /var/www/hudini/requirements.txt
+        source {{ conda_path }}/activate hudini && pip install -r {{ requirements_path }}
       args:
-        chdir: "/var/www/hudini"
+        chdir: "{{ project_path }}"
 
-    - name: Set ownership for the hudini directory
+    - name: Set ownership for the project directory
       file:
-        path: "/var/www/hudini"
+        path: "{{ project_path }}"
         owner: hudini
         group: hudini
         recurse: yes
 
     - name: Set permissions for the project directory
       file:
-        path: "/var/www/hudini"
+        path: "{{ project_path }}"
         mode: '0755'
