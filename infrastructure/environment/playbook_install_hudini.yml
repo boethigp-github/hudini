@@ -2,6 +2,7 @@
   hosts: localhost
   become: yes
   vars:
+    ansible_python_interpreter: /root/anaconda3/envs/hudini/bin/python
     anaconda_path: /root/anaconda3/bin
     project_path: /var/www/hudini
     conda_env_name: hudini
@@ -12,17 +13,32 @@
     database_password: postgres
 
   tasks:
+    - name: Display selected Anaconda path and project settings
+      debug:
+        msg:
+          - "Anaconda path: {{ anaconda_path }}"
+          - "Project path: {{ project_path }}"
+          - "Conda environment name: {{ conda_env_name }}"
+          - "Python version: {{ python_version }}"
+
     - name: Ensure system dependencies are installed
       apt:
         name:
           - python3-dev
           - build-essential
         state: present
+      register: system_dependencies
+    - name: Log system dependencies installation
+      debug:
+        msg: "System dependencies installed: {{ system_dependencies.changes }}"
 
     - name: Ensure Anaconda is available
       stat:
         path: "{{ anaconda_path }}/conda"
       register: conda_check
+    - name: Check Anaconda status
+      debug:
+        msg: "Anaconda exists: {{ conda_check.stat.exists }}"
 
     - name: Fail if Anaconda is not installed
       fail:
@@ -35,6 +51,10 @@
         conda env list | grep -q {{ conda_env_name }} || conda create -n {{ conda_env_name }} python={{ python_version }} -y
       args:
         executable: /bin/bash
+      register: conda_env_check
+    - name: Log conda environment creation
+      debug:
+        msg: "Conda environment status: {{ conda_env_check.stdout }}"
 
     - name: Activate Conda environment and install dependencies
       shell: |
@@ -46,8 +66,7 @@
       environment:
         PATH: "{{ anaconda_path }}:{{ ansible_env.PATH }}"
       register: pip_install_output
-
-    - name: Check pip install result
+    - name: Log pip install output
       debug:
         msg: "{{ pip_install_output.stdout_lines | default('No output') }}"
 
@@ -57,45 +76,5 @@
           - postgresql
           - postgresql-contrib
         state: present
-
-    - name: Ensure PostgreSQL service is running
-      service:
-        name: postgresql
-        state: started
-        enabled: yes
-
-    - name: Create PostgreSQL database
-      postgresql_db:
-        name: "{{ database_name }}"
-        encoding: UTF-8
-        lc_collate: en_US.UTF-8
-        lc_ctype: en_US.UTF-8
-        state: present
-
-    - name: Create PostgreSQL user
-      postgresql_user:
-        name: "{{ database_user }}"
-        password: "{{ database_password }}"
-        privs: "ALL"
-        state: present
-
-    - name: Ensure project directory ownership
-      file:
-        path: "{{ project_path }}"
-        state: directory
-        owner: www-data
-        group: www-data
-        recurse: yes
-
-    - name: Ensure project directory permissions
-      file:
-        path: "{{ project_path }}"
-        state: directory
-        mode: "0755"
-        recurse: yes
-
-    - name: Restart services (if needed)
-      systemd:
-        name: your-service-name
-        state: restarted
-      when: false  # Set to true and replace `your-service-name` if the project has a service to restart
+      register: postgresql_install
+    - name: Log PostgreSQ
