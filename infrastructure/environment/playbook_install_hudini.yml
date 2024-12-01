@@ -1,54 +1,70 @@
-- name: Deploy Hudini Project with Anaconda
+- name: Deploy Hudini Project
   hosts: localhost
-  become: true
-
+  become: yes
   vars:
-    conda_path: "/root/anaconda3/bin"  # Path to your Anaconda installation
-    project_path: "/var/www/hudini"   # Path to the project directory
-    requirements_path: "/var/www/hudini/server/requirements.txt"  # Path to the requirements.txt
+    anaconda_path: /root/anaconda3/bin
+    project_path: /var/www/hudini
+    conda_env_name: hudini
+    python_version: "3.10"
+    requirements_file: "{{ project_path }}/server/requirements.txt"
 
   tasks:
-    - name: Ensure the hudini user exists
-      user:
-        name: hudini
-        shell: /bin/bash
-        state: present
-        home: /home/hudini
-        create_home: yes
-
     - name: Ensure system dependencies are installed
       apt:
         name:
-          - python3  # Optional, for non-Conda tasks
+          - python3-dev
+          - build-essential
         state: present
-        update_cache: yes
 
-    - name: Check if the hudini Conda environment exists
-      shell: |
-        {{ conda_path }}/conda env list | grep -w hudini
-      register: conda_env_check
-      failed_when: false
+    - name: Ensure Anaconda is available
+      stat:
+        path: "{{ anaconda_path }}/conda"
+      register: conda_check
 
-    - name: Create the hudini Conda environment if it doesn't exist
-      shell: |
-        {{ conda_path }}/conda create -n hudini python=3.10 -y
-      when: conda_env_check.rc != 0
+    - name: Fail if Anaconda is not installed
+      fail:
+        msg: "Anaconda is not installed at {{ anaconda_path }}. Please install it before proceeding."
+      when: not conda_check.stat.exists
 
-    - name: Install Python dependencies in the hudini Conda environment
+    - name: Ensure Anaconda environment "{{ conda_env_name }}" exists
       shell: |
-        source {{ conda_path }}/activate hudini && pip install -r {{ requirements_path }}
+        source {{ anaconda_path }}/activate || true
+        conda env list | grep -q {{ conda_env_name }} || conda create -n {{ conda_env_name }} python={{ python_version }} -y
       args:
         executable: /bin/bash
-        chdir: "{{ project_path }}"
 
-    - name: Set ownership for the project directory
+    - name: Activate Conda environment and install dependencies
+      shell: |
+        source {{ anaconda_path }}/activate {{ conda_env_name }}
+        pip install --upgrade pip
+        pip install -r {{ requirements_file }}
+      args:
+        executable: /bin/bash
+      environment:
+        PATH: "{{ anaconda_path }}:{{ ansible_env.PATH }}"
+      register: pip_install_output
+
+    - name: Check pip install result
+      debug:
+        msg: "{{ pip_install_output.stdout_lines | default('No output') }}"
+
+    - name: Ensure project directory ownership
       file:
         path: "{{ project_path }}"
-        owner: hudini
-        group: hudini
+        state: directory
+        owner: www-data
+        group: www-data
         recurse: yes
 
-    - name: Set permissions for the project directory
+    - name: Ensure project directory permissions
       file:
         path: "{{ project_path }}"
-        mode: '0755'
+        state: directory
+        mode: "0755"
+        recurse: yes
+
+    - name: Restart services (if needed)
+      systemd:
+        name: your-service-name
+        state: restarted
+      when: false  # Set to true and replace `your-service-name` if the project has a service to restart
