@@ -38,6 +38,7 @@
       shell: |
         source {{ conda_path }}/activate hudini && pip install -r {{ requirements_path }}
       args:
+        executable: /bin/bash
         chdir: "{{ project_path }}"
 
     - name: Set ownership for the project directory
