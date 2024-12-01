@@ -32,5 +32,9 @@ server/__pycache__/
 server/app/**/__pycache__/
 server/tests/**/__pycache__/
 server/var/cache/
+server/userbot.session
 
-
+/server/app/cli/metadata.pkl
+/server/tests/functional/gripsbox/test_file.txt
+/server/app/cli/embeddings.pkl
+/server/app/cli/dokumente_index.faiss

@@ -1,0 +1,53 @@
+- name: Deploy Hudini Project with Existing Anaconda
+  hosts: localhost
+  become: true
+
+  vars:
+    conda_path: "/root/anaconda3/bin"  # Update to match your Anaconda path
+
+  tasks:
+    - name: Ensure the hudini user exists
+      user:
+        name: hudini
+        shell: /bin/bash
+        state: present
+        home: /home/hudini
+        create_home: yes
+
+    - name: Ensure system dependencies are installed
+      apt:
+        name:
+          - git
+          - python3  # Optional, for non-Conda tasks
+        state: present
+        update_cache: yes
+
+    - name: Create the hudini Conda environment
+      shell: |
+        {{ conda_path }}/conda create -n hudini python=3.10 -y
+      args:
+        creates: "/root/anaconda3/envs/hudini"
+
+    - name: Clone Hudini repository
+      git:
+        repo: "https://github.com/boethigp-github/chatbot.git"
+        dest: "/var/www/hudini"
+        version: "main"
+
+    - name: Install Python dependencies in the hudini Conda environment
+      shell: |
+        source {{ conda_path }}/activate hudini && pip install -r /var/www/hudini/requirements.txt
+      args:
+        chdir: "/var/www/hudini"
+
+    - name: Set ownership for the hudini directory
+      file:
+        path: "/var/www/hudini"
+        owner: hudini
+        group: hudini
+        recurse: yes
+
+    - name: Set permissions for the project directory
+      file:
+        path: "/var/www/hudini"
+        mode: '0755'

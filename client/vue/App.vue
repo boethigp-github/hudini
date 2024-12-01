@@ -1,21 +1,17 @@
 <template>
   <div id="app">
-      <v-app>
-        <ChatForm/>
-      </v-app>
+    <v-app>
+      <router-view />
+    </v-app>
   </div>
 </template>
 
 <script>
-import ChatForm from './components/ChatForm.vue';
-
 export default {
-  components: {
-    ChatForm,
-  },
+  name: 'App',
 };
 </script>
 
 <style>
-/* Add any global styles here */
+/* Globale Styles */
 </style>

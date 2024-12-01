@@ -7,7 +7,7 @@ from server.app.db.base import async_session_maker
 from server.app.models.generation.generation_request import GenerationRequest
 from server.app.clients.googleai.google_ai_client import GoogleAICLient
 from server.app.models.generation.success_generation_model import SuccessGenerationModel
-
+from server.app.utils.auth import auth
 router = APIRouter()
 settings = Settings()
 
@@ -31,7 +31,7 @@ async def get_db():
         "The endpoint returns a streaming JSON response that contains the generated output."
     ),
 )
-async def stream_google_ai_route(request: GenerationRequest, db: AsyncSession = Depends(get_db)):
+async def stream_google_ai_route(request: GenerationRequest, db: AsyncSession = Depends(get_db), _: str = Depends(auth)):
     """
     Stream output from the Google AI model based on the provided generation request.
 

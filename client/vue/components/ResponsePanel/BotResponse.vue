@@ -3,27 +3,36 @@
        @mouseover="$emit('mouseover', contextDataItem.id)"
        @mouseout="$emit('mouseout', contextDataItem.id)">
     <div class="response-metadata">
-      <span class="model"> <v-btn size="x-small" class="panel-menu-button" icon="mdi-robot-happy" :title="$t('open_account', 'Open Account')" key="open_account"></v-btn>{{ getModel() }} </span>
-      <span class="timestamp">{{getCompletionId()}} </span>
-      <span class="timestamp">{{getUuid()}} </span>
+      <span class="model">
+        <v-btn size="x-small" class="panel-menu-button" icon="mdi-robot-happy"
+               :title="$t('open_account', 'Open Account')" key="open_account"></v-btn>
+        {{ getModel() }}
+      </span>
+      <span class="timestamp">{{ getCompletionId() }} </span>
+      <span class="timestamp">{{ getUuid() }} </span>
       <span class="timestamp">{{ getPromptTokens() }}</span>
       <span class="timestamp">{{ getCompletionTokens() }}</span>
       <span class="timestamp">{{ getTotalTokens() }}</span>
       <span class="timestamp">{{ getRunTime() }}</span>
     </div>
+
     <Markdown
+        v-if="typeof processedContent === 'string'"
         class="bot-answer-md"
         :breaks="true"
+        :html="true"
         :plugins="getPlugins()"
-        :source="contextDataItem?.completion?.choices[0].message.content"
+        :source="processedContent"
     />
 
   </div>
 </template>
 
 <script>
+import {ref, watchEffect} from 'vue';
 import Markdown from 'vue3-markdown-it';
 import {markdownPlugins} from './../../stores/markdownPlugins.js';
+import {processToolCalling} from "@/vue/services/TokenStreamListener.js";
 
 export default {
   name: 'BotResponse',
@@ -37,11 +46,7 @@ export default {
     },
   },
   setup(props) {
-    // Definiere actions-Liste korrekt in setup()
-    const actions = [
-
-    ];
-
+    const processedContent = ref('');
 
     const getModel = () => {
       return `Model: ${props.contextDataItem.completion?.model}`;
@@ -55,21 +60,17 @@ export default {
       return `Completion ID: ${props.contextDataItem.completion.id}`;
     };
 
-
     const getPromptTokens = () => {
       return `Prompt Tokens: ${props.contextDataItem.completion?.usage?.prompt_tokens}`;
     };
-
 
     const getCompletionTokens = () => {
       return `Completion Tokens: ${props.contextDataItem.completion?.usage?.completion_tokens}`;
     };
 
-
     const getTotalTokens = () => {
       return `Total Tokens: ${props.contextDataItem.completion?.usage?.total_tokens}`;
     };
-
 
     const getRunTime = () => {
       const start = props.contextDataItem.completion?.usage?.started;
@@ -79,11 +80,17 @@ export default {
       return `Run Time: ${seconds} s`;
     };
 
-
     const getPlugins = () => markdownPlugins;
 
+    watchEffect(async () => {
+      const content = props.contextDataItem?.completion?.choices[0]?.message?.content;
+      if (content) {
+        processedContent.value = props.contextDataItem?.completion?.choices[0]?.message?.content;
+        //processedContent.value = await processToolCalling(content);
+      }
+    });
+
     return {
-      actions,
       getModel,
       getPromptTokens,
       getCompletionTokens,
@@ -91,15 +98,14 @@ export default {
       getRunTime,
       getPlugins,
       getCompletionId,
-      getUuid
+      getUuid,
+      processedContent,
     };
   },
 };
 </script>
 
 <style scoped>
-
-
 .fade-in {
   animation: fadeIn 0.5s;
 }
@@ -145,5 +151,8 @@ export default {
   font-size: 14px;
 }
 
-
+.tool-running {
+  font-style: italic;
+  color: #ff9800;
+}
 </style>

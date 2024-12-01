@@ -3,6 +3,7 @@
     <v-row>
       <v-btn
           class="panel-menu-button"
+          size="small"
           :icon="isComparisonOpen ? 'mdi-close' : 'mdi-select-compare'"
           :title="isComparisonOpen ? $t('close_comparison', 'Close comparison') : $t('comparison_view', 'Comparison view')"
           key="sub1"
@@ -12,6 +13,7 @@
     </v-row>
     <v-row>
       <v-btn
+          size="small"
           class="panel-menu-button"
           icon="mdi-delete-circle"
           :title="$t('delete_thread', 'Delete thread')"
@@ -21,6 +23,7 @@
     </v-row>
      <v-row v-if="selectedBotResponses.length">
       <v-btn
+          size="small"
           class="panel-menu-button"
           icon="mdi-account-group"
           :title="$t('publish_social_media', 'Publish in social media')"
@@ -28,15 +31,25 @@
           @click="publishSocialMedia"
       ></v-btn>
     </v-row>
-
-
     <v-row  v-if="!selectedBotResponses.length">
       <v-btn
+          size="small"
           class="panel-menu-button"
           icon="mdi-microsoft-excel"
           :title="$t('export_to_excel', 'Export to excel')"
           key="delete_thread"
           @click="exportToExcel"
+      ></v-btn>
+    </v-row>
+
+    <v-row>
+      <v-btn
+          size="small"
+          class="panel-menu-button"
+          icon="mdi mdi-cog-outline"
+          :title="$t('open_model_selection', 'Opens Model selection')"
+          key="open_model_selection"
+          @click="openModelSelection"
       ></v-btn>
     </v-row>
 
@@ -57,13 +70,15 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <SelectAccounts ></SelectAccounts>
   </v-container>
 </template>
 
 <script>
 import {ref, onMounted, onBeforeUnmount} from 'vue';
 import {useI18n} from 'vue-i18n';
-
+import SelectAccounts from './../SocialMedia/SelectAccounts.vue'
 export default {
   name: 'SubMenu',
   props: {
@@ -74,12 +89,13 @@ export default {
     },
 
   },
+  components:{SelectAccounts},
   setup(props) {
     const isComparisonOpen = ref(false);
     const deleteDialog = ref(false);
     const selectedBotResponses = ref([]);
     const {t} = useI18n();
-
+    const isSelectAccountsVisible=ref(false)
     const toggleComparison = () => {
       isComparisonOpen.value = !isComparisonOpen.value;
       const eventName = isComparisonOpen.value ? 'comparison-open' : 'comparison-close';
@@ -95,21 +111,23 @@ export default {
       window.dispatchEvent(event);
     };
 
+    const openModelSelection = () => {
+      const eventName = 'open-model-selection'
+      const event = new CustomEvent(eventName, {});
+      window.dispatchEvent(event);
+    };
+
     const onSelectedBotResponse = ((event) => {
       selectedBotResponses.value = event.detail.selectedItems
     });
 
 
     onMounted(() => {
-
-
       window.addEventListener('comparison-bot-response-selected', onSelectedBotResponse);
-
     });
 
     onBeforeUnmount(() => {
       window.removeEventListener('comparison-bot-response-selected', onSelectedBotResponse);
-
     });
 
 
@@ -118,7 +136,8 @@ export default {
     };
 
       const publishSocialMedia = () => {
-
+      const event = new CustomEvent('socialmedia-accounts-selection-open', {detail: { selectedBotResponses: selectedBotResponses.value }});
+      window.dispatchEvent(event);
     };
 
     const cancelDelete = () => {
@@ -154,14 +173,25 @@ export default {
       exportToExcel,
       onSelectedBotResponse,
       publishSocialMedia,
-      selectedBotResponses
+      selectedBotResponses,
+      isSelectAccountsVisible,
+      openModelSelection
     };
   },
 };
 </script>
 
 <style scoped>
+.panel-menu {
+  margin-top: 35px;
+}
+
 .panel-menu-button {
-  margin: 5px;
+    width: 40px;  /* Adjust size as necessary */
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin: 5px;
 }
 </style>

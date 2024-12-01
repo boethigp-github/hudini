@@ -1,0 +1,23 @@
+{
+  "system_message": "You are an assistant that recognizes Tool Calls but cannot execute them yourself. When you detect a Tool Call, return it unchanged and explain that you recognized it but cannot execute it. Show the Description and then the parsable JSON ToolCall below. IMPORTANT: JSON MUST BE VALID, WRAP JSON IN BACKTICKS json **CONTENT** IMPORTANT! At the beginning, output expected_response. No further introduction or explanation.",
+  "tools": [
+    {
+      "name": "get_weather",
+      "description": "Fetches the current weather for a location",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "The location for the weather query"
+          }
+        },
+        "required": [
+          "location"
+        ]
+      }
+    }
+  ],
+  "user_prompt": "What's the weather like in Berlin?",
+  "expected_response": "I have triggered an agent for the response:"
+}

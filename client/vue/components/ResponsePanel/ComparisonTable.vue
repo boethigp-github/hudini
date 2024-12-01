@@ -45,7 +45,7 @@ import {markdownPlugins} from './../../stores/markdownPlugins.js';
 import botResponse from "@/vue/components/ResponsePanel/BotResponse.vue";
 
 export default {
-  name: 'ComparisonDrawer',
+  name: 'ComparisonTable',
   components: {
     Markdown
   },
@@ -106,7 +106,7 @@ export default {
 
     const getRowProps = (item) => {
       return {
-        class: item.isPrompt ? 'user-prompt-row text-primary' : 'completion-row'
+        class: item.item.isPrompt ? 'user-prompt-row text-primary' : 'completion-row'
       };
     };
 
@@ -155,10 +155,7 @@ export default {
       window.removeEventListener('comparison-open', () => drawerVisible.value = true);
       window.removeEventListener('comparison-close', () => drawerVisible.value = false);
     });
-    // Watch for changes in selected items
-    watch(selectedItems, (newSelectedItems) => {
 
-    }, {deep: true}); // Add deep: true to watch nested changes
 
 
 const selectItem = (selectedBotResponses) => {
@@ -200,6 +197,7 @@ const selectItem = (selectedBotResponses) => {
 
 .bot-answer-md {
   font-size: 14px;
+
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 

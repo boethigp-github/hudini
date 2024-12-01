@@ -3,16 +3,22 @@ import requests
 import uuid
 from server.app.config.settings import Settings
 import json
+import asyncio
+from server.tests.test_abstract import TestAbstract  # Assuming this contains the API key logic
 
-class TestGoogleAIStream(unittest.TestCase):
+class TestGoogleAIStream(TestAbstract):
 
     @classmethod
     def setUpClass(cls):
         # Lade die Einstellungen über die Settings-Klasse
         cls.settings = Settings()
 
-        # Setze die SERVER_URL aus den geladenen Konfigurationen
+        # Setze die SERVER_URL und APP_DEFAULT_ADMIN_USERNAME aus den geladenen Konfigurationen
         cls.SERVER_URL = cls.settings.get("default").get("SERVER_URL")
+        cls.APP_DEFAULT_ADMIN_USERNAME = cls.settings.get("default").get("APP_DEFAULT_ADMIN_USERNAME")
+
+        # Manually run async initialization using asyncio.run() to retrieve API key
+        asyncio.run(cls.async_init())
 
     def test_stream_google_ai_success(self):
         """Test des /stream/google-ai Endpunkts für eine erfolgreiche Antwort mittels eines Google AI Modells."""
@@ -38,8 +44,8 @@ class TestGoogleAIStream(unittest.TestCase):
             }]
         }
 
-        # Sende die Anfrage und streame die Antwort
-        response = requests.post(f"{self.SERVER_URL}/stream/google-ai", json=stream_payload, stream=True, timeout=20)
+        # Sende die Anfrage und streame die Antwort unter Verwendung des Admin API-Schlüssels
+        response = requests.post(f"{self.SERVER_URL}/stream/google-ai?api_key={self.api_key}", json=stream_payload, stream=True, timeout=20)
 
         # Überprüfe den Statuscode und den Content-Type der Antwort
         self.assertEqual(response.status_code, 200)
@@ -77,9 +83,10 @@ class TestGoogleAIStream(unittest.TestCase):
             }]
         }
 
-        response = requests.post(f"{self.SERVER_URL}/stream/google-ai", json=stream_payload, stream=True)
+        # Sende die Anfrage unter Verwendung des Admin API-Schlüssels
+        response = requests.post(f"{self.SERVER_URL}/stream/google-ai?api_key={self.api_key}", json=stream_payload, stream=True)
 
-        # Hier wird erwartet, dass der Statuscode 400 ist, weil das Modell ungültig ist
+        # Hier wird erwartet, dass der Statuscode 200 ist, weil das Modell ungültig ist
         self.assertEqual(response.status_code, 200)
 
 

@@ -1,4 +1,4 @@
-import { createI18n } from 'vue-i18n';
+import {createI18n} from 'vue-i18n';
 
 const messages = {
     en: {
@@ -67,7 +67,30 @@ const messages = {
         delete_thread_confirmation: 'Are you sure you want to delete this thread?',
         cancel: 'Cancel',
         failed_to_delete_thread: 'Failed to delete thread',
-        export_to_excel: "Export to Excel"
+        export_to_excel: "Export to Excel",
+        publish_social_media: "Publish in Social Media",
+        select_social_media: "Select Social Media Accounts",
+        publish: "Publish",
+        provider: 'Provider',
+        generate_image: 'Generate Image',
+        image_prompt: 'Enter an image description...',
+        group: 'Group',
+        open_context_manager: "Open Context Manager",
+        hudinis_gripsbox: "Hudini's Gripsbox",
+        upload_files: "Upload Files",
+        assign_tags: "Assign Tags",
+        active: "Active",
+        close: "Close",
+        save: "Save",
+        error_uploading_files: "Error uploading files",
+        logout: 'Logout',
+        open_model_selection: 'Open Model Selection',
+        selected_models: 'Selected Models',
+        reset_filter: "Reset Filter",
+        files_uploaded_successfully: "{count} file(s) uploaded successfully.",
+        restrict_to_models: "Restrict to models"
+
+
     },
     de: {
         hudini_title: 'Hudini - CPU Magier auf SLM',
@@ -135,7 +158,34 @@ const messages = {
         delete_thread_confirmation: 'Sind Sie sicher, dass Sie diesen Thread löschen möchten?',
         cancel: 'Abbrechen',
         failed_to_delete_thread: 'Fehler beim Löschen des Threads',
-        export_to_excel: "Für Excel exportieren"
+        export_to_excel: "Für Excel exportieren",
+        publish_social_media: "In sozialen Medien veröffentlichen",
+        select_social_media: "Soziale Medien Konten auswählen",
+        publish: "Veröffentlichen",
+        provider: 'Anbieter',
+        generate_image: 'Bild generieren',
+        image_prompt: 'Geben Sie eine Bildbeschreibung ein...',
+        group: 'Gruppe',
+        open_context_manager: "Kontextmanager öffnen",
+        hudinis_gripsbox: "Hudinis Gripsbox",
+        upload_files: "Dateien hochladen",
+        assign_tags: "Tags zuweisen",
+        active: "Aktiv",
+        close: "Schließen",
+        save: "Speichern",
+        error_uploading_files: "Fehler beim Hochladen der Dateien",
+        logout: "Abmelden",
+        open_model_selection: 'Modellauswahl öffnen',
+        selected_models: 'Ausgewählte Modelle',
+        delete_confirmation_message: "Sind Sie sicher, dass Sie diese Aktion durchführen möchten?",
+        yes: "Ja",
+        no: "Nein",
+        files_uploaded_successfully: "{count} Datei(en) erfolgreich hochgeladen.",
+        reset_filter: "Filter zurücksetzen",
+        restrict_to_models: "Einschränken auf Modelle"
+
+
+
     },
     fr: {
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
@@ -203,7 +253,34 @@ const messages = {
         delete_thread_confirmation: 'Êtes-vous sûr de vouloir supprimer ce fil de discussion ?',
         cancel: 'Annuler',
         failed_to_delete_thread: 'Échec de la suppression du fil de discussion',
-        export_to_excel: "Exporter vers Excel"
+        export_to_excel: "Exporter vers Excel",
+        publish_social_media: "Publier sur les réseaux sociaux",
+        select_social_media: "Sélectionnez les comptes de réseaux sociaux",
+        publish: "Publier",
+        provider: 'Fournisseur',
+        generate_image: 'Générer une image',
+        image_prompt: 'Entrez une description d\'image...',
+        group: 'Groupe',
+        open_context_manager: "Ouvrir le gestionnaire de contexte",
+        hudinis_gripsbox: "Boîte à astuces de Hudini",
+        upload_files: "Télécharger des fichiers",
+        assign_tags: "Attribuer des tags",
+        active: "Actif",
+        close: "Fermer",
+        save: "Sauvegarder",
+        error_uploading_files: "Erreur lors du téléchargement des fichiers",
+        logout: "Déconnexion",
+        open_model_selection: 'Ouvrir la sélection de modèle',
+        selected_models: 'Modèles sélectionnés',
+        delete_confirmation_message: "Êtes-vous sûr de vouloir procéder à cette action ?",
+        yes: "Oui",
+        no: "Non",
+        reset_filter: "Réinitialiser le filtre",
+        files_uploaded_successfully: "{count} fichier(s) téléchargé(s) avec succès.",
+        restrict_to_models: "Restreindre aux modèles"
+
+
+
     },
     ru: {
         hudini_title: 'Худини - Маг ЦП на SLM',
@@ -271,10 +348,33 @@ const messages = {
         delete_thread_confirmation: 'Вы уверены, что хотите удалить этот поток?',
         cancel: 'Отмена',
         failed_to_delete_thread: 'Не удалось удалить поток',
-        export_to_excel: "Экспорт в Excel"
-
+        export_to_excel: "Экспорт в Excel",
+        publish_social_media: "Опубликовать в социальных сетях",
+        select_social_media: "Выберите аккаунты социальных сетей",
+        publish: "Опубликовать",
+        provider: 'Поставщик',
+        generate_image: '生成图片',
+        image_prompt: '输入图片描述...',
+        group: 'Группа',
+        open_context_manager: "Открыть менеджер контекста",
+        hudinis_gripsbox: "Коробка идей Худини",
+        upload_files: "Загрузить файлы",
+        assign_tags: "Назначить теги",
+        active: "Активный",
+        close: "Закрыть",
+        save: "Сохранить",
+        error_uploading_files: "Ошибка загрузки файлов",
+        logout: "Выйти",
+        open_model_selection: 'Открыть выбор модели',
+        selected_models: 'Выбранные модели',
+        delete_confirmation_message: "Вы уверены, что хотите продолжить это действие?",
+        yes: "Да",
+        no: "Нет",
+        files_uploaded_successfully: "{count} файл(ов) успешно загружен(о).",
+        reset_filter: "Сбросить фильтр",
+        restrict_to_models: "Ограничить по моделям"
     },
-        zh: {
+    zh: {
         hudini_title: 'Hudini - CPU 魔术师在 SLM',
         select_model: '选择模型',
         model: '模型',
@@ -338,12 +438,34 @@ const messages = {
         delete_thread_confirmation: '您确定要删除此线程吗？',
         cancel: '取消',
         failed_to_delete_thread: '删除线程失败',
-        export_to_excel: "导出到 Excel"
+        export_to_excel: "导出到 Excel",
+        publish_social_media: "发布到社交媒体",
+        select_social_media: "选择社交媒体账户",
+        publish: "发布",
+        provider: '供应商',
+        generate_image: '生成图片',
+        image_prompt: '输入图片描述...',
+        group: '组',
+        open_context_manager: "打开上下文管理器",
+        hudinis_gripsbox: "胡迪尼的智慧盒",
+        upload_files: "上传文件",
+        assign_tags: "分配标签",
+        active: "激活",
+        close: "关闭",
+        save: "保存",
+        error_uploading_files: "上传文件时出错",
+        logout: '退出登录',
+        open_model_selection: '打开模型选择',
+        selected_models: '已选择的模型',
+        delete_confirmation_message: "您确定要执行此操作吗？",
+        yes: "是",
+        no: "否",
+        reset_filter: "重置过滤器",
+        files_uploaded_successfully: "成功上传 {count} 个文件。",
+        restrict_to_models: "限制为模型"
     },
     // Add other languages as needed
 };
-
-
 
 
 const i18n = createI18n({
