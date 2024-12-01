@@ -26,85 +26,76 @@ def upgrade() -> None:
     op.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
     op.execute('CREATE EXTENSION IF NOT EXISTS "pgcrypto";')
 
-    # Create the 'users' table first
-    if not table_exists('users'):
-        op.create_table(
-            'users',
-            sa.Column('uuid', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"),
-                      primary_key=True),
-            sa.Column('username', sa.String(length=50), nullable=False, unique=True),
-            sa.Column('email', sa.String(length=100), nullable=False, unique=True),
-            sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'),
-                      nullable=False),
-            sa.Column('updated', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'),
-                      nullable=True),
-            sa.Column('last_login', sa.TIMESTAMP(timezone=True), nullable=True),
-            sa.Column('password', sa.String(length=128), nullable=False),
-        )
+    # Drop tables if they exist
+    if table_exists('user_context'):
+        op.drop_table('user_context')
+    if table_exists('prompts'):
+        op.drop_table('prompts')
+    if table_exists('gripsbox'):
+        op.drop_table('gripsbox')
+    if table_exists('api_keys'):
+        op.drop_table('api_keys')
+    if table_exists('users'):
+        op.drop_table('users')
+
+    # Create the 'users' table
+    op.create_table(
+        'users',
+        sa.Column('uuid', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"), primary_key=True),
+        sa.Column('username', sa.String(length=50), nullable=False, unique=True),
+        sa.Column('email', sa.String(length=100), nullable=False, unique=True),
+        sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.Column('updated', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
+        sa.Column('last_login', sa.TIMESTAMP(timezone=True), nullable=True),
+        sa.Column('password', sa.String(length=128), nullable=False),
+    )
 
     # Create the 'api_keys' table
-    if not table_exists('api_keys'):
-        op.create_table(
-            'api_keys',
-            sa.Column('id', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"),
-                      primary_key=True),
-            sa.Column('user', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.uuid', ondelete='CASCADE'),
-                      nullable=False),
-            sa.Column('key', sa.String(length=64), nullable=False),
-            sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'),
-                      nullable=False),
-            sa.Column('active', sa.Boolean(), server_default=sa.text('FALSE'), nullable=False),
-        )
-        op.create_index('ix_api_keys_key', 'api_keys', ['key'])
+    op.create_table(
+        'api_keys',
+        sa.Column('id', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"), primary_key=True),
+        sa.Column('user', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.uuid', ondelete='CASCADE'), nullable=False),
+        sa.Column('key', sa.String(length=64), nullable=False),
+        sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.Column('active', sa.Boolean(), server_default=sa.text('FALSE'), nullable=False),
+    )
+    op.create_index('ix_api_keys_key', 'api_keys', ['key'])
 
     # Create the 'gripsbox' table
-    if not table_exists('gripsbox'):
-        op.create_table(
-            'gripsbox',
-            sa.Column('id', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"),
-                      primary_key=True),
-            sa.Column('name', sa.String(), nullable=False),
-            sa.Column('size', sa.Integer(), nullable=False),
-            sa.Column('type', sa.String(), nullable=False),
-            sa.Column('active', sa.Boolean(), nullable=False),
-            sa.Column('tags', sa.JSON(), nullable=False),
-            sa.Column('models', sa.JSON(), nullable=True),
-            sa.Column('user', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.uuid', ondelete='CASCADE'),
-                      nullable=False),  # Add the missing 'user' column
-            sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'),
-                      nullable=False),
-            sa.Column('updated', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'),
-                      nullable=False),
-        )
+    op.create_table(
+        'gripsbox',
+        sa.Column('id', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"), primary_key=True),
+        sa.Column('name', sa.String(), nullable=False),
+        sa.Column('size', sa.Integer(), nullable=False),
+        sa.Column('type', sa.String(), nullable=False),
+        sa.Column('active', sa.Boolean(), nullable=False),
+        sa.Column('tags', sa.JSON(), nullable=False),
+        sa.Column('models', sa.JSON(), nullable=True),
+        sa.Column('user', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.uuid', ondelete='CASCADE'), nullable=False),
+        sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.Column('updated', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    )
 
-    # Add other tables
-    if not table_exists('prompts'):
-        op.create_table(
-            'prompts',
-            sa.Column('uuid', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"),
-                      primary_key=True),
-            sa.Column('prompt', sa.Text(), nullable=False),
-            sa.Column('status', sa.String(length=50), nullable=False),
-            sa.Column('user', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.uuid', ondelete='CASCADE'),
-                      nullable=False),
-            sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'),
-                      nullable=False),
-        )
+    # Create the 'prompts' table
+    op.create_table(
+        'prompts',
+        sa.Column('uuid', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"), primary_key=True),
+        sa.Column('prompt', sa.Text(), nullable=False),
+        sa.Column('status', sa.String(length=50), nullable=False),
+        sa.Column('user', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.uuid', ondelete='CASCADE'), nullable=False),
+        sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    )
 
-    if not table_exists('user_context'):
-        op.create_table(
-            'user_context',
-            sa.Column('uuid', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"),
-                      primary_key=True),
-            sa.Column('context_data', postgresql.JSONB(), nullable=False),
-            sa.Column('user', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.uuid', ondelete='CASCADE'),
-                      nullable=False),
-            sa.Column('thread_id', sa.BigInteger(), nullable=False),
-            sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'),
-                      nullable=False),
-            sa.Column('updated', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'),
-                      nullable=True),
-        )
+    # Create the 'user_context' table
+    op.create_table(
+        'user_context',
+        sa.Column('uuid', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"), primary_key=True),
+        sa.Column('context_data', postgresql.JSONB(), nullable=False),
+        sa.Column('user', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.uuid', ondelete='CASCADE'), nullable=False),
+        sa.Column('thread_id', sa.BigInteger(), nullable=False),
+        sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+        sa.Column('updated', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=True),
+    )
 
 
 def downgrade() -> None:
