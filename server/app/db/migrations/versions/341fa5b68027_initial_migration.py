@@ -3,7 +3,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # Revision identifiers, used by Alembic
-revision = 'initial_migration'
+revision = '341fa5b68027'
 down_revision = None
 branch_labels = None
 depends_on = None
