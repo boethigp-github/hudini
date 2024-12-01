@@ -28,6 +28,7 @@
           - build-essential
         state: present
       register: system_dependencies
+
     - name: Log system dependencies installation
       debug:
         msg: "System dependencies installed: {{ system_dependencies.changes }}"
@@ -36,6 +37,7 @@
       stat:
         path: "{{ anaconda_path }}/conda"
       register: conda_check
+
     - name: Check Anaconda status
       debug:
         msg: "Anaconda exists: {{ conda_check.stat.exists }}"
@@ -52,6 +54,7 @@
       args:
         executable: /bin/bash
       register: conda_env_check
+
     - name: Log conda environment creation
       debug:
         msg: "Conda environment status: {{ conda_env_check.stdout }}"
@@ -66,6 +69,7 @@
       environment:
         PATH: "{{ anaconda_path }}:{{ ansible_env.PATH }}"
       register: pip_install_output
+
     - name: Log pip install output
       debug:
         msg: "{{ pip_install_output.stdout_lines | default('No output') }}"
@@ -77,4 +81,79 @@
           - postgresql-contrib
         state: present
       register: postgresql_install
-    - name: Log PostgreSQ
+
+    - name: Log PostgreSQL installation status
+      debug:
+        msg: "PostgreSQL installed: {{ postgresql_install.changes }}"
+
+    - name: Ensure PostgreSQL service is running
+      service:
+        name: postgresql
+        state: started
+        enabled: yes
+      register: postgresql_service
+
+    - name: Log PostgreSQL service status
+      debug:
+        msg: "PostgreSQL service status: {{ postgresql_service }}"
+
+    - name: Create PostgreSQL database
+      postgresql_db:
+        name: "{{ database_name }}"
+        encoding: UTF-8
+        lc_collate: en_US.UTF-8
+        lc_ctype: en_US.UTF-8
+        state: present
+      register: db_creation
+
+    - name: Log database creation
+      debug:
+        msg: "Database creation output: {{ db_creation }}"
+
+    - name: Create PostgreSQL user
+      postgresql_user:
+        name: "{{ database_user }}"
+        password: "{{ database_password }}"
+        privs: "ALL"
+        state: present
+      register: user_creation
+
+    - name: Log user creation
+      debug:
+        msg: "User creation output: {{ user_creation }}"
+
+    - name: Ensure project directory ownership
+      file:
+        path: "{{ project_path }}"
+        state: directory
+        owner: www-data
+        group: www-data
+        recurse: yes
+      register: ownership_changes
+
+    - name: Log project directory ownership changes
+      debug:
+        msg: "Ownership changes: {{ ownership_changes }}"
+
+    - name: Ensure project directory permissions
+      file:
+        path: "{{ project_path }}"
+        state: directory
+        mode: "0755"
+        recurse: yes
+      register: permission_changes
+
+    - name: Log project directory permission changes
+      debug:
+        msg: "Permission changes: {{ permission_changes }}"
+
+    - name: Restart services (if needed)
+      systemd:
+        name: your-service-name
+        state: restarted
+      when: false  # Set to true and replace `your-service-name` if the project has a service to restart
+      register: service_restart
+
+    - name: Log service restart status
+      debug:
+        msg: "Service restart status: {{ service_restart }}"
