@@ -12,6 +12,7 @@
     database_user: postgres
     database_password: postgres
     pg_hba_conf_path: /etc/postgresql/16/main/pg_hba.conf
+    alembic_migration_path: /var/www/hudini/infrastructure/migrations
 
   tasks:
     - name: Display selected Anaconda path and project settings
@@ -138,6 +139,20 @@
     - name: Log project directory permission changes
       debug:
         msg: "{{ permission_changes }}"
+
+    - name: Reset database and apply migrations using Alembic
+      shell: |
+        source {{ anaconda_path }}/activate {{ conda_env_name }}
+        cd {{ alembic_migration_path }}
+        alembic downgrade base
+        alembic upgrade head
+      args:
+        executable: /bin/bash
+      register: alembic_output
+
+    - name: Log Alembic migration result
+      debug:
+        msg: "{{ alembic_output.stdout_lines | default('No output') }}"
 
   handlers:
     - name: Restart PostgreSQL
