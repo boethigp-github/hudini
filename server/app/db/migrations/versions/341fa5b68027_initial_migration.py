@@ -22,6 +22,10 @@ def table_exists(table_name):
 
 
 def upgrade() -> None:
+    # Enable necessary extensions
+    op.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
+    op.execute('CREATE EXTENSION IF NOT EXISTS "pgcrypto";')
+
     # Check and create the 'users' table
     if not table_exists('users'):
         op.create_table(
@@ -73,8 +77,6 @@ def upgrade() -> None:
         )
 
     # Add other tables similarly
-    # Example for 'prompts' and 'user_context'
-
     if not table_exists('prompts'):
         op.create_table(
             'prompts',
@@ -106,9 +108,18 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     # Drop tables in reverse order of creation
-    op.drop_table('user_context')
-    op.drop_table('prompts')
-    op.drop_table('gripsbox')
-    op.drop_index('ix_api_keys_key', table_name='api_keys')
-    op.drop_table('api_keys')
-    op.drop_table('users')
+    if table_exists('user_context'):
+        op.drop_table('user_context')
+
+    if table_exists('prompts'):
+        op.drop_table('prompts')
+
+    if table_exists('gripsbox'):
+        op.drop_table('gripsbox')
+
+    if table_exists('api_keys'):
+        op.drop_index('ix_api_keys_key', table_name='api_keys')
+        op.drop_table('api_keys')
+
+    if table_exists('users'):
+        op.drop_table('users')
