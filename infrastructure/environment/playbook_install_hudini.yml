@@ -11,7 +11,7 @@
     database_name: hudini
     database_user: postgres
     database_password: postgress
-    pg_hba_conf_path: /etc/postgresql/{{ ansible_distribution_major_version }}/main/pg_hba.conf
+    pg_hba_conf_path: /etc/postgresql/16/main/pg_hba.conf
 
   tasks:
     - name: Display selected Anaconda path and project settings
@@ -28,6 +28,52 @@
           - python3-dev
           - build-essential
         state: present
+      register: system_dependencies
+
+    - name: Log system dependencies installation
+      debug:
+        msg: "{{ system_dependencies }}"
+
+    - name: Ensure Anaconda is available
+      stat:
+        path: "{{ anaconda_path }}/conda"
+      register: conda_check
+
+    - name: Check Anaconda status
+      debug:
+        msg: "Anaconda exists: {{ conda_check.stat.exists }}"
+
+    - name: Fail if Anaconda is not installed
+      fail:
+        msg: "Anaconda is not installed at {{ anaconda_path }}. Please install it before proceeding."
+      when: not conda_check.stat.exists
+
+    - name: Ensure Anaconda environment "{{ conda_env_name }}" exists
+      shell: |
+        source {{ anaconda_path }}/activate || true
+        conda env list | grep -q {{ conda_env_name }} || conda create -n {{ conda_env_name }} python={{ python_version }} -y
+      args:
+        executable: /bin/bash
+      register: conda_env_check
+
+    - name: Log conda environment creation
+      debug:
+        msg: "Conda environment status: {{ conda_env_check.stdout }}"
+
+    - name: Activate Conda environment and install dependencies
+      shell: |
+        source {{ anaconda_path }}/activate {{ conda_env_name }}
+        pip install --upgrade pip
+        pip install -r {{ requirements_file }}
+      args:
+        executable: /bin/bash
+      environment:
+        PATH: "{{ anaconda_path }}:{{ ansible_env.PATH }}"
+      register: pip_install_output
+
+    - name: Log pip install output
+      debug:
+        msg: "{{ pip_install_output.stdout_lines | default('No output') }}"
 
     - name: Ensure PostgreSQL is installed
       apt:
@@ -35,6 +81,11 @@
           - postgresql
           - postgresql-contrib
         state: present
+      register: postgresql_install
+
+    - name: Log PostgreSQL installation status
+      debug:
+        msg: "{{ postgresql_install }}"
 
     - name: Configure PostgreSQL authentication (pg_hba.conf)
       lineinfile:
@@ -60,6 +111,11 @@
         name: postgresql
         state: started
         enabled: yes
+      register: postgresql_service
+
+    - name: Log PostgreSQL service status
+      debug:
+        msg: "{{ postgresql_service }}"
 
     - name: Create PostgreSQL database
       postgresql_db:
@@ -68,6 +124,11 @@
         lc_collate: en_US.UTF-8
         lc_ctype: en_US.UTF-8
         state: present
+      register: db_creation
+
+    - name: Log database creation
+      debug:
+        msg: "{{ db_creation }}"
 
     - name: Create PostgreSQL user
       postgresql_user:
@@ -75,6 +136,11 @@
         password: "{{ database_password }}"
         privs: "ALL"
         state: present
+      register: user_creation
+
+    - name: Log user creation
+      debug:
+        msg: "{{ user_creation }}"
 
     - name: Ensure project directory ownership
       file:
@@ -83,6 +149,11 @@
         owner: www-data
         group: www-data
         recurse: yes
+      register: ownership_changes
+
+    - name: Log project directory ownership changes
+      debug:
+        msg: "{{ ownership_changes }}"
 
     - name: Ensure project directory permissions
       file:
@@ -90,3 +161,8 @@
         state: directory
         mode: "0755"
         recurse: yes
+      register: permission_changes
+
+    - name: Log project directory permission changes
+      debug:
+        msg: "{{ permission_changes }}"
