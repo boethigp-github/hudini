@@ -10,7 +10,7 @@
     requirements_file: "{{ project_path }}/server/requirements.txt"
     database_name: hudini
     database_user: postgres
-    database_password: postgress
+    database_password: postgres
     pg_hba_conf_path: /etc/postgresql/16/main/pg_hba.conf
 
   tasks:
@@ -105,8 +105,9 @@
         lc_collate: en_US.UTF-8
         lc_ctype: en_US.UTF-8
         state: present
-      environment:
-        PGPASSWORD: "{{ database_password }}"
+        login_user: "{{ database_user }}"
+        login_password: "{{ database_password }}"
+        login_host: "localhost"
       register: db_creation
 
     - name: Log database creation
