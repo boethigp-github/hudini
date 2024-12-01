@@ -87,25 +87,51 @@
       debug:
         msg: "{{ postgresql_install }}"
 
-    - name: Set PostgreSQL user password during installation
-      become: yes
-      become_user: postgres
-      shell: |
-        psql -c "ALTER USER postgres WITH PASSWORD '{{ database_password }}';"
-      args:
-        executable: /bin/bash
-
-    - name: Configure PostgreSQL authentication (pg_hba.conf)
+    - name: Set PostgreSQL authentication to peer
       lineinfile:
         path: "{{ pg_hba_conf_path }}"
-        regexp: '^local\s+all\s+postgres\s+peer$'
-        line: 'local   all             postgres                                md5'
+        regexp: '^local\s+all\s+postgres\s+.*$'
+        line: 'local   all             postgres                                peer'
         backup: yes
+      notify: Restart PostgreSQL
 
-    - name: Restart PostgreSQL to apply configuration changes
+    - name: Restart PostgreSQL to apply peer authentication
       service:
         name: postgresql
         state: restarted
+
+    - name: Set PostgreSQL user password
+      become: yes
+      become_user: postgres
+      shell: |
+        psql -c "ALTER USER postgres PASSWORD '{{ database_password }}';"
+      args:
+        executable: /bin/bash
+
+    - name: Revert PostgreSQL authentication to md5
+      lineinfile:
+        path: "{{ pg_hba_conf_path }}"
+        regexp: '^local\s+all\s+postgres\s+.*$'
+        line: 'local   all             postgres                                md5'
+        backup: yes
+      notify: Restart PostgreSQL
+
+    - name: Restart PostgreSQL to apply md5 authentication
+      service:
+        name: postgresql
+        state: restarted
+
+    - name: Test PostgreSQL login with password
+      shell: |
+        PGPASSWORD='{{ database_password }}' psql -U postgres -h localhost -c "\conninfo"
+      register: login_test
+      failed_when: "'Connected to' not in login_test.stdout"
+      args:
+        executable: /bin/bash
+
+    - name: Log PostgreSQL login test result
+      debug:
+        msg: "PostgreSQL login test passed: {{ login_test.stdout }}"
 
     - name: Ensure PostgreSQL service is running
       service:
