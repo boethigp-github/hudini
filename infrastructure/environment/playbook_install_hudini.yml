@@ -12,7 +12,7 @@
     database_user: postgres
     database_password: postgres
     pg_hba_conf_path: /etc/postgresql/16/main/pg_hba.conf
-    alembic_migration_path: /var/www/hudini/infrastructure/database
+    alembic_migration_path: /var/www/hudini/infrastructure/database/migrations
 
   tasks:
     - name: Display selected Anaconda path and project settings
