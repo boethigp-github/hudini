@@ -144,12 +144,7 @@
       shell: |
         source {{ anaconda_path }}/activate {{ conda_env_name }}
         cd {{ alembic_migration_path }}
-        if [ ! -d "versions" ]; then
-          alembic init .
-        fi
-      args:
-        executable: /bin/bash
-      register: alembic_init
+  
 
     - name: Log Alembic initialization result
       debug:
