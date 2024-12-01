@@ -146,14 +146,3 @@
     - name: Log project directory permission changes
       debug:
         msg: "Permission changes: {{ permission_changes }}"
-
-    - name: Restart services (if needed)
-      systemd:
-        name: your-service-name
-        state: restarted
-      when: false  # Set to true and replace `your-service-name` if the project has a service to restart
-      register: service_restart
-
-    - name: Log service restart status
-      debug:
-        msg: "Service restart status: {{ service_restart }}"
