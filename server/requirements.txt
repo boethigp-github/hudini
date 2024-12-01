@@ -101,6 +101,7 @@ nipype==1.8.6
 numpy==1.26.4
 openai==1.41.1
 openpyxl==3.1.5
+bcrypt>=4.0.0
 orjson==3.10.7
 packaging==24.1
 pandas==2.2.2
