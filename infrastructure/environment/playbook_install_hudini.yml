@@ -100,13 +100,6 @@
         name: postgresql
         state: restarted
 
-    - name: Set PostgreSQL user password
-      become: yes
-      shell: |
-        psql -U postgres -c "ALTER USER postgres PASSWORD '{{ database_password }}';"
-      args:
-        executable: /bin/bash
-
     - name: Revert PostgreSQL authentication to md5
       lineinfile:
         path: "{{ pg_hba_conf_path }}"
@@ -120,9 +113,9 @@
         name: postgresql
         state: restarted
 
-    - name: Test PostgreSQL login with password
+    - name: Test PostgreSQL login
       shell: |
-        PGPASSWORD='{{ database_password }}' psql -U postgres -h localhost -c "\conninfo"
+        psql -U postgres -h localhost -c "\conninfo"
       register: login_test
       failed_when: "'Connected to' not in login_test.stdout"
       args:
