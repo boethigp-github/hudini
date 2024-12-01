@@ -535,3 +535,7 @@ ask chatgpt about the content
 ```shell
 python  ask_gpt_with_faiss_search.py
 ```
+ssh login
+```shell
+ssh -l root 78.47.242.59
+```

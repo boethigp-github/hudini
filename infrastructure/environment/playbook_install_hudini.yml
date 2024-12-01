@@ -7,6 +7,9 @@
     conda_env_name: hudini
     python_version: "3.10"
     requirements_file: "{{ project_path }}/server/requirements.txt"
+    database_name: hudini
+    database_user: postgres
+    database_password: postgres
 
   tasks:
     - name: Ensure system dependencies are installed
@@ -47,6 +50,34 @@
     - name: Check pip install result
       debug:
         msg: "{{ pip_install_output.stdout_lines | default('No output') }}"
+
+    - name: Ensure PostgreSQL is installed
+      apt:
+        name:
+          - postgresql
+          - postgresql-contrib
+        state: present
+
+    - name: Ensure PostgreSQL service is running
+      service:
+        name: postgresql
+        state: started
+        enabled: yes
+
+    - name: Create PostgreSQL database
+      postgresql_db:
+        name: "{{ database_name }}"
+        encoding: UTF-8
+        lc_collate: en_US.UTF-8
+        lc_ctype: en_US.UTF-8
+        state: present
+
+    - name: Create PostgreSQL user
+      postgresql_user:
+        name: "{{ database_user }}"
+        password: "{{ database_password }}"
+        privs: "ALL"
+        state: present
 
     - name: Ensure project directory ownership
       file:
