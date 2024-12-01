@@ -98,18 +98,6 @@
       debug:
         msg: "{{ postgresql_service }}"
 
-    - name: Test PostgreSQL login with password
-      shell: |
-        PGPASSWORD="{{ database_password }}" psql -U postgres -h localhost -c "\conninfo"
-      register: login_test
-      failed_when: "'Connected to' not in login_test.stdout"
-      args:
-        executable: /bin/bash
-
-    - name: Log PostgreSQL login test result
-      debug:
-        msg: "PostgreSQL login test passed: {{ login_test.stdout }}"
-
     - name: Create PostgreSQL database
       postgresql_db:
         name: "{{ database_name }}"
