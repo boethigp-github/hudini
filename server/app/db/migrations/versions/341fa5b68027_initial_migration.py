@@ -26,7 +26,7 @@ def upgrade() -> None:
     op.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
     op.execute('CREATE EXTENSION IF NOT EXISTS "pgcrypto";')
 
-    # Check and create the 'users' table
+    # Create the 'users' table first
     if not table_exists('users'):
         op.create_table(
             'users',
@@ -42,7 +42,7 @@ def upgrade() -> None:
             sa.Column('password', sa.String(length=128), nullable=False),
         )
 
-    # Check and create the 'api_keys' table
+    # Create the 'api_keys' table
     if not table_exists('api_keys'):
         op.create_table(
             'api_keys',
@@ -57,7 +57,7 @@ def upgrade() -> None:
         )
         op.create_index('ix_api_keys_key', 'api_keys', ['key'])
 
-    # Check and create the 'gripsbox' table
+    # Create the 'gripsbox' table
     if not table_exists('gripsbox'):
         op.create_table(
             'gripsbox',
@@ -67,13 +67,14 @@ def upgrade() -> None:
             sa.Column('size', sa.Integer(), nullable=False),
             sa.Column('type', sa.String(), nullable=False),
             sa.Column('active', sa.Boolean(), nullable=False),
+            sa.Column('user', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.uuid', ondelete='CASCADE'),
+                      nullable=False),  # Added this explicitly
             sa.Column('tags', sa.JSON(), nullable=False),
             sa.Column('models', sa.JSON(), nullable=True),
             sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'),
                       nullable=False),
             sa.Column('updated', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'),
                       nullable=False),
-            sa.ForeignKeyConstraint(['user'], ['users.uuid'], ondelete='CASCADE'),
         )
 
     # Add other tables similarly
