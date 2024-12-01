@@ -38,3 +38,4 @@ server/userbot.session
 /server/tests/functional/gripsbox/test_file.txt
 /server/app/cli/embeddings.pkl
 /server/app/cli/dokumente_index.faiss
+infrastructure/environment/.env
