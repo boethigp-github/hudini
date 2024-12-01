@@ -31,7 +31,8 @@
 
     - name: Log system dependencies installation
       debug:
-        msg: "{{ system_dependencies }}"
+        msg: >
+          System dependencies installation result: {{ system_dependencies | to_nice_json }}
 
     - name: Ensure Anaconda is available
       stat:
@@ -84,7 +85,7 @@
 
     - name: Log PostgreSQL installation status
       debug:
-        msg: "{{ postgresql_install }}"
+        msg: "{{ postgresql_install | to_nice_json }}"
 
     - name: Ensure PostgreSQL service is running
       service:
@@ -95,7 +96,7 @@
 
     - name: Log PostgreSQL service status
       debug:
-        msg: "{{ postgresql_service }}"
+        msg: "{{ postgresql_service | to_nice_json }}"
 
     - name: Create PostgreSQL database
       postgresql_db:
@@ -108,7 +109,7 @@
 
     - name: Log database creation
       debug:
-        msg: "{{ db_creation }}"
+        msg: "{{ db_creation | to_nice_json }}"
 
     - name: Create PostgreSQL user
       postgresql_user:
@@ -120,7 +121,7 @@
 
     - name: Log user creation
       debug:
-        msg: "{{ user_creation }}"
+        msg: "{{ user_creation | to_nice_json }}"
 
     - name: Ensure project directory ownership
       file:
@@ -133,7 +134,7 @@
 
     - name: Log project directory ownership changes
       debug:
-        msg: "{{ ownership_changes }}"
+        msg: "{{ ownership_changes | to_nice_json }}"
 
     - name: Ensure project directory permissions
       file:
@@ -145,4 +146,4 @@
 
     - name: Log project directory permission changes
       debug:
-        msg: "{{ permission_changes }}"
+        msg: "{{ permission_changes | to_nice_json }}"
