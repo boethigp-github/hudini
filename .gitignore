@@ -39,3 +39,4 @@ server/userbot.session
 /server/app/cli/embeddings.pkl
 /server/app/cli/dokumente_index.faiss
 infrastructure/environment/.env
+infrastructure/environment/.env.local
