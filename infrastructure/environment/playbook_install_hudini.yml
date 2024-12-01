@@ -95,11 +95,6 @@
         backup: yes
       notify: Restart PostgreSQL
 
-    - name: Restart PostgreSQL to apply peer authentication
-      service:
-        name: postgresql
-        state: restarted
-
     - name: Set PostgreSQL user password
       become: yes
       become_user: postgres
@@ -115,11 +110,6 @@
         line: 'local   all             postgres                                md5'
         backup: yes
       notify: Restart PostgreSQL
-
-    - name: Restart PostgreSQL to apply md5 authentication
-      service:
-        name: postgresql
-        state: restarted
 
     - name: Test PostgreSQL login with password
       shell: |
@@ -193,3 +183,9 @@
     - name: Log project directory permission changes
       debug:
         msg: "{{ permission_changes }}"
+
+  handlers:
+    - name: Restart PostgreSQL
+      service:
+        name: postgresql
+        state: restarted
