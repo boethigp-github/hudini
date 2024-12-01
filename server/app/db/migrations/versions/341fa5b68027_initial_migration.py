@@ -10,11 +10,11 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Create the uuid-ossp extension
+    # Enable required PostgreSQL extensions
     op.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";')
     op.execute('CREATE EXTENSION IF NOT EXISTS "pgcrypto";')
 
-    # Users table
+    # Create the users table
     op.create_table(
         'users',
         sa.Column('uuid', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"), primary_key=True),
@@ -26,6 +26,7 @@ def upgrade() -> None:
         sa.Column('password', sa.String(length=128), nullable=False),
     )
 
+    # Create API key generation function and trigger for the users table
     op.execute("""
     CREATE OR REPLACE FUNCTION create_api_key_for_user()
     RETURNS TRIGGER AS $$
@@ -46,7 +47,7 @@ def upgrade() -> None:
     FOR EACH ROW EXECUTE FUNCTION create_api_key_for_user();
     """)
 
-    # API Keys table
+    # Create the api_keys table
     op.create_table(
         'api_keys',
         sa.Column('id', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"), primary_key=True),
@@ -57,7 +58,7 @@ def upgrade() -> None:
     )
     op.create_index('ix_api_keys_key', 'api_keys', ['key'])
 
-    # Gripsbox table
+    # Create the gripsbox table
     op.create_table(
         'gripsbox',
         sa.Column('id', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"), primary_key=True),
@@ -72,6 +73,7 @@ def upgrade() -> None:
         sa.Column('models', sa.JSON(), nullable=True),
     )
 
+    # Create update trigger for the gripsbox table
     op.execute("""
     CREATE OR REPLACE FUNCTION update_modified_column()
     RETURNS TRIGGER AS $$
@@ -88,7 +90,7 @@ def upgrade() -> None:
     FOR EACH ROW EXECUTE FUNCTION update_modified_column();
     """)
 
-    # Prompts table
+    # Create the prompts table
     op.create_table(
         'prompts',
         sa.Column('uuid', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"), primary_key=True),
@@ -98,11 +100,11 @@ def upgrade() -> None:
         sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     )
 
-    # User Context table
+    # Create the user_context table
     op.create_table(
         'user_context',
         sa.Column('uuid', postgresql.UUID(as_uuid=True), server_default=sa.text("uuid_generate_v4()"), primary_key=True),
-        sa.Column('context_data', sa.JSONB(), nullable=False),
+        sa.Column('context_data', postgresql.JSONB(), nullable=False),
         sa.Column('user', postgresql.UUID(as_uuid=True), sa.ForeignKey('users.uuid', ondelete='CASCADE'), nullable=False),
         sa.Column('thread_id', sa.BigInteger(), nullable=False),
         sa.Column('created', sa.TIMESTAMP(timezone=True), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
