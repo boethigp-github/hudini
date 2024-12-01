@@ -87,6 +87,14 @@
       debug:
         msg: "{{ postgresql_install }}"
 
+    - name: Set PostgreSQL user password during installation
+      become: yes
+      become_user: postgres
+      shell: |
+        psql -c "ALTER USER postgres WITH PASSWORD '{{ database_password }}';"
+      args:
+        executable: /bin/bash
+
     - name: Configure PostgreSQL authentication (pg_hba.conf)
       lineinfile:
         path: "{{ pg_hba_conf_path }}"
@@ -98,13 +106,6 @@
       service:
         name: postgresql
         state: restarted
-
-    - name: Set PostgreSQL user password
-      become_user: postgres
-      shell: |
-        psql -c "ALTER USER postgres WITH PASSWORD '{{ database_password }}';"
-      args:
-        executable: /bin/bash
 
     - name: Ensure PostgreSQL service is running
       service:
