@@ -536,6 +536,12 @@ ask chatgpt about the content
 python  ask_gpt_with_faiss_search.py
 ```
 ssh login
+
 ```shell
 ssh -l root 78.47.242.59
+```
+### Ansible install
+```shell
+cd infrastructure/environment/
+ansible-playbook playbook_install_hudini.yml
 ```
