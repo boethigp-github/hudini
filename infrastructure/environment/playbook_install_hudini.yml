@@ -95,11 +95,15 @@
         backup: yes
       notify: Restart PostgreSQL
 
+    - name: Restart PostgreSQL to apply peer authentication
+      service:
+        name: postgresql
+        state: restarted
+
     - name: Set PostgreSQL user password
       become: yes
-      become_user: postgres
       shell: |
-        psql -c "ALTER USER postgres PASSWORD '{{ database_password }}';"
+        psql -U postgres -c "ALTER USER postgres PASSWORD '{{ database_password }}';"
       args:
         executable: /bin/bash
 
@@ -110,6 +114,11 @@
         line: 'local   all             postgres                                md5'
         backup: yes
       notify: Restart PostgreSQL
+
+    - name: Restart PostgreSQL to apply md5 authentication
+      service:
+        name: postgresql
+        state: restarted
 
     - name: Test PostgreSQL login with password
       shell: |
