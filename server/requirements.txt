@@ -187,7 +187,7 @@ uvicorn==0.30.6
 watchfiles==0.23.0
 wcwidth==0.2.13
 websockets==13.0
-Werkzeug==2.3.7
+Werkzeug==3.0.0
 wsproto==1.2.0
 yarl==1.9.4
 zipp==3.16.1
