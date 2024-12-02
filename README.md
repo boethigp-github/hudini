@@ -271,6 +271,11 @@ If you prefer to start each service manually, follow these steps:
    fastapi run run.py --port=80
    ```
 
+   if you want to start in debug mode and reload
+  ```bash 
+   run run.py --port=80 --reload
+    ```
+
    This starts the FastAPI application on port 80.
 
 3. **Frontend Development Server:**

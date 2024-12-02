@@ -6,6 +6,8 @@ export async function loadModels() {
   try {
     const data = await getModels();
 
+    console.log("models", data);
+
     // Save the complete service response
     await modelsStore.saveServiceResponse(data);
 

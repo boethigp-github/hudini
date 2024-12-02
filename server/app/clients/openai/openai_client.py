@@ -44,11 +44,14 @@ class OpenAIClient:
 
             systemprompt = self.hudini_character(today, current_time)
 
+            # Combine system prompt and context
+            combined_system_message = f"{systemprompt}\n\nContext: {context}"
+
             # Use the context in the system message and pass it to the OpenAI API
             stream = await self.client.chat.completions.create(
                 model=openai_model.id,
                 messages=[
-                    {"role": "system", "content": systemprompt},
+                    {"role": "system", "content": combined_system_message},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=1.0,

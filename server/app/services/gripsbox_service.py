@@ -147,4 +147,4 @@ async def add_gripsbox_content_to_llm_context(user: User) -> List[Message]:
 
     except Exception as e:
         logger.error(f"Error while adding Gripsbox content to LLM context: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Failed to add Gripsbox content to for user: {user.uuid} LLM context.")
+        raise HTTPException(status_code=500, detail=f"Failed to add Gripsbox content to for user: {user.uuid} LLM context. {str(e)}")

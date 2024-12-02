@@ -182,11 +182,22 @@ async def stream_route(request: GenerationRequest, user: User = Depends(auth)):
     # Fetch user context from the database
     user_context = await get_user_context(thread_id=1)
 
-    # Fetch Gripsbox content for the user
-    gripsbox_context_messages = await add_gripsbox_content_to_llm_context(user)
+    try:
+        gripsbox_context_messages = await add_gripsbox_content_to_llm_context(user)
+        # Safely join content messages
+        gripsbox_content = " ".join([msg.content for msg in gripsbox_context_messages])
+
+        print(f"--------------------------------------")
+        print(f"Gripsbox content: {gripsbox_content}")
+
+    except Exception as e:
+        # Log the error if necessary
+        print(f"Error adding Gripsbox content: {e}")
+        gripsbox_content = ""
 
     # Combine user context and Gripsbox content into a single context
-    combined_context = user_context + " " + " ".join([msg.content for msg in gripsbox_context_messages])
+    combined_context = user_context + " " + gripsbox_content
+
 
     # Validate models and clients
     valid_models = validate_models_and_clients(request.models, request.method_name)
