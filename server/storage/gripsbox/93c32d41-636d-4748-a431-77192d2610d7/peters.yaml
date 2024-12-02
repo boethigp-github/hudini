@@ -1,0 +1,493 @@
+openapi: 3.0.0
+info:
+  title: Hudini - Rest API
+  version: 1.0.0
+  description: API for a Flask application with prompt management and text generation capabilities
+
+servers:
+  - url: http://localhost:5000
+
+tags:
+  - name: Home
+    description: Endpoints related to the home page and general status
+  - name: Models
+    description: Endpoints related to managing and retrieving models
+  - name: Prompts
+    description: Endpoints related to creating, updating, deleting, and retrieving prompts
+  - name: Swagger
+    description: OpenAPI Definition and Swagger UI
+  - name: Generations
+    description: LLM Generations
+
+paths:
+  /:
+    get:
+      tags:
+        - Home
+      summary: Home page
+      responses:
+        '200':
+          description: Renders the index.html template
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /models:
+    get:
+      tags:
+        - Models
+      summary: Get available models
+      responses:
+        '200':
+          description: List of available local and OpenAI models
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelsResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /stream:
+    post:
+      tags:
+        - Generations
+      summary: Stream generated text
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prompt:
+                  type: string
+                  description: The prompt for text generation
+                  example: "Tell me a joke"
+                models:
+                  type: array
+                  items:
+                    type: string
+                  description: The list of models to use for text generation
+                  example: ["gpt-3.5-turbo"]
+      responses:
+        '200':
+          description: Stream of generated text
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/SuccessGenerationModel'
+        '400':
+          description: No prompt or model available for streaming
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerationModel'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerationModel'
+
+  /prompt:
+    get:
+      tags:
+        - Prompts
+      summary: Load saved prompts
+      responses:
+        '200':
+          description: List of saved prompts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Prompt'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags:
+        - Prompts
+      summary: Create a new prompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Prompt'
+      responses:
+        '200':
+          description: Prompt created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prompt'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerationModel'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerationModel'
+
+  /prompt/{id}:
+    patch:
+      tags:
+        - Prompts
+      summary: Update an existing prompt
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Prompt'
+      responses:
+        '200':
+          description: Prompt updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prompt'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerationModel'
+        '404':
+          description: Prompt not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerationModel'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerationModel'
+
+    delete:
+      tags:
+        - Prompts
+      summary: Delete a saved prompt
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Prompt deleted successfully
+        '404':
+          description: Prompt not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerationModel'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerationModel'
+
+  /swagger.yaml:
+    get:
+      tags:
+        - Swagger
+      summary: Get Swagger YAML
+      description: Retrieve the Swagger YAML file describing the API
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/x-yaml:
+              schema:
+                type: string
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerationModel'
+
+  /api/docs:
+    get:
+      tags:
+        - Swagger
+      summary: Swagger UI
+      description: Renders the Swagger UI for the API
+      responses:
+        '200':
+          description: Successful response rendering the Swagger UI
+          content:
+            text/html:
+              schema:
+                type: string
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerationModel'
+
+components:
+  schemas:
+    SuccessGenerationModel:
+      type: object
+      properties:
+        model:
+          type: string
+          description: The name of the model being used
+          example: "gpt-3"
+        completion:
+          type: object
+          properties:
+            id:
+              type: string
+              description: The unique identifier for the completion
+              example: "cmpl-5Huiq..."
+            choices:
+              type: array
+              items:
+                type: object
+                properties:
+                  finish_reason:
+                    type: string
+                    description: The reason why the completion finished
+                    example: "stop"
+                  index:
+                    type: integer
+                    description: The index of the choice in the response
+                    example: 0
+                  logprobs:
+                    type: object
+                    additionalProperties:
+                      type: integer
+                    description: Log probabilities of tokens (if available)
+                  message:
+                    type: object
+                    properties:
+                      content:
+                        type: string
+                        description: The content of the message
+                        example: "This is a generated response."
+                      refusal:
+                        type: string
+                        nullable: true
+                        description: Refusal message if the model refuses to generate (optional)
+                        example: "I can't do that."
+                      role:
+                        type: string
+                        description: The role of the message (e.g., system, user, assistant)
+                        example: "assistant"
+            created:
+              type: integer
+              description: The timestamp when the completion was created
+              example: 1627543200
+            model:
+              type: string
+              description: The model that generated the completion
+              example: "gpt-3.5-turbo"
+            object:
+              type: string
+              description: The type of object returned (typically "text_completion")
+              example: "text_completion"
+            system_fingerprint:
+              type: string
+              nullable: true
+              description: System fingerprint information, if available
+              example: "fingerprint-info"
+            usage:
+              type: object
+              properties:
+                completion_tokens:
+                  type: integer
+                  description: Number of tokens generated by the completion
+                  example: 50
+                prompt_tokens:
+                  type: integer
+                  description: Number of tokens in the prompt
+                  example: 20
+                total_tokens:
+                  type: integer
+                  description: Total number of tokens (prompt + completion)
+                  example: 70
+      required:
+        - model
+        - completion
+
+    GenerationErrorDetail:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Detailed error message
+          example: "Invalid input parameter"
+        type:
+          type: string
+          description: Type of error
+          example: "validation_error"
+        param:
+          type: string
+          description: The parameter that caused the error
+          example: "prompt"
+        code:
+          type: string
+          nullable: true
+          description: Optional error code
+          example: "invalid_prompt"
+
+    ErrorModel:
+      type: object
+      properties:
+        error:
+          $ref: '#/components/schemas/GenerationErrorDetail'
+
+    ErrorGenerationModel:
+      type: object
+      properties:
+        model:
+          type: string
+          description: The name of the model associated with the error
+          example: "gpt-3"
+        error:
+          oneOf:
+            - type: string
+              description: Simple error message
+              example: "An unknown error occurred."
+            - $ref: '#/components/schemas/ErrorModel'
+      required:
+        - model
+        - error
+
+    Prompt:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The unique identifier of the prompt
+        user:
+          type: string
+          description: The user who created the prompt
+          minLength: 5
+          maxLength: 30
+        status:
+          type: string
+          enum:
+            - initialized
+            - prompt-saved
+            - prompt-updated
+            - prompt-deleted
+          description: The current status of the prompt
+          example: "initialized"
+        prompt:
+          type: string
+          description: The prompt text
+        timestamp:
+          type: string
+          format: date-time
+          description: The time when the prompt was created
+      required:
+        - id
+        - user
+        - prompt
+        - status
+      additionalProperties: false
+
+    OpenAIModel:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the model
+          example: "text-davinci-003"
+        object:
+          type: string
+          description: The type of the object (typically "model")
+          example: "model"
+        created:
+          type: integer
+          description: The timestamp when the model was created
+          example: 1610070400
+        owned_by:
+          type: string
+          description: The owner of the model
+          example: "openai"
+        permission:
+          type: array
+          items:
+            type: string
+          description: A list of permissions associated with the model
+        root:
+          type: string
+          description: The root model ID
+          example: "text-davinci-003"
+        parent:
+          type: string
+          description: The parent model ID, if any
+          example: "text-davinci-002"
+        category:
+          type: string
+          description: The category of the model
+          example: "text_completion"
+        description:
+          type: string
+          description: A brief description of the model's purpose
+          example: "A GPT-based model for text completion"
+      required:
+        - id
+        - object
+
+    ModelsResponse:
+      type: object
+      properties:
+        local_models:
+          type: array
+          items:
+            type: string
+        openai_models:
+          type: array
+          items:
+            $ref: '#/components/schemas/OpenAIModel'
+      required:
+        - local_models
+        - openai_models
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: A detailed error message explaining what went wrong
+        details:
+          type: string
+          description: Additional details about the error
+      required:
+        - error
+        - details
