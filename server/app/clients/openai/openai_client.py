@@ -13,6 +13,32 @@ from typing import Optional
 class OpenAIClient:
     async_methods = ['fetch_completion']
 
+    CHAT_MODELS = [
+        'gpt-3.5-turbo',
+        'gpt-4',
+        'gpt-4-turbo',
+        'gpt-3.5-turbo-16k',
+        'gpt-4-0613',
+        'gpt-4-turbo-2024',
+        'chatgpt-4o-latest',
+        'gpt-4-1106-preview',
+        'gpt-4-turbo-preview',
+        'gpt-4-turbo-2024-04-09',
+        'gpt-3.5-turbo-0125',
+        'gpt-3.5-turbo-1106',
+        'gpt-4o-mini',
+        'gpt-4o',
+        'o1-preview',
+        'o1',
+    ]
+
+    DONT_SUPPORT_SYSTEM_PROMPT = [
+
+        'o1-preview',
+        'o1',
+    ]
+
+
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.client = AsyncOpenAI(api_key=api_key)  # For async operations
@@ -44,16 +70,28 @@ class OpenAIClient:
 
             systemprompt = self.hudini_character(today, current_time)
 
-            # Combine system prompt and context
-            combined_system_message = f"{systemprompt}\n\nContext: {context}"
-
-            # Use the context in the system message and pass it to the OpenAI API
-            stream = await self.client.chat.completions.create(
-                model=openai_model.id,
-                messages=[
+            # Wenn das Modell das Systemprompt nicht unterstützt, integriere es in die Benutzer-Nachricht
+            if openai_model.id in self.DONT_SUPPORT_SYSTEM_PROMPT:
+                # Verwende das Systemprompt in der Benutzer-Nachricht
+                messages = [
+                    {"role": "user", "content": f"context: {systemprompt}\n\nContext and <Gripsbox>: {context} </Gripsbox>"},
+                    {"role": "user", "content": f"Frage: {prompt}"}
+                ]
+            else:
+                # Für Chat-Modelle oder andere unterstützte Modelle
+                combined_system_message = f"{systemprompt}\n\nContext and Gripsbox Content: {context}"
+                messages = [
                     {"role": "system", "content": combined_system_message},
                     {"role": "user", "content": prompt}
-                ],
+                ]
+
+
+            self.logger.debug(f"Content sended:  {str(messages)}")
+
+            # Verwende die zusammengestellten Nachrichten für das Modell
+            stream = await self.client.chat.completions.create(
+                model=openai_model.id,
+                messages=messages,
                 temperature=1.0,
                 stream=True,
                 presence_penalty=presence_penalty
@@ -173,20 +211,22 @@ class OpenAIClient:
 
     def get_available_models(self) -> list:
         """
-        Fetches the list of available models from OpenAI using the synchronous OpenAI client.
+        Fetches the list of available chat models from OpenAI using the synchronous OpenAI client.
 
         Returns:
-            list: A list of OpenaiModel instances representing the models available in the OpenAI API.
+            list: A list of OpenaiModel instances representing the chat models available in the OpenAI API.
         """
         try:
             response = openai.models.list()  # Synchronous call to fetch models
-            models = [
+            # Only include chat models from the list
+            chat_models = [
                 OpenaiModel.from_dict(model.model_dump()).model_dump()  # Use the factory method to create each model
                 for model in response.data
+                if model.id in self.CHAT_MODELS  # Check if the model ID is in the predefined CHAT_MODELS list
             ]
 
-            self.logger.debug(f"Retrieved {len(models)} models from OpenAI")
-            return models
+            self.logger.debug(f"Retrieved {len(chat_models)} chat models from OpenAI")
+            return chat_models
         except Exception as e:
             self.logger.error(f"Failed to fetch models from OpenAI: {str(e)}", exc_info=True)
             raise ValueError(f"Error fetching models from OpenAI: {str(e)}")

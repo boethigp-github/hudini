@@ -57,6 +57,7 @@ async def get_models(
 
         # Check if the result is in the cache for the active providers
         cached_models = cache.get(cache_key)
+        cached_models=None
         if cached_models is not None:
             logger.debug("Cache hit: Returning cached models list for active providers")
             return cached_models  # The response model handles the serialization

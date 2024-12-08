@@ -33,6 +33,7 @@
                   :spellcheck="false"
                   @keydown="handleKeydown"
               ></textarea>
+
             </v-form>
           </v-col>
           <v-col cols="3" md="3" sm="0">
@@ -370,7 +371,7 @@ export default {
         showMessage(t('error_submitting_prompt'), 'error');
         console.error('Error submitting prompt:', error);
       } finally {
-        hideLoader();
+        //hideLoader();
       }
     };
 

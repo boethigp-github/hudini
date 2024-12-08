@@ -25,8 +25,19 @@
               @mouseover="handleMouseOver(contextDataItem.id)"
               @mouseout="handleMouseOut"
           />
+                <!-- Add the spinner here, it will be shown only when loading is true -->
+
         </v-card>
       </v-card>
+<!--          <v-progress-linear-->
+<!--      v-if="loading"-->
+<!--      indeterminate-->
+<!--      color="secondary"-->
+<!--      height="20"-->
+<!--      class="thinking-spinner"-->
+<!--    >-->
+<!--      Thinking...-->
+<!--    </v-progress-linear>-->
     </div>
   </div>
 </template>
