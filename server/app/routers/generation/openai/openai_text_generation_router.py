@@ -128,13 +128,32 @@ async def get_user_context(thread_id: int = 1) -> str:
         )
         user_contexts = result.scalars().all()
 
-        # Extract context_data and convert to string
-        context_data_strings = [json.dumps(uc.context_data) for uc in user_contexts]
+        # Extract context_data, parse JSON if needed, and get 'content' values
+        content_list = []
+        for uc in user_contexts:
+            context_data = uc.context_data  # Assuming `uc.context_data` is already a dict
+            if isinstance(context_data, str):
+                # If context_data is a JSON string, parse it
+                context_data = json.loads(context_data)
 
-        # Combine all context data into a single string
-        combined_context = " ".join(context_data_strings)
+            # Process context_data to extract 'content'
+            if isinstance(context_data, list):  # Assuming it's a list of dicts
+                for data_item in context_data:
+                    completion = data_item.get("completion", {})
+                    choices = completion.get("choices", [])
+                    for choice in choices:
+                        content = choice.get("message", {}).get("content")
+                        if content:
+                            content_list.append(content)
+
+        # Combine all content into a single string
+        combined_context = " ".join(content_list)
+
+        logger.debug(f"userContext start: {content_list}")
+        logger.debug(f"userContext end")
 
         return combined_context
+
 
 
 @router.post(

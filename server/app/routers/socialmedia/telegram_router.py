@@ -63,8 +63,10 @@ async def publish_to_telegram(publish_request: TelegramPublishRequestModel,_: st
         api_hash = telegram_provider["api_hash"]
         phone_number = telegram_provider["phone_number"]
         password = telegram_provider.get("password")  # Get the 2FA password if available
-
+        logger.debug(f"Send Telegram: user {SOCIALMEDIA_USER}. API_ID: {api_id} API_HASH: {api_hash} PHONE_NUMBER: {phone_number} PASSWORD: {password}")
         client = TelegramClient('userbot', api_id, api_hash)
+
+
 
         # Start client and authenticate
         await client.start(phone=phone_number)

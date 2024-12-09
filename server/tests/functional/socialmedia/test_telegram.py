@@ -26,7 +26,7 @@ def telegram_publish_payload():
     return {
         "user": "JohnDoe",
         "api_id": 23915104,  # Match your SOCIALMEDIA_USER API ID
-        "group_id": "@hudinitests",  # Use the group ID directly
+        "group_id": "@hudinitest",  # Use the group ID directly
         "message": "Test message from pytest"
     }
 
@@ -64,7 +64,7 @@ class TestTelegramPublish(TestAbstract):
         telegram_publish_payload_with_2fa = {
             "user": "JohnDoe",
             "api_id": 23915104,  # Match your SOCIALMEDIA_USER API ID
-            "group_id": "@hudinitests",  # Use the group ID directly
+            "group_id": "@hudinitest",  # Use the group ID directly
             "message": "Test message from pytest",
             "password": "8300"  # Assuming this is your 2FA password
         }
@@ -91,7 +91,7 @@ class TestTelegramPublish(TestAbstract):
         telegram_publish_payload = {
             "user": "JohnDoe",
             "api_id": 23915104,  # Match your SOCIALMEDIA_USER API ID
-            "group_id": "@hudinitests",  # Use the group ID directly
+            "group_id": "@hudinitest",  # Use the group ID directly
             "message": "Test message from pytest"
         }
 

@@ -18,7 +18,7 @@ def telegram_image_publish_payload():
     return {
         "user": "JohnDoe",
         "api_id": "23915104",
-        "group_id": "@hudinitests",
+        "group_id": "@hudinitest",
         "caption": "Test caption from pytest",
         "url": "https://testimages.org/img/testimages_screenshot.jpg"  # Ensure this URL points to a valid image for testing
     }
@@ -51,7 +51,7 @@ class TestTelegramPublishWithImage(TestAbstract):
             json={
         "user": "JohnDoe",
         "api_id": "23915104",
-        "group_id": "@hudinitests",
+        "group_id": "@hudinitest",
         "caption": "Test caption from pytest",
         "url": "https://testimages.org/img/testimages_screenshot.jpg"  # Ensure this URL points to a valid image for testing
     },

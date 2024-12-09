@@ -118,7 +118,10 @@ async def create_gripsbox_service(
 
 
 async def load_active_gripsbox_files(user_uuid: str) -> List[str]:
-    """Load the contents of all active files in the user's Gripsbox, and load extracted text for PDFs."""
+    """
+    Load the contents of all active files in the user's Gripsbox, and load extracted text for PDFs.
+    Includes the file name and type directly in the content.
+    """
     user_gripsbox_path = get_users_gripsbox_folder(user_uuid)
 
     # Check if the Gripsbox folder exists
@@ -150,7 +153,10 @@ async def load_active_gripsbox_files(user_uuid: str) -> List[str]:
                     try:
                         with open(extracted_text_filename, "r", encoding="utf-8", errors="ignore") as text_file:
                             extracted_text = text_file.read()
-                        file_contents.append(extracted_text)
+                        # Append content with file name and type
+                        file_contents.append(
+                            f"File: {gripsbox_entry.name} (type: PDF)\n{extracted_text}"
+                        )
                         logger.info(f"Loaded extracted text for PDF: {gripsbox_entry.name}")
                     except UnicodeDecodeError as e:
                         logger.error(f"Error reading extracted text for PDF {gripsbox_entry.name}: {str(e)}")
@@ -163,7 +169,10 @@ async def load_active_gripsbox_files(user_uuid: str) -> List[str]:
                     try:
                         with open(file_path, "r", encoding="utf-8", errors="ignore") as file:
                             content = file.read()
-                        file_contents.append(content)
+                        # Append content with file name and type
+                        file_contents.append(
+                            f"File: {gripsbox_entry.name} (type: {gripsbox_entry.type})\n{content}"
+                        )
                     except UnicodeDecodeError as e:
                         logger.error(f"Error reading file {gripsbox_entry.name}: {str(e)}")
                         raise HTTPException(status_code=500, detail=f"Error reading file {gripsbox_entry.name}.")
@@ -172,6 +181,7 @@ async def load_active_gripsbox_files(user_uuid: str) -> List[str]:
                     raise HTTPException(status_code=404, detail=f"File {gripsbox_entry.name} not found.")
 
         return file_contents
+
 
 
 

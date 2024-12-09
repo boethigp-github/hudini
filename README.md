@@ -109,7 +109,7 @@ SOCIALMEDIA_USER='[{
   "phone_number": "",
   "password": "",
   "groups": [
-      "@hudinitests"
+      "hudinitest"
     ]
 }]'
 ```
