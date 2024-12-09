@@ -8,7 +8,10 @@ from server.app.models.generation.success_generation_model import SuccessGenerat
 from server.app.models.generation_error_details import ErrorGenerationModel
 from server.app.models.generation.openai_model import OpenaiModel
 from typing import Optional
+import httpx
+import json
 
+from server.app.utils.tool_calling_tools import get_tool_calling_tools, get_weather, get_hudini_user
 
 class OpenAIClient:
     async_methods = ['fetch_completion']
@@ -69,114 +72,134 @@ class OpenAIClient:
         return logger
 
     async def fetch_completion(self, openai_model: OpenaiModel, prompt: str, id: str,
-                               context: str, presence_penalty: Optional[float] = 0.0):
+                               context: str, presence_penalty: Optional[float] = 0.0,
+                               use_tool: bool = True, gripsbox_content: Optional[str] = None):
         try:
             self.logger.debug(
-                f"Fetching completion for model: {openai_model.id} with presence_penalty: {presence_penalty}")
+                f"Fetching completion for model: {openai_model.id} with presence_penalty: {presence_penalty}, use_tool: {use_tool}"
+            )
 
+            tools = []
+            if use_tool:
+                tools = get_tool_calling_tools()
+
+            # Kontext vorbereiten: Gripsbox-Inhalt und Benutzerkontext hinzufügen
+            context_combined = context
+            if gripsbox_content:
+                context_combined += f"\n\nGripsbox Content:\n{gripsbox_content}"
+
+            # HUDINI-Systemprompt erstellen
             now = datetime.now()
             today = now.strftime("%Y-%m-%d")
             current_time = now.strftime("%H:%M:%S")
-
-            # Get the context window size for the model
-            context_window = self.MODEL_CONTEXT_WINDOWS.get(openai_model.id, 4096)
-            self.logger.debug(f"Context window size for model {openai_model.id}: {context_window}")
-
-            # Calculate token sizes for each component
-            systemprompt = self.hudini_character(today, current_time)
-            system_prompt_tokens = len(systemprompt.split())
-            user_prompt_tokens = len(prompt.split())
-            context_tokens = len(context.split())
-
-            # Ensure user prompt and system prompt fit
-            reserved_tokens = system_prompt_tokens + user_prompt_tokens
-            if reserved_tokens >= context_window:
-                raise ValueError(
-                    f"System prompt and user prompt exceed the context window size of {context_window} tokens.")
-
-            # Trim context to fit the remaining space
-            max_context_tokens = context_window - reserved_tokens
-            if context_tokens > max_context_tokens:
-                context = self.trim_context(context, max_context_tokens)
-                self.logger.debug(f"Trimmed context to fit within {max_context_tokens} tokens.")
-
-            # Prepare messages
-            if openai_model.id in self.DONT_SUPPORT_SYSTEM_PROMPT:
-                messages = [
-                    {"role": "user", "content": f"context: {systemprompt}\n\n{context}"},
-                    {"role": "user", "content": prompt}
-                ]
-            else:
-                combined_system_message = f"{systemprompt}\n\n{context}"
-                messages = [
-                    {"role": "system", "content": combined_system_message},
-                    {"role": "user", "content": prompt}
-                ]
+            system_prompt = self.hudini_character(today, current_time)
+            messages = [
+                {"role": "system", "content": f"{system_prompt}\n\n{context_combined}"},
+                {"role": "user", "content": prompt},
+            ]
 
             self.logger.debug(f"Messages prepared: {messages}")
 
-            # Send the request to OpenAI
+            # Anfrage an OpenAI senden
             stream = await self.client.chat.completions.create(
                 model=openai_model.id,
                 messages=messages,
-                temperature=1.0,
+                temperature=0.1 if use_tool else 1.0,
                 stream=True,
-                presence_penalty=presence_penalty
+                presence_penalty=presence_penalty,
+                functions=tools if use_tool else None,
+                function_call="auto" if use_tool else None,
             )
 
             async def async_generator():
                 full_content = ""
+                partial_arguments = ""
+                function_name = None
+
                 async for chunk in stream:
-                    if chunk.choices[0].delta.content:
+                    self.logger.debug(f"Chunk received: {chunk}")
+
+                    # Tool-Handling
+                    if use_tool and hasattr(chunk.choices[0].delta, "function_call"):
+                        function_call = chunk.choices[0].delta.function_call
+                        if function_call:
+                            if function_call.name and not function_name:
+                                function_name = function_call.name
+                                self.logger.debug(f"Detected function name: {function_name}")
+
+                            if function_call.arguments:
+                                partial_arguments += function_call.arguments
+                                self.logger.debug(f"Accumulated arguments: {partial_arguments}")
+
+                    # Tool-Call ausführen, wenn abgeschlossen
+                    if use_tool and chunk.choices[0].finish_reason == "function_call" and function_name:
+                        try:
+                            function_args = json.loads(partial_arguments)
+                            self.logger.debug(f"Parsed arguments for {function_name}: {function_args}")
+
+                            if function_name == "get_weather":
+                                result = get_weather(function_args["location"])
+                                self.logger.info(f"Tool {function_name} executed successfully: {result}")
+                                full_content = result
+
+                            elif function_name == "get_hudini_user":
+                                result = await get_hudini_user()
+                                self.logger.info(f"Tool {function_name} executed successfully: {result}")
+                                full_content = result
+                        except Exception as e:
+                            self.logger.error(f"Error while executing tool '{function_name}': {str(e)}")
+                        finally:
+                            partial_arguments = ""
+                            function_name = None
+
+                    # Inhalte normal anhängen (ohne Tools)
+                    if hasattr(chunk.choices[0].delta, "content"):
                         content = chunk.choices[0].delta.content
-                        full_content += content
+                        if content:
+                            full_content += content
+                            self.logger.debug(f"Content received: {content}")
 
-                        completion = Completion(
-                            id=chunk.id,
-                            choices=[Choice(
-                                finish_reason=chunk.choices[0].finish_reason or "null",
-                                index=chunk.choices[0].index,
-                                message=Message(
-                                    content=full_content,
-                                    role=chunk.choices[0].delta.role or "assistant"
-                                )
-                            )],
-                            created=chunk.created,
-                            model=openai_model.id,
-                            object=chunk.object,
-                            system_fingerprint=None,
-                            usage=Usage(
-                                completion_tokens=len(full_content.split()),
-                                prompt_tokens=user_prompt_tokens,
-                                total_tokens=len(full_content.split()) + user_prompt_tokens,
-                                ended=int(datetime.utcnow().timestamp())
+                    # Leere Inhalte überspringen
+                    if not full_content.strip():
+                        self.logger.debug("Skipping empty content chunk")
+                        continue
+
+                    # Completion erstellen und streamen
+                    completion = Completion(
+                        id=chunk.id,
+                        choices=[Choice(
+                            finish_reason=chunk.choices[0].finish_reason or "null",
+                            index=chunk.choices[0].index,
+                            message=Message(
+                                content=full_content,
+                                role=chunk.choices[0].delta.role or "assistant"
                             )
+                        )],
+                        created=chunk.created,
+                        model=openai_model.id,
+                        object=chunk.object,
+                        system_fingerprint=None,
+                        usage=Usage(
+                            completion_tokens=len(full_content.split()),
+                            prompt_tokens=len(prompt.split()),
+                            total_tokens=len(full_content.split()) + len(prompt.split()),
+                            ended=int(datetime.utcnow().timestamp())
                         )
-
-                        yield (SuccessGenerationModel(
-                            id=id,
-                            model=openai_model.id,
-                            completion=completion
-                        ).model_dump_json()).encode('utf-8')
+                    )
+                    self.logger.debug(f"Completion created: {completion}")
+                    yield (SuccessGenerationModel(
+                        id=id,
+                        model=openai_model.id,
+                        completion=completion
+                    ).model_dump_json()).encode('utf-8')
 
             return async_generator()
 
-
         except Exception as e:
+            self.logger.error(f"Error in fetch_completion: {str(e)}")
+            raise
 
-            self.logger.error(
-                f"OpenAIClient::fetch_completion: Error with model {openai_model.id}: {str(e)}",
-                exc_info=True  # Logs the traceback for debugging
-            )
 
-            # Pass the error explicitly to the generator
-            async def error_generator(captured_error: str):
-                yield (ErrorGenerationModel(
-                    model=openai_model.id,
-                    error=captured_error
-                ).model_dump_json()).encode('utf-8')
-
-            return error_generator(str(e))
 
     def hudini_character(self, today, current_time):
         hudini_text = f"""

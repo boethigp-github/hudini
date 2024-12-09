@@ -33,3 +33,15 @@ class UserService:
         async for db in get_db():
             result = await db.execute(select(User).filter(User.username == username))
             return result.scalar_one_or_none()
+
+    async def get_all_users(self) -> list[dict]:
+        """
+        Retrieve all users from the database.
+
+        Returns:
+            list[dict]: A list of user dictionaries containing username and email.
+        """
+        async for db in get_db():
+            result = await db.execute(select(User))
+            users = result.scalars().all()
+            return [{"username": user.username, "email": user.email} for user in users]
