@@ -1,5 +1,5 @@
 <template>
-  <div :class="['user-prompt', 'fade-in','text-primary']">
+  <div :class="['user-prompt', 'fade-in','text-primary']" v-if="promptTokens!=='0'">
     <div class="prompt-id">{{ $t('prompt_id', 'ID') }}: {{ promptUuid }}</div>
     <div class="prompt-tokens">
       {{ $t('prompt_tokens', 'Prompt Tokens') }}: <span >{{ promptTokens }}</span>
