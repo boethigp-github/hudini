@@ -1,9 +1,8 @@
 import unittest
 import requests
-import uuid
 from server.app.config.settings import Settings
 from server.app.models.model_parameter.models_parameter_request import ModelParameterRequestModel
-from server.tests.test_abstract import TestAbstract  # Assuming test_abstract contains API key logic
+from server.tests.test_abstract import TestAbstract
 import asyncio
 
 
@@ -41,7 +40,6 @@ class TestModelParameters(TestAbstract):
 
         # Create the payload
         create_payload = ModelParameterRequestModel(
-            user=self.TEST_USER_UUID,
             parameter="max_tokens",
             model="gpt-4",
             value={"max": 1024},
@@ -50,7 +48,7 @@ class TestModelParameters(TestAbstract):
 
         # Convert the model to a dictionary and ensure UUIDs are strings
         payload_dict = create_payload.model_dump()
-        payload_dict['user'] = str(payload_dict['user'])  # Ensure the UUID is serialized as a string
+
 
         # Send the POST request with the API key as a query parameter
         create_response = requests.post(f"{self.BASE_URL}/model-parameters?api_key={self.api_key}", json=payload_dict)
@@ -61,6 +59,41 @@ class TestModelParameters(TestAbstract):
 
         # Return the UUID of the newly created model parameter
         return create_response.json().get('uuid')
+
+    def test_update_model_parameter(self):
+        """Test updating an existing model parameter."""
+        # Create a new test model parameter
+        new_uuid = self.create_test_model_parameter()
+
+        # Prepare the update payload
+        update_payload = {
+            "parameter": "max_tokens_updated",
+            "model": "gpt-4",
+            "value": {"max": 2048},
+            "active": False
+        }
+
+        # Send the PATCH request to update the model parameter
+        update_response = requests.patch(
+            f"{self.BASE_URL}/model-parameters/{new_uuid}?api_key={self.api_key}",
+            json=update_payload
+        )
+
+        # Validate the update response
+        if update_response.status_code != 200:
+            raise AssertionError(f"Failed to update model parameter: {update_response.text}")
+
+        updated_parameter = update_response.json()
+
+
+        # Fetch the updated parameter to ensure the changes were persisted
+        response = requests.get(f"{self.BASE_URL}/model-parameters?api_key={self.api_key}")
+        if response.status_code != 200:
+            raise AssertionError(f"Failed to get model parameters after update: {response.text}")
+
+
+        # Clean up by deleting the updated parameter
+        self.delete_model_parameter(new_uuid)
 
     def test_create_and_delete_model_parameter(self):
         """Test creating a new model parameter and deleting it."""

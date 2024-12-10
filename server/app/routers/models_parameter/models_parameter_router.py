@@ -14,7 +14,7 @@ from server.app.models.model_parameter.models_parameter_response import ModelPar
 from server.app.models.users.user import User
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
+from fastapi import Body, Path
 router = APIRouter()
 
 # Dependency to get the database session
@@ -66,11 +66,65 @@ async def get_model_parameters(db: AsyncSession = Depends(get_db), _: dict = Dep
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
 
+from fastapi import Path
+
+@router.patch("/model-parameters/{parameter_id}", response_model=ModelParameterResponseModel, tags=["model_parameters"])
+async def update_model_parameter(
+    parameter_id: UUID = Path(..., description="The unique identifier of the model parameter"),
+    request: ModelParameterRequestModel = Body(...),
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(auth)
+):
+    """
+    Update a model parameter by ID.
+    """
+    try:
+        # Fetch the existing parameter
+        parameter = await db.get(ModelParameter, parameter_id)
+        if not parameter:
+            logger.warning(f"Model parameter not found: id={parameter_id}")
+            raise HTTPException(status_code=404, detail=f"Model parameter with ID {parameter_id} not found")
+
+        # Ensure the parameter belongs to the logged-in user
+        if parameter.user != user.uuid:
+            logger.warning(f"Unauthorized update attempt: user={user.uuid}, parameter={parameter_id}")
+            raise HTTPException(status_code=403, detail="Not authorized to update this parameter")
+
+        # Update fields if provided in the request
+        if request.parameter is not None:
+            parameter.parameter = request.parameter
+        if request.model is not None:
+            parameter.model = request.model
+        if request.value is not None:
+            parameter.value = request.value
+        if request.active is not None:
+            parameter.active = request.active
+
+        logger.debug(f"Update parameter: user={user.uuid}, parameter={parameter.to_dict()},  parameter_id={parameter_id}")
+
+        # Commit the changes
+        db.add(parameter)
+        await db.commit()
+        await db.refresh(parameter)
+
+        logger.info(f"Model parameter updated successfully: id={parameter_id}")
+        return ModelParameterResponseModel(**parameter.to_dict())
+
+    except SQLAlchemyError as e:
+        logger.error(f"Unexpected error while updating model parameter: {str(e)}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+
+    except SQLAlchemyError as e:
+        logger.error(f"Unexpected error while updating model parameter: {str(e)}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
+
 
 
 @router.post("/model-parameters", response_model=ModelParameterResponseModel, status_code=status.HTTP_201_CREATED, tags=["model_parameters"])
 async def create_model_parameter(
-    request: ModelParameterRequestModel, db: AsyncSession = Depends(get_db), _: dict = Depends(auth)
+    request: ModelParameterRequestModel,
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(auth)  # Fetch user from session
 ):
     """
     Create a new model parameter.
@@ -78,7 +132,7 @@ async def create_model_parameter(
     try:
         # Check for existing model parameter with the same user and parameter
         result = await db.execute(
-            select(ModelParameter).filter_by(user=request.user, parameter=request.parameter)
+            select(ModelParameter).filter_by(user=user.uuid, parameter=request.parameter)
         )
         existing_parameter = result.scalars().first()
 
@@ -87,7 +141,13 @@ async def create_model_parameter(
             return ModelParameterResponseModel(**existing_parameter.to_dict())
 
         # Create and save a new model parameter
-        new_parameter = ModelParameter(**request.model_dump())
+        new_parameter = ModelParameter(
+            user=user.uuid,
+            parameter=request.parameter,
+            model=request.model,
+            value=request.value,
+            active=request.active
+        )
         db.add(new_parameter)
         await db.commit()
         await db.refresh(new_parameter)

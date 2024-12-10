@@ -474,6 +474,35 @@ export const fetchAccessToken = async () => {
     }
 };
 
+/**
+ * Updates an existing model parameter by UUID.
+ * @param {string} parameterId - The UUID of the model parameter to update.
+ * @param {Object} updatedData - The updated data for the model parameter.
+ * @returns {Promise<Object>} A promise that resolves to the updated model parameter.
+ */
+export const updateModelParameter = async (parameterId, updatedData) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/model-parameters/${parameterId}`, {
+      method: "PATCH",
+      credentials: "include", // Include session cookies
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updatedData), // Convert the payload to JSON
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to update model parameter: ${response.statusText}`);
+    }
+
+    return await response.json(); // Parse and return the response JSON
+  } catch (error) {
+    console.error("Error updating model parameter:", error);
+    throw error; // Re-throw the error for caller handling
+  }
+};
+
+
 
 /**
  * Logs the user out by calling the /auth/logout endpoint.
@@ -517,6 +546,58 @@ export const getGripsBox = async () => {
     }
 };
 
+/**
+ * Creates a new model parameter.
+ * @param {Object} modelParameterRequest - The payload containing model parameter data.
+ * @returns {Promise<Object>} A promise that resolves to the created model parameter.
+ */
+export const createModelParameter = async (modelParameterRequest) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/model-parameters`, {
+      method: "POST",
+      credentials: "include", // Include session cookies
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(modelParameterRequest), // Convert the payload to JSON
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create model parameter: ${response.statusText}`);
+    }
+
+    return await response.json(); // Parse and return the response JSON
+  } catch (error) {
+    console.error("Error creating model parameter:", error);
+    throw error; // Re-throw the error for caller handling
+  }
+};
+
+
+/**
+ * Fetches model parameters for the authenticated user.
+ * @returns {Promise<Array>} A promise that resolves to a list of model parameters.
+ */
+export const getModelParameters = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/model-parameters/user`, {
+      method: "GET",
+      credentials: "include", // Ensures the session cookies are sent
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch model parameters: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching model parameters:", error);
+    throw error;
+  }
+};
 
 /**
  * Updates the active status of a gripsbox item.
