@@ -15,6 +15,7 @@ from server.app.routers.generation.openai.openai_dalle3_image_generation_router 
 from server.app.routers.socialmedia.telegram_image_text_router import router as socialmedia_telegram_image_text_router
 from server.app.routers.tool.calling_router import router as tool_call_router
 from server.app.routers.gripsbox.gripsbox_router import router as gripsbox_router
+from server.app.routers.models_parameter.models_parameter_router import router as models_parameter_router
 from server.app.routers.users.users_router import router as users_router
 from server.app.routers.auth.auth_router import router as auth_router, setup_oauth
 
@@ -110,4 +111,5 @@ class FastAPIAppFactory:
         self.app.include_router(gripsbox_router)
         self.app.include_router(auth_router)  # Register auth routes
         self.app.include_router(tool_call_router)  # Register auth routes
+        self.app.include_router(models_parameter_router)  # Register auth routes
         self.logger.debug("Finished: Registering routes")
