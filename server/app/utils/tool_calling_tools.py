@@ -3,7 +3,6 @@ import logging
 import json
 from server.app.services.user_service import UserService
 from sqlalchemy.future import select
-from sqlalchemy.sql import text
 from server.app.models.users.user import User
 logger = logging.getLogger(__name__)
 import httpx
