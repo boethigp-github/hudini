@@ -11,7 +11,7 @@ from server.app.utils.auth import auth
 from server.app.models.model_parameter.models_parameter import ModelParameter
 from server.app.models.model_parameter.models_parameter_request import ModelParameterRequestModel
 from server.app.models.model_parameter.models_parameter_response import ModelParameterResponseModel
-
+from server.app.models.users.user import User
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
@@ -21,6 +21,31 @@ router = APIRouter()
 async def get_db():
     async with async_session_maker() as session:
         yield session
+
+
+@router.get("/model-parameters/user", response_model=List[ModelParameterResponseModel], tags=["model_parameters"])
+async def get_model_parameters_by_user(
+    db: AsyncSession = Depends(get_db),
+    user: User = Depends(auth)
+):
+    """
+    Retrieve all model parameters for a specific user.
+    """
+    try:
+        result = await db.execute(
+            select(ModelParameter)
+            .filter_by(user=user.uuid)  # Access user.uuid directly
+            .order_by(ModelParameter.created.desc())
+        )
+        parameters = result.scalars().all()
+        logger.debug(f"model_parameters for user: {user.uuid}: {parameters}")
+        # Ensure serialization to response model
+        serialized_parameters = [ModelParameterResponseModel(**parameter.to_dict()) for parameter in parameters]
+        return serialized_parameters
+
+    except SQLAlchemyError as e:
+        logger.error(f"Error retrieving model parameters for user {user.uuid}: {str(e)}")
+        raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
 
 @router.get("/model-parameters", response_model=List[ModelParameterResponseModel], tags=["model_parameters"])

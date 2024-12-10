@@ -2,6 +2,16 @@ import {createI18n} from 'vue-i18n';
 
 const messages = {
     en: {
+        field_required: 'This field is required',
+        create_parameter: 'Create Parameter',
+        update_parameter: 'Update Parameter',
+        add_new_parameter: 'Add New Parameter',
+        actions: 'Actions',
+        uuid: 'UUID',
+        parameter: 'Parameter',
+        value: 'Value',
+        context_manager: 'Context Manager',
+        model_parameters: 'Model Parameters',
         hudini_title: 'Hudini - CPU Magician on SLM',
         select_model: 'Select Model',
         model: 'Model',
@@ -93,6 +103,16 @@ const messages = {
 
     },
     de: {
+        field_required: 'Dieses Feld ist erforderlich',
+        update_parameter: 'Parameter aktualisieren',
+        create_parameter: 'Parameter erstellen',
+        add_new_parameter: 'Neuen Parameter hinzufügen',
+        actions: 'Aktionen',
+        uuid: 'UUID',
+        parameter: 'Parameter',
+        value: 'Wert',
+        context_manager: 'Kontextmanager',
+        model_parameters: 'Modellparameter',
         hudini_title: 'Hudini - CPU Magier auf SLM',
         select_model: 'Modell auswählen',
         model: 'Modell',
@@ -188,6 +208,16 @@ const messages = {
 
     },
     fr: {
+        field_required: 'Ce champ est obligatoire',
+        create_parameter: 'Créer un paramètre',
+        update_parameter: 'Mettre à jour le paramètre',
+        add_new_parameter: 'Ajouter un nouveau paramètre',
+        actions: 'Actions',
+        uuid: 'UUID',
+        parameter: 'Paramètre',
+        value: 'Valeur',
+        context_manager: 'Gestionnaire de Contexte',
+        model_parameters: 'Paramètres du Modèle',
         hudini_title: 'Hudini - Magicien du CPU sur SLM',
         select_model: 'Sélectionner le modèle',
         model: 'Modèle',
@@ -283,6 +313,16 @@ const messages = {
 
     },
     ru: {
+        field_required: 'Это поле обязательно для заполнения',
+        create_parameter: 'Создать параметр',
+        update_parameter: 'Обновить параметр',
+        add_new_parameter: 'Добавить новый параметр',
+        actions: 'Действия',
+        uuid: 'UUID',
+        parameter: 'Параметр',
+        value: 'Значение',
+        context_manager: 'Менеджер контекста',
+        model_parameters: 'Параметры модели',
         hudini_title: 'Худини - Маг ЦП на SLM',
         select_model: 'Выберите модель',
         model: 'Модель',
@@ -375,6 +415,15 @@ const messages = {
         restrict_to_models: "Ограничить по моделям"
     },
     zh: {
+        create_parameter: '创建参数',
+        update_parameter: '更新参数',
+        add_new_parameter: '添加新参数',
+        actions: '操作',
+        uuid: 'UUID',
+        parameter: '参数',
+        value: '值',
+        context_manager: '上下文管理器',
+        model_parameters: '模型参数',
         hudini_title: 'Hudini - CPU 魔术师在 SLM',
         select_model: '选择模型',
         model: '模型',
@@ -462,7 +511,8 @@ const messages = {
         no: "否",
         reset_filter: "重置过滤器",
         files_uploaded_successfully: "成功上传 {count} 个文件。",
-        restrict_to_models: "限制为模型"
+        restrict_to_models: "限制为模型",
+        field_required: '此字段为必填项',
     },
     // Add other languages as needed
 };

@@ -1,18 +1,6 @@
 <template>
-  <div>
-    <v-btn
-      class="contextmanager-opener"
-      icon="mdi-head-snowflake"
-      color="primary"
-      size="small"
-      elevation="2"
-      :title="t('open_context_manager', 'Hudinis Brain')"
-      @click="isModalOpen = true"
-    ></v-btn>
 
-    <v-dialog height="95%" v-model="isModalOpen">
       <v-card>
-        <v-card-title> {{ t('hudinis_gripsbox', 'Hudinis Gripsbox') }} </v-card-title>
         <v-card-text>
           <v-file-input
             v-model="files"
@@ -169,8 +157,7 @@
           <v-btn color="secondary" @click="isModalOpen = false"> {{ t('close', 'Close') }} </v-btn>
         </v-card-actions>
       </v-card>
-    </v-dialog>
-  </div>
+
 </template>
 
 <script setup>

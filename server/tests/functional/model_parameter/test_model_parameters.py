@@ -13,7 +13,7 @@ class TestModelParameters(TestAbstract):
         """Synchronous setup, including the API key retrieval."""
         cls.settings = Settings()
         cls.BASE_URL = cls.settings.get("default").get("SERVER_URL")
-        cls.APP_DEFAULT_ADMIN_USERNAME = cls.settings.get("default").get("APP_DEFAULT_ADMIN_USERNAME")
+        cls.APP_DEFAULT_ADMIN_USERNAME = "pboethig"
 
         # Manually run async initialization using asyncio.run() to retrieve API key
         asyncio.run(cls.async_init())
@@ -89,6 +89,27 @@ class TestModelParameters(TestAbstract):
             any(parameter['uuid'] == new_uuid for parameter in parameters),
             "Model parameter still found after deletion"
         )
+
+    def test_get_model_parameters_by_user(self):
+        """Test retrieving model parameters for a specific user."""
+        # Create a new test model parameter for the user
+        new_uuid = self.create_test_model_parameter()
+
+        # Fetch model parameters for the specific user
+        response = requests.get(f"{self.BASE_URL}/model-parameters/user?api_key={self.api_key}")
+        if response.status_code != 200:
+            raise AssertionError(f"Failed to get model parameters for user: {response.text}")
+
+        parameters = response.json()
+
+        # Validate that the created model parameter appears in the user's parameters
+        self.assertTrue(
+            any(parameter['uuid'] == new_uuid for parameter in parameters),
+            f"Model parameter {new_uuid} not found in user's parameters: {parameters}"
+        )
+
+        # Clean up by deleting the created model parameter
+        self.delete_model_parameter(new_uuid)
 
     def delete_model_parameter(self, parameter_id):
         """Delete the given model parameter by UUID."""
