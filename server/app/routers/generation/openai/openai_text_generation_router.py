@@ -13,8 +13,7 @@ from server.app.models.generation.openai_model import OpenaiModel
 from server.app.models.generation.anthropic_model import AnthropicModel
 from server.app.models.generation.generation_request import GenerationRequest
 from server.app.models.generation.success_generation_model import SuccessGenerationModel
-from sqlalchemy import select
-from server.app.models.usercontext.user_context import UserContextModel
+from server.app.utils.user_context_util import get_user_context
 from server.app.utils.auth import auth
 from server.app.services.gripsbox_service import add_gripsbox_content_to_llm_context
 from server.app.models.users.user import User
@@ -28,17 +27,15 @@ logger = logging.getLogger(__name__)
 
 # Initialize clients
 openai_client = OpenAIClient(api_key=settings.get("default").get("API_KEY_OPEN_AI"))
-anthropic_client = AnthropicClient(api_key=settings.get("default").get("API_KEY_ANTHROPIC"))
+
 
 registered_methods = ['fetch_completion', 'chat_completion']
 clients = {
     'openai': openai_client,
-    'anthropic': anthropic_client,
 }
 
 MODEL_CLASS_MAP: Dict[str, Type] = {
     "openai": OpenaiModel,
-    "anthropic": AnthropicModel,
 }
 
 
@@ -119,43 +116,6 @@ def validate_models_and_clients(models: List[ModelConfig], method_name: str) -> 
     return valid_models
 
 
-async def get_user_context(thread_id: int = 1) -> str:
-    async for session in get_db():  # Correctly retrieve the session from the async generator
-        result = await session.execute(
-            select(UserContextModel)
-            .where(UserContextModel.thread_id == thread_id)
-            .order_by(UserContextModel.created.asc())
-        )
-        user_contexts = result.scalars().all()
-
-        # Extract context_data, parse JSON if needed, and get 'content' values
-        content_list = []
-        for uc in user_contexts:
-            context_data = uc.context_data  # Assuming `uc.context_data` is already a dict
-            if isinstance(context_data, str):
-                # If context_data is a JSON string, parse it
-                context_data = json.loads(context_data)
-
-            # Process context_data to extract 'content'
-            if isinstance(context_data, list):  # Assuming it's a list of dicts
-                for data_item in context_data:
-                    completion = data_item.get("completion", {})
-                    choices = completion.get("choices", [])
-                    for choice in choices:
-                        content = choice.get("message", {}).get("content")
-                        if content:
-                            content_list.append(content)
-
-        # Combine all content into a single string
-        combined_context = " ".join(content_list)
-
-        logger.debug(f"userContext start: {content_list}")
-        logger.debug(f"userContext end")
-
-        return combined_context
-
-
-
 @router.post(
     "/stream/openai",
     response_model=SuccessGenerationModel,
@@ -182,7 +142,7 @@ async def get_user_context(thread_id: int = 1) -> str:
         "If the configuration is invalid or the platform is not supported, a `400 Bad Request` error is raised."
     ),
 )
-async def stream_route(request: GenerationRequest, user: User = Depends(auth)):
+async def stream_route(request: GenerationRequest, user: User = Depends(auth),db: Any = Depends(get_db)):
     """
     Stream AI-generated content based on the provided prompt and model configurations.
 
@@ -199,23 +159,21 @@ async def stream_route(request: GenerationRequest, user: User = Depends(auth)):
     logger.info("=" * 50)
 
     # Fetch user context from the database
-    user_context = await get_user_context(thread_id=1)
+    user_context = await get_user_context(thread_id=1, get_db=get_db)
 
     try:
         gripsbox_context_messages = await add_gripsbox_content_to_llm_context(user)
         # Safely join content messages
         gripsbox_content = " ".join([msg.content for msg in gripsbox_context_messages])
 
-        print(f"--------------------------------------")
-        print(f"Gripsbox content: {gripsbox_content}")
-
     except Exception as e:
         # Log the error if necessary
-        print(f"Error adding Gripsbox content: {e}")
         gripsbox_content = ""
+
 
     # Combine user context and Gripsbox content into a single context
     combined_context = user_context + " " + gripsbox_content
+
 
 
     # Validate models and clients
@@ -226,7 +184,7 @@ async def stream_route(request: GenerationRequest, user: User = Depends(auth)):
 
         for model, client, method in valid_models:
             # Pass the combined context as a parameter to fetch_completion
-            async_task = method(model, request.prompt, request.id, context=combined_context)
+            async_task = method(model, request.prompt, request.id, context=combined_context,   db=db, user_uuid=str(user.uuid) )
             task = asyncio.create_task(async_task)
             tasks.append(task)
 

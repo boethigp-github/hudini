@@ -19,13 +19,14 @@
         class="prompt-panel"
         height="50vh"
         :items="filteredPrompts"
+        :item-height="50"
       >
         <template v-slot:default="{ item }">
           <v-expansion-panel :key="item.id">
             <template v-slot:title>
               <div class="panel-content">
                 <div class="panel-header">
-                  <span class="title">{{ getTitle(item) }}</span>
+                  <span class="title">{{ item.title }}</span>
                   <span class="timestamp" v-if="item.created_at">{{ formatTimestamp(item.created_at) }}</span>
                 </div>
                 <div class="header-actions">
@@ -67,51 +68,58 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import {fetchPrompts, deletePromptById} from "@/vue/services/api.js";
+import { fetchPrompts, deletePromptById } from "@/vue/services/api.js";
+import debounce from 'lodash/debounce';
 
 const { t } = useI18n();
 const previousPrompts = ref([]);
-const serverUrl = import.meta.env.SERVER_URL;
 const searchQuery = ref('');
+const activeKey = ref([]);
+const serverUrl = import.meta.env.SERVER_URL;
 
 if (!serverUrl) {
   console.error("SERVER_URL not set. Check Env. All envs", import.meta.env);
 }
 
-const activeKey = ref([]);
+// Debounced search query to optimize reactivity
+const debouncedQuery = ref('');
+const updateSearch = debounce((value) => {
+  debouncedQuery.value = value;
+}, 300);
 
+watch(searchQuery, (value) => {
+  updateSearch(value);
+});
+
+// Filtered prompts based on search query
 const filteredPrompts = computed(() => {
-  if (!searchQuery.value) return previousPrompts.value;
+  if (!debouncedQuery.value) return previousPrompts.value;
   return previousPrompts.value.filter(prompt =>
-    getTitle(prompt).toLowerCase().includes(searchQuery.value.toLowerCase())
+    prompt.title.toLowerCase().includes(debouncedQuery.value.toLowerCase())
   );
 });
 
-const copyToClipboard = (text) => {
-  navigator.clipboard
-    .writeText(text)
-    .then(() => {
-      // Replace with Vuetify snackbar or notification system
-      console.log(t('copied_to_clipboard'));
-    })
-    .catch((error) => {
-      // Replace with Vuetify snackbar or notification system
-      console.error(t('failed_to_copy'));
-      console.error("Copy failed:", error);
-    });
-};
-
-const loadPrompts = () => {
-   fetchPrompts().then(response => {
-     previousPrompts.value = response;
-   })
+const loadPrompts = async () => {
+  try {
+    const response = await fetchPrompts();
+    previousPrompts.value = response.map(prompt => ({
+      ...prompt,
+      title: prompt.prompt ? prompt.prompt.substring(0, 200) + (prompt.prompt.length > 200 ? "..." : "") : "",
+    }));
+  } catch (error) {
+    console.error('Failed to load prompts:', error);
+  }
 };
 
 const deletePrompt = async (id) => {
-    await deletePromptById(id)
-    loadPrompts()
+  try {
+    await deletePromptById(id);
+    await loadPrompts();
+  } catch (error) {
+    console.error('Failed to delete prompt:', error);
+  }
 };
 
 const rerunPrompt = (prompt) => {
@@ -121,30 +129,25 @@ const rerunPrompt = (prompt) => {
   window.dispatchEvent(event);
 };
 
-const getTitle = (prompt) => {
-  if (!prompt.prompt) return '';
-  let title = prompt.prompt.substring(0, 200);
-  if (title.length >= 200) {
-    title += "...";
+const copyToClipboard = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    console.log(t('copied_to_clipboard'));
+  } catch (error) {
+    console.error(t('failed_to_copy'));
+    console.error("Copy failed:", error);
   }
-  return title;
 };
 
 const formatTimestamp = (timestamp) => {
   const date = new Date(timestamp);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  const seconds = String(date.getSeconds()).padStart(2, "0");
-
-  return `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
+  return date.toLocaleString('de-DE', { dateStyle: 'short', timeStyle: 'medium' });
 };
 
 onMounted(() => {
   loadPrompts(); // Load prompts when the component is mounted
 });
+
 </script>
 
 <style scoped>

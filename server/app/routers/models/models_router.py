@@ -1,14 +1,16 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List
+
+from server.app.clients.cerebras.cerebras_client import CerebrasClient
 from server.app.config.settings import Settings
 from server.app.clients.openai.openai_client import OpenAIClient
 from server.app.clients.anthropic.anthropic_client import AnthropicClient
 from server.app.clients.googleai.google_ai_client import GoogleAICLient
-import logging
+
 from server.app.models.models.models_get_response import ModelGetResponseModel
 from server.app.utils.auth import auth
 import os
-
+import logging
 # Initialize the logger
 logger = logging.getLogger("models_router")
 settings = Settings()  # Initialize settings
@@ -74,6 +76,10 @@ async def get_models(
         if "GOOGLE_AI" in active_providers:
             google_ai_models = GoogleAICLient(api_key=settings.get("default").get("API_KEY_GOOGLE_AI")).get_available_models()
             all_models.extend(google_ai_models)
+        if "CEREBRAS" in active_providers:
+            cerebras_models = CerebrasClient(
+                api_key=settings.get("default").get("API_KEY_CEREBRAS")).get_available_models()
+            all_models.extend(cerebras_models)
 
         # Cache the models, even if it's an empty list, specific to the active providers
         cache.set(cache_key, all_models, expire=300)

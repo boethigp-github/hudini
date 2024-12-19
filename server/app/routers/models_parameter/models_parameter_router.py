@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 from fastapi import Body, Path
 router = APIRouter()
 
+
 # Dependency to get the database session
 async def get_db():
     async with async_session_maker() as session:
@@ -66,7 +67,6 @@ async def get_model_parameters(db: AsyncSession = Depends(get_db), _: dict = Dep
         raise HTTPException(status_code=500, detail="An unexpected error occurred")
 
 
-from fastapi import Path
 
 @router.patch("/model-parameters/{parameter_id}", response_model=ModelParameterResponseModel, tags=["model_parameters"])
 async def update_model_parameter(

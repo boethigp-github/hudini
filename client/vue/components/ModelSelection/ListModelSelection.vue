@@ -28,6 +28,9 @@ export default defineComponent({
     const fetchModels = async () => {
       loading.value = true;
       try {
+
+
+
         allModels.value = await loadModels();
         updateSelectedModels();
       } catch (error) {

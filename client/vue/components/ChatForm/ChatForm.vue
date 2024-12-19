@@ -69,7 +69,7 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useModelsStore } from '../../stores/models.js';
-import PromptPanel from '../ResponsePanel/PromptPanel.vue';
+import PromptPanel from '../PromptPanel/PromptPanel.vue';
 import ResponsePanel from '../ResponsePanel/ResponsePanel.vue';
 import LanguageSwitch from '../LanguageSelection/LanguageSwitch.vue';
 import ModelSelection from '../ModelSelection/ModelSelection.vue';
@@ -317,14 +317,15 @@ export default {
             hideLoader();
           },
           () => {
+
             createPromptServerside(promptPostRequest).then(() => {
               setTimeout(() => {
                 saveUserContextServerside();
                 dispatchOnCompleteEvent();
               }, 200)
             });
-
             hideLoader();
+
           }
         );
       }

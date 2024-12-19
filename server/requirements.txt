@@ -1,3 +1,4 @@
+accelerate==1.2.1
 aiocache==0.12.2
 aiofiles==23.2.1
 aiogram==3.13.0
@@ -10,28 +11,34 @@ anthropic==0.34.1
 anyio==4.4.0
 asgiref==3.8.1
 async-timeout==4.0.3
-asyncpg==0.29.0
+asyncpg==0.30.0
 attrs==24.2.0
 Authlib==1.3.2
+auto_gptq==0.7.1
 backoff==2.2.1
 bcrypt==4.2.0
 beautifulsoup4==4.12.3
-blinker @ file:///C:/b/abs_d9y2dm7cw2/croot/blinker_1696539752170/work
-Brotli @ file:///C:/b/abs_3d36mno480/croot/brotli-split_1714483178642/work
+bitsandbytes==0.45.0
+blinker==1.6.0
+Brotli==1.0.9
 cachetools==5.5.0
 certifi==2024.7.4
-cffi==1.17.0
+cffi==1.17.1
 charset-normalizer==3.3.2
 ci-info==0.3.0
-click @ file:///C:/b/abs_f9ihnt72pu/croot/click_1698129847492/work
-colorama @ file:///C:/b/abs_a9ozq0l032/croot/colorama_1672387194846/work
+click==8.0.4
+cmake==3.31.2
+colorama==0.4.6
 ConfigArgParse==1.7
 configobj==5.0.8
 configparser==7.0.0
 confuse==2.0.1
 cryptg==0.4.0
 cryptography==43.0.1
+ctransformers==0.2.27
+datasets==3.2.0
 diff-match-patch==20230430
+dill==0.3.8
 diskcache==5.6.3
 distro==1.9.0
 dnspython==2.6.1
@@ -45,8 +52,8 @@ fastapi-cli==0.0.5
 filelock==3.15.4
 fitz==0.0.1.dev2
 flake8==7.1.1
-Flask==3.0.3
-Flask-Compress @ file:///C:/b/abs_a7ii9f64l5/croot/flask-compress_1668714951742/work
+Flask==2.2.3
+Flask-Compress==2.1.0
 Flask-Cors==4.0.1
 Flask-Login==0.6.3
 Flask-Migrate==4.0.7
@@ -54,8 +61,10 @@ Flask-SQLAlchemy==3.1.1
 flask-swagger-ui==4.11.1
 frozenlist==1.4.1
 fsspec==2024.6.1
+gekko==1.2.1
 gevent==24.2.1
 geventhttpclient==2.3.1
+gguf==0.13.0
 gitdb==4.0.11
 GitPython==3.1.43
 google-ai-generativelanguage==0.6.6
@@ -65,9 +74,9 @@ google-auth==2.34.0
 google-auth-httplib2==0.2.0
 google-generativeai==0.7.2
 googleapis-common-protos==1.65.0
-greenlet==3.0.3
+greenlet==3.1.1
 grep-ast==0.3.3
-grpcio==1.66.1
+grpcio==1.68.1
 grpcio-status==1.62.3
 h11==0.14.0
 h2==4.1.0
@@ -76,17 +85,17 @@ httpcore==1.0.5
 httplib2==0.22.0
 httptools==0.6.1
 httpx==0.27.0
-huggingface-hub==0.24.5
+huggingface-hub==0.26.5
 Hypercorn==0.17.3
 hyperframe==6.0.1
 idna==3.7
-importlib-metadata @ file:///C:/b/abs_c1egths604/croot/importlib_metadata-suite_1704813568388/work
+importlib_metadata==7.2.1
 importlib_resources==6.4.0
 iniconfig==2.0.0
 isodate==0.6.1
-itsdangerous @ file:///C:/b/abs_c4vwgdr5yn/croot/itsdangerous_1716533399914/work
-Jinja2 @ file:///C:/b/abs_92fccttino/croot/jinja2_1716993447201/work
-jiter==0.5.0
+itsdangerous==2.1.2
+Jinja2==3.1.2
+jiter==0.8.2
 joblib==1.4.2
 jsonschema==4.23.0
 jsonschema-specifications==2023.12.1
@@ -98,25 +107,28 @@ lxml==5.3.0
 magic-filter==1.0.12
 Mako==1.3.5
 markdown-it-py==3.0.0
-MarkupSafe @ file:///C:/b/abs_ecfdqh67b_/croot/markupsafe_1704206030535/work
+MarkupSafe==2.1.1
 mccabe==0.7.0
 mdurl==0.1.2
 mpmath==1.3.0
 msgpack==1.0.8
 multidict==6.0.5
+multiprocess==0.70.16
 networkx==3.2.1
 nibabel==5.2.1
+ninja==1.11.1.3
 nipype==1.8.6
-numpy==1.26.4
+numpy==1.23.5
 openai==1.41.1
 openpyxl==3.1.5
 orjson==3.10.7
 packaging==24.1
-pandas==2.2.2
+pandas==2.2.3
 pathlib==1.0.1
 pathspec==0.12.1
 pdf2image==1.17.0
-pillow==10.4.0
+peft==0.14.0
+pillow==11.0.0
 pluggy==1.5.0
 priority==2.0.0
 prompt_toolkit==3.0.47
@@ -124,21 +136,24 @@ proto-plus==1.24.0
 protobuf==4.25.4
 prov==2.0.1
 psutil==6.0.0
-psycopg2==2.9.9
+psycopg2==2.9.10
 psycopg2-binary==2.9.9
+py-cpuinfo==9.0.0
 pyaes==1.6.1
+pyarrow==15.0.0
 pyasn1==0.6.0
 pyasn1_modules==0.4.0
+pybind11==2.13.6
 pycodestyle==2.12.1
 pycparser==2.22
-pydantic==2.8.2
+pydantic==2.4.1
 pydantic-extra-types==2.9.0
 pydantic-settings==2.4.0
-pydantic_core==2.20.1
+pydantic_core==2.10.1
 pydot==3.0.1
 pyflakes==3.2.0
 Pygments==2.18.0
-PyMuPDF==1.24.10
+PyMuPDF==1.25.1
 PyMuPDFb==1.24.10
 pypandoc==1.13
 pyparsing==3.1.4
@@ -161,12 +176,14 @@ referencing==0.35.1
 regex==2024.7.24
 requests==2.32.3
 rich==13.7.1
-rpds-py==0.20.0
+rouge==1.0.1
+rpds-py==0.22.3
 rsa==4.9
 safetensors==0.4.5
-scikit-learn==1.5.2
-scipy==1.13.1
+scikit-learn==1.6.0
+scipy==1.9.3
 sentence-transformers==3.1.0
+sentencepiece==0.2.0
 shellingham==1.5.4
 simplejson==3.19.3
 six==1.16.0
@@ -177,20 +194,23 @@ soundfile==0.12.1
 soupsieve==2.5
 SQLAlchemy==2.0.32
 starlette==0.38.2
-sympy==1.13.2
+sympy==1.13.1
 taskgroup==0.0.0a4
 Telethon==1.36.0
 threadpoolctl==3.5.0
 tiktoken==0.7.0
-tokenizers==0.19.1
+tokenizers==0.21.0
 toml==0.10.2
 tomli==2.0.1
-torch==2.4.1
+torch==2.0.1
+torchaudio==2.0.2+cu117
+torchvision==0.15.2+cu117
 tqdm==4.66.5
 traits==6.3.2
-transformers==4.44.2
+transformers==4.47.0
 tree-sitter==0.21.3
 tree-sitter-languages==1.10.2
+triton @ https://huggingface.co/madbuda/triton-windows-builds/resolve/main/triton-2.1.0-cp311-cp311-win_amd64.whl#sha256=89f07cc06559a3cc2dace69c77eb2a47bf853d52b0e4930d591889d61d4eb637
 typer==0.12.5
 typing_extensions==4.12.2
 tzdata==2024.1
@@ -201,9 +221,10 @@ uvicorn==0.30.6
 watchfiles==0.23.0
 wcwidth==0.2.13
 websockets==13.0
-Werkzeug @ file:///C:/b/abs_8bittcw9jr/croot/werkzeug_1716533366070/work
+Werkzeug==2.2.3
 wsproto==1.2.0
+xxhash==3.5.0
 yarl==1.9.4
-zipp @ file:///C:/b/abs_b0beoc27oa/croot/zipp_1704206963359/work
+zipp==3.19.2
 zope.event==5.0
 zope.interface==7.0.3

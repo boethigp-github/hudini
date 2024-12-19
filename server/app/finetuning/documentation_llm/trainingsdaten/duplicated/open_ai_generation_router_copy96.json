@@ -1,0 +1,40 @@
+{
+  "conversations": [
+    {
+      "role": "system",
+      "content": "[SYSTEM]\nDu bist ein erfahrener Softwareentwickler, der die Streaming-Antworten von OpenAI und Anthropic-Modellen in FastAPI erklärt. Deine Antworten enthalten Verweise auf das vollständige Package, die Klasse und die Methode, sodass ein Entwickler den Code direkt nachvollziehen kann.<|endoftext|>"
+    },
+    {
+      "role": "user",
+      "content": "[USER]\nWelche Endpunkte sind für die Modell-Generierung verfügbar?<|endoftext|>"
+    },
+    {
+      "role": "assistant",
+      "content": "[ASSISTANT]\nDie Endpunkte für die Modell-Generierung sind in der Datei `server.app.routes.generation_routes` definiert:\n\n1. **Streaming Generierung**\n   - **Route**: `/stream/openai`\n   - **HTTP-Methode**: `POST`\n   - **Package.Klasse.Methode**: `server.app.routes.generation_routes.stream_route`\n   - **Beschreibung**: Dieser Endpunkt ermöglicht die Streaming-Generierung von OpenAI- und Anthropic-Modellen.\n\n   **Code-Snippet**:\n   ```python\n   @router.post(\"/stream/openai\", response_model=SuccessGenerationModel)\n   async def stream_route(request: GenerationRequest, user: User = Depends(auth), db: Any = Depends(get_db)):\n       ...\n       return StreamingResponse(generate(), media_type='application/json')\n   ```\n   Der Endpunkt erwartet ein `GenerationRequest`-Objekt, validiert die Modelle und streamt die Antworten als JSON-Objekte.<|endoftext|>"
+    },
+    {
+      "role": "user",
+      "content": "[USER]\nWie wird die Kombination von Nutzer- und Gripsbox-Kontext gehandhabt?<|endoftext|>"
+    },
+    {
+      "role": "assistant",
+      "content": "[ASSISTANT]\nDie Kombination von Nutzer- und Gripsbox-Kontext erfolgt in der Methode **`stream_route`** im Paket `server.app.routes.generation_routes`:\n\n1. **Nutzer-Kontext aus der Datenbank**:\n   - **Methode**: `get_user_context`\n   - **Package.Klasse.Methode**: `server.app.routes.generation_routes.get_user_context`\n   - **Beschreibung**: Lädt Kontextdaten zu einem gegebenen Thread aus der Datenbank.\n     ```python\n     user_context = await get_user_context(thread_id=1)\n     ```\n\n2. **Gripsbox-Inhalt**:\n   - **Service**: `add_gripsbox_content_to_llm_context`\n   - **Package.Klasse.Methode**: `server.app.services.gripsbox_service.add_gripsbox_content_to_llm_context`\n   - **Beschreibung**: Lädt Inhalte aus der Gripsbox und formatiert sie.\n     ```python\n     gripsbox_context_messages = await add_gripsbox_content_to_llm_context(user)\n     gripsbox_content = \" \".join([msg.content for msg in gripsbox_context_messages])\n     ```\n\n3. **Kombination der Inhalte**:\n   Die kombinierten Inhalte werden durch einfache String-Konkatenation erzeugt:\n   ```python\n   combined_context = user_context + \" \" + gripsbox_content\n   ```<|endoftext|>"
+    },
+    {
+      "role": "user",
+      "content": "[USER]\nWie werden die Modelle und Plattformen validiert?<|endoftext|>"
+    },
+    {
+      "role": "assistant",
+      "content": "[ASSISTANT]\nDie Validierung der Modelle und Plattformen erfolgt in der Methode **`validate_models_and_clients`** innerhalb des Pakets `server.app.routes.generation_routes`. \n\n**Schritte**:\n\n1. **Model-Klasse ermitteln**:\n   - **Methode**: `get_model_class`\n   - **Beschreibung**: Holt die zugehörige Klasse für die Plattform aus `MODEL_CLASS_MAP`.\n     ```python\n     model_class = MODEL_CLASS_MAP.get(platform)\n     ```\n   - Wenn die Plattform unbekannt ist, wird ein Fehler geworfen:\n     ```python\n     raise ModelNotFoundException(platform)\n     ```\n\n2. **Client-Validierung**:\n   - Prüft, ob der Client für die Plattform existiert und die Methode implementiert:\n     ```python\n     if not platform_client or not hasattr(platform_client, method_name):\n         raise HTTPException(status_code=400, detail=f\"Method '{method_name}' not found\")\n     ```\n\n3. **Instanziierung des Modells**:\n   - Erzeugt eine Instanz der Modellklasse:\n     ```python\n     model_instance = model_class(**model_dict)\n     ```\n   - Bei ungültigen Parametern wird ein **400 Bad Request** Fehler geworfen:\n     ```python\n     raise HTTPException(status_code=400, detail=f\"Invalid model configuration\")\n     ```<|endoftext|>"
+    },
+    {
+      "role": "user",
+      "content": "[ASSISTANT]\nWie wird das Streaming der Antworten durchgeführt?<|endoftext|>"
+    },
+    {
+      "role": "assistant",
+      "content": "[ASSISTANT]\nDas Streaming der Antworten erfolgt in der Methode **`stream_route`** im Paket `server.app.routes.generation_routes`.\n\n**Ablauf**:\n1. **Asynchrone Generierung**:\n   - Für jedes valide Modell wird eine asynchrone Methode des Clients aufgerufen:\n     ```python\n     async_task = method(model, request.prompt, request.id, context=combined_context, db=db, user_uuid=str(user.uuid))\n     task = asyncio.create_task(async_task)\n     ```\n\n2. **Streaming der Antworten**:\n   - Die Ergebnisse werden stückweise gestreamt:\n     ```python\n     for completed_task in asyncio.as_completed(tasks):\n         async_gen = await completed_task\n         async for result in async_gen:\n             yield SuccessGenerationModel.model_validate(json.loads(result)).model_dump_json().encode('utf-8') + b'\\n'\n     ```\n\n3. **Rückgabe**:\n   - Die Antworten werden als `StreamingResponse` zurückgegeben:\n     ```python\n     return StreamingResponse(generate(), media_type='application/json')\n     ```<|endoftext|>"
+    }
+  ]
+}

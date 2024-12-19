@@ -128,7 +128,7 @@
 <script>
 import {ref, reactive, onMounted} from "vue";
 import {useI18n} from "vue-i18n";
-import {getModelParameters, createModelParameter, updateModelParameter} from "@/vue/services/api.js";
+import {getModelParameters, createModelParameter, updateModelParameter, deleteModelParameter} from "@/vue/services/api.js";
 import {useModelsStore} from "@/vue/stores/models";
 
 export default {
@@ -248,10 +248,7 @@ export default {
       await fetchParameters();
     };
 
-    const deleteModelParameter = async (uuid) => {
-      console.log("Deleting parameter:", uuid);
-      // Add your API logic here for deleting the parameter
-    };
+
     const toggleActiveModelParameter = async (uuid, active) => {
       console.log(`Toggling active state for parameter: ${uuid} to ${active}`);
       // Add your API logic here for toggling the active state

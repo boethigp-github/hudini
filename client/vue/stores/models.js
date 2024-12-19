@@ -15,6 +15,8 @@ export const useModelsStore = defineStore('models', {
     actions: {
         async setSelectedModels(models) {
             this.selectedModels = models;
+
+            console.log("SetSelectedModels", models);
             await this.saveToStorage();
         },
 
@@ -26,7 +28,9 @@ export const useModelsStore = defineStore('models', {
         },
 
         async loadFromStorage() {
+
             const storedModels = await localforage.getItem('selectedModels');
+
             if (storedModels) {
                 try {
                     this.selectedModels = JSON.parse(storedModels);
@@ -45,6 +49,7 @@ export const useModelsStore = defineStore('models', {
             }
         },
         async saveToStorage() {
+
             try {
                 await localforage.setItem('selectedModels', JSON.stringify(this.selectedModels));
                 await localforage.setItem('serviceResponse', JSON.stringify(this.serviceResponse));

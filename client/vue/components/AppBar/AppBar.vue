@@ -6,7 +6,7 @@
           <img src="/assets/hudini.webp" height="40" width="40" class="mr-2" alt="Hudini logo">
         </v-col>
         <v-app-bar-title>
-          Hudini greets
+          Houdini greets
           <span v-if="user_info" class="username ml-2 text-primary">{{ user_info.username }}</span>
         </v-app-bar-title>
         <v-spacer></v-spacer>

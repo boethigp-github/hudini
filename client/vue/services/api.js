@@ -475,6 +475,32 @@ export const fetchAccessToken = async () => {
 };
 
 /**
+ * Deletes a model parameter by ID.
+ * @param {string} parameterId - The UUID of the model parameter to delete.
+ * @returns {Promise<Object>} - A promise that resolves to the server's response.
+ */
+export const deleteModelParameter = async (parameterId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/model-parameters/${parameterId}`, {
+      method: "DELETE",
+      credentials: "include", // Include session cookies
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete model parameter: ${response.statusText}`);
+    }
+
+    return await response.json(); // Parse and return the response JSON
+  } catch (error) {
+    console.error("Error deleting model parameter:", error);
+    throw error; // Re-throw the error for caller handling
+  }
+};
+
+/**
  * Updates an existing model parameter by UUID.
  * @param {string} parameterId - The UUID of the model parameter to update.
  * @param {Object} updatedData - The updated data for the model parameter.

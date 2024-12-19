@@ -2,13 +2,13 @@ To adjust the README documentation to reflect the use of `bigint` for `user` and
 
 ---
 
-# Hudini - CPU Magician on SLM
+# Houdini - CPU Magician on SLM
 
-![Hudini Logo](/client/vue/assets/Fhudini-logo.webp)
+![Houdini Logo](/client/vue/assets/FHoudini-logo.webp)
 
 **CAUTION: FOR TESTING PURPOSES ONLY. NOT FOR PRODUCTION USE.**
 
-Hudini is an interactive chat interface that works with CPU magic on SLM, allowing real-time prompt input and response generation.
+Houdini is an interactive chat interface that works with CPU magic on SLM, allowing real-time prompt input and response generation.
 
 ## Table of Contents
 
@@ -73,7 +73,7 @@ You need to create an Anaconda environment with the name specified in the enviro
 
 ```plaintext
 ## Startupscripts
-ANACONDA_ENV_NAME=hudini
+ANACONDA_ENV_NAME=Houdini
 
 SERVER_URL=http://localhost:80
 PROJECT_MODEL_PATH=C:\\projects\\llama.cpp\\models\\custom\
@@ -84,17 +84,17 @@ API_KEY_ANTHROPIC=
 API_KEY_GOOGLE_AI=
 APP_ACTIVE_PROVIDER=OPEN_AI
 PROJECT_FRONTEND_DIRECTORY=C:\\projects\\llama.cpp\\projects\\src\\llama-cpp-chat\\src\\frontend\
-DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost/hudini
-DATABASE_URL_SYNC=postgresql+psycopg2://postgres:postgres@localhost/hudini
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost/Houdini
+DATABASE_URL_SYNC=postgresql+psycopg2://postgres:postgres@localhost/Houdini
 APP_TIMEZONE=Europe/Berlin
 APP_DEBUG=False
 APP_ENV=development
 APP_Testing=False
 APP_LOG_LEVEL=DEBUG
-APP_PROJECT_NAME=HUDINI
+APP_PROJECT_NAME=Houdini
 APP_CORS_ORIGIN=http://localhost:5173,https://editor.swagger.io
-APP_CACHE=C:\projects\hudini\server\var\cache
-APP_STORAGE=C:\projects\hudini\server\storage
+APP_CACHE=C:\projects\Houdini\server\var\cache
+APP_STORAGE=C:\projects\Houdini\server\storage
 DB_SQL_ECHO=False
 DB_POOL_SIZE=20
 DB_MAX_OVERFLOW=5
@@ -104,12 +104,12 @@ DB_USE_NULL_POOL=False
 SOCIALMEDIA_USER='[{
   "provider": "telegram",
   "api_id": "",
-  "displayname": "hudini",
+  "displayname": "Houdini",
   "api_hash": "",
   "phone_number": "",
   "password": "",
   "groups": [
-      "hudinitest"
+      "Houdinitest"
     ]
 }]'
 ```
@@ -117,13 +117,13 @@ SOCIALMEDIA_USER='[{
 Then, create the Anaconda environment using the name from the `ANACONDA_ENV_NAME` variable:
 
 ```bash
-conda create --name hudini python=3.9
+conda create --name Houdini python=3.9
 ```
 
 Activate the environment:
 
 ```bash
-conda activate hudini
+conda activate Houdini
 ```
 
 ### 3. Install Required Python Packages
@@ -150,7 +150,7 @@ Download and install PostgreSQL from the [official website](https://www.postgres
 Open the PostgreSQL command line or a tool like pgAdmin. To create a new database, use the following SQL command:
 
 ```sql
-CREATE DATABASE hudini;
+CREATE DATABASE Houdini;
 ```
 
 #### Step 4.3: Apply Database Migrations
@@ -174,7 +174,7 @@ This will ensure that all tables and schemas are created with the correct `bigin
 
 ## 4_1. Activate LLM Provider
 
-Hudini allows you to integrate with multiple AI model providers (such as OpenAI, Anthropic, and Google AI). You can control which providers are active by setting the `APP_ACTIVE_PROVIDER` environment variable in the `.env.local` file.
+Houdini allows you to integrate with multiple AI model providers (such as OpenAI, Anthropic, and Google AI). You can control which providers are active by setting the `APP_ACTIVE_PROVIDER` environment variable in the `.env.local` file.
 
 ### How to Activate Providers
 
@@ -192,7 +192,7 @@ To activate multiple providers, add the `APP_ACTIVE_PROVIDER` variable to your `
 APP_ACTIVE_PROVIDER=OPEN_AI,ANTHROPIC,GOOGLE_AI
 ```
 
-This activates all three providers: OpenAI, Anthropic, and Google AI. Hudini will query models from these providers when a request is made to the `/models` endpoint.
+This activates all three providers: OpenAI, Anthropic, and Google AI. Houdini will query models from these providers when a request is made to the `/models` endpoint.
 
 ### Deactivating Providers
 
@@ -202,11 +202,11 @@ If you want to limit which providers are active, simply remove the providers you
 APP_ACTIVE_PROVIDER=OPEN_AI
 ```
 
-In this case, Hudini will only retrieve models from OpenAI when a request is made to the `/models` endpoint.
+In this case, Houdini will only retrieve models from OpenAI when a request is made to the `/models` endpoint.
 
 ### No Providers Activated
 
-If no providers are specified in the `.env.local` file, Hudini won’t query any providers and will return an empty list. For example, setting `APP_ACTIVE_PROVIDER` as an empty string:
+If no providers are specified in the `.env.local` file, Houdini won’t query any providers and will return an empty list. For example, setting `APP_ACTIVE_PROVIDER` as an empty string:
 
 ```plaintext
 APP_ACTIVE_PROVIDER=
@@ -259,7 +259,7 @@ If you prefer to start each service manually, follow these steps:
 1. **Activate the Conda Environment:**
 
    ```bash
-   conda activate hudini
+   conda activate Houdini
    ```
 
 2. **Backend Server:**
@@ -301,7 +301,7 @@ If you prefer to start each service manually, follow these steps:
 
 ### How Caching Works
 
-Hudini uses a caching mechanism to store and retrieve data quickly, improving the performance of the application. The cache is typically stored in the directory specified by the `APP_CACHE` environment variable.
+Houdini uses a caching mechanism to store and retrieve data quickly, improving the performance of the application. The cache is typically stored in the directory specified by the `APP_CACHE` environment variable.
 
 ### Clearing the Cache
 
@@ -316,10 +316,10 @@ python cache-clear.py
 
 ## Directory Structure
 
-Here's a typical directory structure for the Hudini project:
+Here's a typical directory structure for the Houdini project:
 
 ```
-hudini/
+Houdini/
 ├── client/                         
 ├── docs/                           
 ├── infrastructure/                 
@@ -511,7 +511,7 @@ test('renders the component correctly', () => {
 
 ### How Caching Works
 
-Hudini uses a caching mechanism to store and retrieve data quickly, improving the performance of the application. The cache is typically stored in the directory specified by the `APP_CACHE` environment variable.
+Houdini uses a caching mechanism to store and retrieve data quickly, improving the performance of the application. The cache is typically stored in the directory specified by the `APP_CACHE` environment variable.
 
 ### Clearing the Cache
 
@@ -519,7 +519,7 @@ To clear the cache, you can manually delete the contents of the cache directory 
 
 ---
 
-This README documentation now provides a comprehensive guide on how to set up, run, and test the Hudini project, with the necessary adjustments for using `bigint` for `user` and `prompt_id`.
+This README documentation now provides a comprehensive guide on how to set up, run, and test the Houdini project, with the necessary adjustments for using `bigint` for `user` and `prompt_id`.
 
 
 ## Embeddings
@@ -527,7 +527,7 @@ put your pdfs in /server/storage/pdfs
 Create embeddings:
 ```shell
 cd server/app/cli
-python  pdf_embeddings_cli.py C:/projects/hudini/server/storage/pdfs --output embeddings.pkl --metadata-output metadata.pkl
+python  pdf_embeddings_cli.py C:/projects/Houdini/server/storage/pdfs --output embeddings.pkl --metadata-output metadata.pkl
 ```
 
 save embeddings to faiss
@@ -548,5 +548,5 @@ ssh -l root 78.47.242.59
 ### Ansible install
 ```shell
 cd infrastructure/environment/
-ansible-playbook playbook_install_hudini.yml
+ansible-playbook playbook_install_Houdini.yml
 ```

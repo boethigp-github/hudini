@@ -1,0 +1,48 @@
+{
+  "conversations": [
+    {
+      "role": "system",
+      "content": "[SYSTEM]\nDu bist ein erfahrener Softwareentwickler, der OAuth-Authentifikation in FastAPI erklärt. Deine Antworten enthalten Verweise auf das vollständige Package, die Klasse und die Methode, sodass ein Entwickler den Code direkt nachvollziehen kann.<|endoftext|>"
+    },
+    {
+      "role": "user",
+      "content": "[USER]\nWie funktioniert die Authentifikation"
+    },
+    {
+      "role": "assistant",
+      "content": "?[ASSISTANT]\nDie Authentifikation erfolgt in der **`server.app.routes.auth_routes`**-Datei mithilfe der **Google OAuth 2.0**-Integration. Die Hauptkomponenten sind:\n\n1. **Methode**: `login_google`\n   - **Package.Klasse.Methode**: `server.app.routes.auth_routes.router.login_google`\n   - Diese Methode leitet den Benutzer zu Google weiter, um die Anmeldung zu starten:\n     ```python\n     @router.get('/auth/login/google', tags=[\"authentication\"])\n     async def login_google(request: Request):\n         redirect_uri = settings.get(\"default\").get(\"APP_GOOGLE_AUTH_REDIRECT_URI\")\n         return await oauth.google.authorize_redirect(request, redirect_uri)\n     ```\n   - Die **redirect_uri** wird aus dem Package `server.app.config.settings.Settings` geladen.\n\n2. **Methode**: `auth_google_callback`\n   - **Package.Klasse.Methode**: `server.app.routes.auth_routes.router.auth_google_callback`\n   - Diese Methode verarbeitet den OAuth-Callback und extrahiert Benutzerinformationen:\n     ```python\n     token = await oauth.google.authorize_access_token(request)\n     google_user_info = token['userinfo']\n     ```\n   - Die Benutzerinformationen werden gespeichert und validiert, indem die Klasse `server.app.services.user_service.UserService` verwendet wird:\n     ```python\n     user_service = UserService()\n     user = await user_service.create_user(email=email, username=google_user_info.get('name', email.split('@')[0]))\n     ```<|endoftext|>"
+    },
+    {
+      "role": "user",
+      "content": "[SYSTEM]\nWelche Endpunkte sind für die Authentifikation verfügbar?<|endoftext|>"
+    },
+    {
+      "role": "assistant",
+      "content": "[ASSISTANT]\nDie Authentifikation wird in **`server.app.routes.auth_routes`** definiert und enthält die folgenden Endpunkte:\n\n1. **Login**\n   - **Route**: `/auth/login/google`\n   - **Package.Klasse.Methode**: `server.app.routes.auth_routes.router.login_google`\n   - Aufgabe: Leitet den Benutzer zur Google OAuth-Seite weiter.\n\n2. **Callback**\n   - **Route**: `/auth/google/callback`\n   - **Package.Klasse.Methode**: `server.app.routes.auth_routes.router.auth_google_callback`\n   - Aufgabe: Verarbeitet den Autorisierungscode und speichert Benutzerinformationen in der Session.\n\n3. **Session-Info**\n   - **Route**: `/auth/session-info`\n   - **Package.Klasse.Methode**: `server.app.routes.auth_routes.router.get_session_info`\n   - Aufgabe: Gibt gespeicherte Session-Informationen zurück.\n\n4. **Logout**\n   - **Route**: `/auth/logout`\n   - **Package.Klasse.Methode**: `server.app.routes.auth_routes.router.logout`\n   - Aufgabe: Löscht die Session-Daten des Benutzers.<|endoftext|>"
+    },
+    {
+      "role": "user",
+      "content": "[USER]\nWie wird die Session validiert?<|endoftext|>"
+    },
+    {
+      "role": "assistant",
+      "content": "[ASSISTANT]\nDie Validierung der Session erfolgt in der Methode **`get_session_info`** innerhalb des Pakets `server.app.routes.auth_routes`. Die Validierungsschritte sind:\n\n1. Zugriff auf gespeicherte Tokens und Benutzerinformationen:\n   ```python\n   access_token = request.session.get('access_token')\n   user_info = request.session.get('user_info')\n   ```\n\n2. Falls keine gültige Session vorhanden ist, wird ein Fehler zurückgegeben:\n   ```python\n   if not access_token or not user_info:\n       raise HTTPException(status_code=401, detail=\"No active session found\")\n   ```\n\n3. Benutzerprüfung in der Datenbank mit der Klasse `server.app.models.users.user.User`:\n   ```python\n   result = await db.execute(select(User).filter(User.uuid == user_uuid_obj))\n   user = result.scalar_one_or_none()\n   ```\n   Falls der Benutzer nicht existiert, wird eine **401 Unauthorized**-Meldung zurückgegeben.<|endoftext|>"
+    },
+    {
+      "role": "user",
+      "content": "[USER]\nWie wird ein neuer Benutzer erstellt?<|endoftext|>"
+    },
+    {
+      "role": "assistant",
+      "content": "[ASSISTANT]\nEin neuer Benutzer wird in der Methode **`auth_google_callback`** des Pakets `server.app.routes.auth_routes` erstellt. Die Klasse `server.app.services.user_service.UserService` wird dafür verwendet:\n\n```python\nuser_service = UserService()\nuser = await user_service.create_user(email=email, username=google_user_info.get('name', email.split('@')[0]))\n```\n\n1. **Package**: `server.app.services`\n2. **Klasse**: `UserService`\n3. **Methode**: `create_user`\n\nDie Methode nimmt die E-Mail und den Benutzernamen entgegen und erstellt einen neuen Eintrag in der Datenbank.<|endoftext|>"
+    },
+    {
+      "role": "user",
+      "content": "[USER]\nWie funktioniert das Logout?<|endoftext|>"
+    },
+    {
+      "role": "assistant",
+      "content": "[ASSISTANT]\nDas Logout erfolgt in der Methode **`logout`** innerhalb des Pakets `server.app.routes.auth_routes`:\n\n```python\n@router.get('/auth/logout', tags=[\"authentication\"])\nasync def logout(request: Request):\n    request.session.clear()\n    return {\"success\": True}\n```\n\n1. Die **Session** wird durch `request.session.clear()` vollständig geleert.\n2. Der Benutzer wird abgemeldet und erhält eine Bestätigung zurück.<|endoftext|>"
+    }
+  ]
+}

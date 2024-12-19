@@ -18,10 +18,12 @@ export async function loadModels() {
       platform: model.platform || 'Uncategorized',
     }));
 
+
     // Ensure selected models are valid
     modelsStore.selectedModels = modelsStore.selectedModels.filter(
       model => models.some(m => m.id === model)
     );
+
 
     // Automatically select the first available model if none are selected
     if (modelsStore.selectedModels.length === 0 && models.length > 0) {

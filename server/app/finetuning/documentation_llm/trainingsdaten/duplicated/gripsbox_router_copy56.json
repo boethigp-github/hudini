@@ -1,0 +1,40 @@
+{
+  "conversations": [
+    {
+      "role": "system",
+      "content": "[System]\nDu bist ein erfahrener Softwareentwickler, der FastAPI-Endpunkte für die Verwaltung von Gripsbox-Daten erklärt. Du gibst vollständige Pfade zu Paketen, Klassen und Methoden an und erläuterst detailliert, wie die Endpunkte funktionieren.<|endoftext|>"
+    },
+    {
+      "role": "user",
+      "content": "[USER]\nWelche Endpunkte sind für Gripsbox verfügbar?<|endoftext|>"
+    },
+    {
+      "role": "assistant",
+      "content": "[ASSISTANT]\nDie Endpunkte für die Gripsbox-Verwaltung sind in **`server.app.routes.gripsbox_routes`** definiert und umfassen die folgenden Routen:\n\n1. **Gripsbox abrufen**\n   - **Route**: `/gripsbox`\n   - **HTTP-Methode**: `GET`\n   - **Package.Klasse.Methode**: `server.app.routes.gripsbox_routes.get_gripsbox`\n   - **Beschreibung**: Ruft die Liste aller Gripsbox-Einträge aus der Datenbank ab.\n     ```python\n     @router.get(\"/gripsbox\", response_model=List[GripsboxPostResponseModel], tags=[\"gripsbox\"])\n     async def get_gripsbox(db: AsyncSession = Depends(get_db), _: str = Depends(auth)):\n         result = await db.execute(select(Gripsbox).order_by(Gripsbox.created.desc()))\n         return result.scalars().all()\n     ```\n\n2. **Gripsbox erstellen**\n   - **Route**: `/gripsbox`\n   - **HTTP-Methode**: `POST`\n   - **Package.Klasse.Methode**: `server.app.routes.gripsbox_routes.create_gripsbox`\n   - **Beschreibung**: Erstellt einen neuen Gripsbox-Eintrag und speichert die zugehörige Datei.\n     ```python\n     @router.post(\"/gripsbox\", response_model=GripsboxPostResponseModel)\n     async def create_gripsbox(name: str = Form(...), file: UploadFile = File(...), ...):\n         ...\n     ```\n\n3. **Gripsbox löschen**\n   - **Route**: `/gripsbox/{id}`\n   - **HTTP-Methode**: `DELETE`\n   - **Package.Klasse.Methode**: `server.app.routes.gripsbox_routes.delete_gripsbox`\n   - **Beschreibung**: Löscht einen Gripsbox-Eintrag anhand seiner UUID.\n     ```python\n     @router.delete(\"/gripsbox/{id}\")\n     async def delete_gripsbox(id: UUID, db: AsyncSession = Depends(get_db)):\n         ...\n     ```\n\n4. **Gripsbox-Aktivstatus aktualisieren**\n   - **Route**: `/gripsbox/{id}/active`\n   - **HTTP-Methode**: `PATCH`\n   - **Package.Klasse.Methode**: `server.app.routes.gripsbox_routes.update_gripsbox_active_status`\n   - **Beschreibung**: Aktualisiert den Aktivstatus eines Gripsbox-Eintrags.\n     ```python\n     @router.patch(\"/gripsbox/{id}/active\", response_model=dict)\n     async def update_gripsbox_active_status(id: UUID, update_data: GripsboxActiveUpdateModel):\n         ...\n     ```<|endoftext|>"
+    },
+    {
+      "role": "user",
+      "content": "[USER]\nWie wird eine neue Gripsbox erstellt?<|endoftext|>"
+    },
+    {
+      "role": "assistant",
+      "content": "[ASSISTANT]\nEine neue Gripsbox wird in der Methode **`create_gripsbox`** im Paket `server.app.routes.gripsbox_routes` erstellt:\n\n1. **Route**: `/gripsbox`\n   - **HTTP-Methode**: `POST`\n   - **Package.Klasse.Methode**: `server.app.routes.gripsbox_routes.create_gripsbox`\n\n2. **Parameter**:\n   - `name`: Name der Gripsbox (Pflichtfeld)\n   - `size`: Größe der Datei (Pflichtfeld)\n   - `type`: Dateityp (optional, Standardwert ist `application/octet-stream`)\n   - `active`: Aktivstatus der Gripsbox (Pflichtfeld)\n   - `tags`: Optionale Tags (JSON-Array)\n   - `models`: Optionale Modelle (JSON-Array)\n   - `file`: Die hochzuladende Datei\n\n3. **Datenvalidierung**:\n   Die Felder werden validiert, bevor sie in die Datenbank geschrieben werden:\n   ```python\n   gripsbox_data = GripsboxPostRequestModel.model_validate(data)\n   ```\n\n4. **Service-Aufruf**:\n   Die Methode ruft `create_gripsbox_service` auf, um die Datei zu speichern und die Datenbank zu aktualisieren:\n   ```python\n   new_gripsbox = await create_gripsbox_service(\n       file=file, gripsbox_post_data=gripsbox_data, user=user\n   )\n   ```\n\n5. **Rückgabe**:\n   Ein JSON-Objekt des neu erstellten Gripsbox-Eintrags wird zurückgegeben:\n   ```python\n   return GripsboxPostResponseModel.from_orm(new_gripsbox)\n   ```<|endoftext|>"
+    },
+    {
+      "role": "user",
+      "content": "[USER]\nWie funktioniert das Löschen eines Gripsbox-Eintrags?"
+    },
+    {
+      "role": "assistant",
+      "content": "[ASSISTANT]\nDas Löschen eines Gripsbox-Eintrags erfolgt in der Methode **`delete_gripsbox`** innerhalb des Pakets `server.app.routes.gripsbox_routes`:\n\n1. **Route**: `/gripsbox/{id}`\n   - **HTTP-Methode**: `DELETE`\n   - **Package.Klasse.Methode**: `server.app.routes.gripsbox_routes.delete_gripsbox`\n\n2. **Ablauf**:\n   - Die Methode sucht den Gripsbox-Eintrag anhand der UUID:\n     ```python\n     gripsbox = await db.get(Gripsbox, id)\n     ```\n   - Falls der Eintrag gefunden wird, wird er gelöscht:\n     ```python\n     await db.delete(gripsbox)\n     await db.commit()\n     ```\n   - Falls der Eintrag nicht existiert, wird ein **404 Not Found** Fehler geworfen:\n     ```python\n     raise HTTPException(status_code=404, detail=f\"Gripsbox with id {id} not found\")\n     ```\n\n3. **Rückgabe**:\n   Bei erfolgreichem Löschen wird eine Bestätigung zurückgegeben:\n   ```json\n   { \"status\": \"Gripsbox deleted successfully\" }\n   ```<|endoftext|>"
+    },
+    {
+      "role": "user",
+      "content": "[USER]\nWie wird der Aktivstatus eines Gripsbox-Eintrags aktualisiert?"
+    },
+    {
+      "role": "assistant",
+      "content": "[ASSISTANT]\nDer Aktivstatus eines Gripsbox-Eintrags wird in der Methode **`update_gripsbox_active_status`** im Paket `server.app.routes.gripsbox_routes` aktualisiert:\n\n1. **Route**: `/gripsbox/{id}/active`\n   - **HTTP-Methode**: `PATCH`\n   - **Package.Klasse.Methode**: `server.app.routes.gripsbox_routes.update_gripsbox_active_status`\n\n2. **Ablauf**:\n   - Die Methode sucht den Gripsbox-Eintrag anhand der UUID:\n     ```python\n     gripsbox = await db.get(Gripsbox, id)\n     ```\n   - Aktualisiert den Aktivstatus:\n     ```python\n     gripsbox.active = update_data.active\n     await db.commit()\n     ```\n   - Wenn der Eintrag nicht gefunden wird, wird ein **404 Not Found** Fehler zurückgegeben:\n     ```python\n     raise HTTPException(status_code=404, detail=f\"Gripsbox with id {id} not found\")\n     ```\n\n3. **Rückgabe**:\n   Eine Bestätigung wird zurückgegeben:\n   ```json\n   { \"status\": \"Active status updated successfully\" }\n   ```<|endoftext|>"
+    }
+  ]
+}

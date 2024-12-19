@@ -32,6 +32,9 @@ export default defineComponent({
     const selectedCategory = ref('');
 
     const loadAndFilterModels = async () => {
+
+
+
       await modelsStore.loadFromStorage();
       models.value = await loadModels();
       onCategoryChange(selectedCategory.value);
@@ -42,6 +45,7 @@ export default defineComponent({
     };
 
     const onModelsChange = async (values) => {
+
       await updateModels(values);
     };
 

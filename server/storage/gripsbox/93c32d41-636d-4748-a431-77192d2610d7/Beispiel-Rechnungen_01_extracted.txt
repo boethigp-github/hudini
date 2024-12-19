@@ -1,0 +1,450 @@
+Musterbeispiele für Rechnungen 
+Diese Sammlung enthält Beispiele für die 
+•
+Ordentliche Rechnung mit Mehrwertsteuer
+•
+Reverse-Charge-Rechnung für das Geschäfte innerhalb der EU
+•
+Kleinunternehmerrechnung
+•
+Kleinbetragsrechnung
+Rechnung
+Rechnungsnummer:
+R-1321321
+Kundennr.
+123
+Kunden Ust-IdNr.:
+DE 321 123 123
+Datum:
+01.01.2019
+Leistungszeitraum:
+1.12. - 31.12.2018
+Pos Leistung
+Menge
+Preis MwSt.
+Gesamt Netto
+1 Eingangsberatung
+1
+150,00 €
+19%
+28,50 €
+150,00 €
+2 Erstellung Businessplan
+1
+2.000,00 €
+19%
+380,00 €
+2.000,00 €
+3 Begleitung Bankgespräch
+2
+150,00 €
+19%
+57,00 €
+300,00 €
+Gesamt Netto
+2.450,00 €
+zzgl.
+7%
+0,00 €
+zzgl.
+19%
+465,50 €
+Zahlbetrag Gesamt:
+2.915,50 €
+Zahlungsziel: 14 Tage
+Bei einer Zahlung innerhalb 7 Tagen gewähre ich 2% Skonto.
+Karbo‐Power UG (haftungsbeschränkt)
+Gutenbergstraße 32
+35043 Marburg
+Falling Consult
+Südviertel 2
+35037 Marburg
+Steuernummer:
+21 875 40956
+USt. Id. Nr. 
+DE 494836735
+Bankverbindung:
+Hypovereinsbank
+BIC
+HYVBLC
+IBAN
+DE89 1000 1000 1000 00
+Tel.: +49 (0) 6421 / 464 007
+Mail: info@falling.de
+Web: www.falling.de
+Falling Consult
+Gründungsberatung vom Profi
+1. Die normale Rechnung mit Mehrwertsteuer für den innerdeutschen Geschäftsverkehr 
+Rechnung
+Rechnungsnummer:
+R-1321321
+Kundennr.
+123
+Kunden Ust-IdNr.:
+DE 321 123 123
+Datum:
+01.01.2019
+Leistungszeitraum:
+1.12. - 31.12.2018
+Pos Leistung
+Menge
+                 Preis 
+Gesamt Netto
+1 Eingangsberatung
+150,00 €
+2 Erstellung Businessplan
+2.000,00 €
+3 Begleitung Bankgespräch
+1 
+ 
+ 
+150,00 
+€  
+1 
+ 
+ 
+ 
+ 
+2.000,00 
+€  
+1 
+ 
+      150,00   €
+300,00 €
+Gesamt Netto
+2.450,00 €
+Hinweis: Reverse Charge Verfahren, MwSt.
+0,00 €
+Zahlbetrag Gesamt:
+2.450,00 €
+Zahlungsziel: 14 Tage
+Bei einer Zahlung innerhalb 7 Tagen gewähren wir 2% Skonto.
+Hacks 4 Austria Ges. mbH
+Donauviertler Gasse 12
+A 2103 Langenzersdorf
+Falling Consult
+Gründungsberatung vom Profi
+Falling Consult
+Südviertel 2
+35037 Marburg
+Steuernummer:
+21 875 40956
+USt. Id. Nr. 
+DE 494836735
+Bankverbindung:
+Hypovereinsbank
+BIC
+HYVBLC
+IBAN
+DE89 1000 1000 1000 00
+Tel.: +49 (0) 6421 / 464 007
+Mail: info@falling.de
+Web: www.falling.de
+2. Die Reverse-Charge-Rechnung für Geschäfte im EU-Raum
+Rechnung
+Rechnungsnummer:
+R-1321321
+Kundennr.
+1
+Kunden Ust-IdNr.:
+DE 321 123 123
+Datum:
+01.01.2019
+Leistungszeitraum:
+1.12. - 31.12.2018
+Pos Leistung
+Menge
+Preis
+Gesamt Netto
+1 Webseiten Texte
+3
+150,00 €
+450,00 €
+Gesamt Netto
+450,00 €
+Zahlbetrag Gesamt:
+450,00 €
+Als Kleinunternehmer im Sinne von § 19 Abs. 1 Umsatzsteuergesetz (UStG) 
+wird Umsatzsteuer nicht berechnet.
+Bei einer Zahlung innerhalb 7 Tagen gewähren wir 3% Skonto.
+Zahlungsziel: 14 Tage
+Metzgermeister Schimpf GmbH
+Usbeckstraße 12
+34134 Kassel
+Wort‐Blume
+Doro M. Leinfeld
+Sensenborn 12 
+34134 Kassel
+Steuernummer:
+23 870 64307
+USt. Id. Nr. 
+Bankverbindung:
+Volksbank Kassel Göttingen eG
+BIC
+GENODE51KS1
+IBAN
+DE43 5209 0000 0012 1234 00
+Tel.: +49 (0) 561 / 333 941
+Mail: wortblume@gmx.de
+Web: www.wortblume.wordpress.org
+Wort-Blume
+3. Die Kleinunternehmerrechnung
+Rechnung
+Datum:
+05.03.2020
+Pos Leistung
+Menge
+Preis
+Gesamt Brutto
+1 4 Kant Schrauben Typ A
+5
+4,55 €
+22,75 €
+2 1 Packung Dübel
+1
+7,55 €
+7,55 €
+GESAMTBETRAG
+30,30 €
+Der Zahlbeträg enthält 19% MwSt.
+Schrauben 
+Eberharter & Sohn
+Todfeilerstraße 12 
+85435 Erding
+Bankverbindung:
+Hypovereinsbank
+BIC
+HYVBLC
+IBAN
+DE89 1000 1000 1000 00
+Tel.: +49 (0) 8122 / 35689
+Mail: info@schrauben‐erding.de
+Web: www.schrauben‐erding.de
+Eberharter Schrauben
+Wir schrauben`s zusammen.
+4. Die Kleinbetragsrechnung  für Lieferungen/Leistungen unter 250 €
+Abo-Rechnung
+Vereinbarung/Vertrag:
+V-001001
+Rechnungsnummer:
+R-1321321
+Kundennr.
+123
+Kunden Ust-IdNr.:
+DE 321 123 123
+Datum:
+01.01.2019
+Leistungszeitraum:
+1.12. - 31.12.2018
+Pos Leistung
+Menge
+Preis MwSt.
+Gesamt Netto
+1 Abonnement
+1
+40,00 €
+19%
+7,60 €
+40,00 €
+ 
+ 
+Gesamt Netto
+40,00 €
+zzgl.
+7%
+0,00 €
+zzgl.
+19%
+7,60 €
+Zahlbetrag Gesamt:
+47,60 €
+Zahlungsziel: 14 Tage
+Bei einer Zahlung innerhalb 7 Tagen gewähren wir 3% Skonto.
+Firma X GmbH
+Straße
+Mustermann
+Straße 
+PLZ- ORT
+Steuernummer:
+2387 xxx
+USt. Id. Nr. 
+DE 2387 xxx
+Bankverbindung:
+Hypovereinsbank
+BIC
+HYVBLC
+IBAN
+DE89 1000 1000 1000 00
+Tel.: +49 (0) 89 / 464 464 464
+Mail: info@mustermann.de
+Web: www.mustermann.de
+LOGO
+1 Abschlagsrechnung
+Vereinbarung/Vertrag:
+V-001001 vom 15.11.2018
+Rechnungsnummer:
+R-1321321
+Kundennr.
+123
+Kunden Ust-IdNr.:
+DE 321 123 123
+Datum:
+01.01.2019
+Leistungszeitraum:
+1.12. - 31.12.2018
+Pos Leistung
+Menge
+Preis MwSt.
+Gesamt Netto
+1 Teilleistung
+1
+1.000,00 €
+19%
+190,00 €
+1.000,00 €
+ 
+ 
+Gesamt Netto
+1.000,00 €
+zzgl.
+7%
+0,00 €
+zzgl.
+19%
+190,00 €
+Zahlbetrag Gesamt:
+1.190,00 €
+Zahlungsziel: 14 Tage
+Bei einer Zahlung innerhalb 7 Tagen gewähren wir 3% Skonto.
+Firma X GmbH
+Straße
+PLZ - ORT
+Mustermann
+Straße 
+PLZ- ORT
+Steuernummer:
+2387 xxx
+USt. Id. Nr. 
+DE 2387 xxx
+Bankverbindung:
+Hypovereinsbank
+BIC
+HYVBLC
+IBAN
+DE89 1000 1000 1000 00
+Tel.: +49 (0) 89 / 464 464 464
+Mail: info@mustermann.de
+Web: www.mustermann.de
+LOGO
+Stornorechnung
+Vereinbarung/Vertrag:
+V-001001 vom 15.11.2018
+Rechnungsnummer:
+R-1321321
+Kundennr.
+123
+Kunden Ust-IdNr.:
+DE 321 123 123
+Datum:
+01.01.2019
+Leistungszeitraum:
+1.12. - 31.12.2018
+Pos Leistung
+Menge
+Preis MwSt.
+Gesamt Netto
+1 Teilleistung
+1
+1.000,00 €
+19%
+190,00 €
+1.000,00 €
+ 
+ 
+Gesamt Netto
+-1.000,00 €
+zzgl.
+7%
+0,00 €
+zzgl.
+19%
+-190,00 €
+Zahlbetrag Gesamt:
+-1.190,00 €
+Wir überweisen Ihnen den Betrag innerhalb von 7 Tagen gut.
+Firma X GmbH
+Straße
+PLZ - ORT
+Mustermann
+Straße 
+PLZ- ORT
+Steuernummer:
+2387 xxx
+USt. Id. Nr. 
+DE 2387 xxx
+Bankverbindung:
+Hypovereinsbank
+BIC
+HYVBLC
+IBAN
+DE89 1000 1000 1000 00
+Tel.: +49 (0) 89 / 464 464 464
+Mail: info@mustermann.de
+Web: www.mustermann.de
+LOGO
+Gutschrift-Nr.:
+Vereinbarung/Vertrag:
+V-001001 vom 15.11.2018
+Gutschrift-Nr.:
+G-1321321
+Kundennr.
+123
+Kunden Ust-IdNr.:
+DE 321 123 123
+Datum:
+01.01.2019
+Leistungszeitraum:
+1.12. - 31.12.2018
+Pos Leistung
+Menge
+Preis MwSt.
+Gesamt Netto
+1 Teilleistung
+1
+1.000,00 €
+19%
+190,00 €
+1.000,00 €
+ 
+ 
+Gesamt Netto
+-1.000,00 €
+zzgl.
+7%
+0,00 €
+zzgl.
+19%
+-190,00 €
+Zahlbetrag Gesamt:
+-1.190,00 €
+Wir überweisen Ihnen den Betrag innerhalb von 7 Tagen gut.
+Firma X GmbH
+Straße
+PLZ - ORT
+Mustermann
+Straße 
+PLZ- ORT
+Steuernummer:
+2387 xxx
+USt. Id. Nr. 
+DE 2387 xxx
+Bankverbindung:
+Hypovereinsbank
+BIC
+HYVBLC
+IBAN
+DE89 1000 1000 1000 00
+Tel.: +49 (0) 89 / 464 464 464
+Mail: info@mustermann.de
+Web: www.mustermann.de
+LOGO

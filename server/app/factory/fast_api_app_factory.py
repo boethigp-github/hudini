@@ -1,12 +1,13 @@
 import logging
 from diskcache import FanoutCache
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware as FastAPISessionMiddleware
 
 from server.app.routers.models.models_router import router as models_router
 from server.app.routers.prompts.prompts_router import router as prompts_router
-from server.app.routers.generation.openai.openai_text_generation_router import router as generation_router
+from server.app.routers.generation.cerebras.cerebras_text_generation_router import router as cerebras_generation_router
+from server.app.routers.generation.openai.openai_text_generation_router import router as open_ai_text_generation_router
 from server.app.routers.usercontext.usercontext_router import router as usercontext_router
 from server.app.routers.generation.anthropic_generation_router import router as anthropic_generation_router
 from server.app.routers.generation.google_ai_generation_router import router as google_ai_generation_router
@@ -100,7 +101,7 @@ class FastAPIAppFactory:
         self.logger.debug("Registering routes")
         self.app.include_router(models_router)
         self.app.include_router(prompts_router)
-        self.app.include_router(generation_router)
+        self.app.include_router(cerebras_generation_router)
         self.app.include_router(usercontext_router)
         self.app.include_router(users_router)
         self.app.include_router(anthropic_generation_router)
@@ -109,7 +110,8 @@ class FastAPIAppFactory:
         self.app.include_router(openai_dalle2_image_generation_router)
         self.app.include_router(socialmedia_telegram_image_text_router)
         self.app.include_router(gripsbox_router)
-        self.app.include_router(auth_router)  # Register auth routes
-        self.app.include_router(tool_call_router)  # Register auth routes
-        self.app.include_router(models_parameter_router)  # Register auth routes
+        self.app.include_router(auth_router)
+        self.app.include_router(tool_call_router)
+        self.app.include_router(tool_call_router)
+        self.app.include_router(open_ai_text_generation_router)
         self.logger.debug("Finished: Registering routes")
