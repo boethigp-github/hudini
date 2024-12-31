@@ -3,8 +3,8 @@ import logging
 from uuid import uuid4
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
-import openai
 import re
+from google.cloud import texttospeech
 from server.app.config.settings import Settings
 from server.app.services.gripsbox_service import load_gripsbox_by_id
 from server.app.models.podcasts.podcast_response_model import PodcastPostResponseModel
@@ -26,8 +26,8 @@ PODCAST_STORAGE_PATH = os.path.join(STORAGE_PATH, "audio", "podcasts")
 # Sicherstellen, dass das Speicherverzeichnis existiert
 os.makedirs(PODCAST_STORAGE_PATH, exist_ok=True)
 
-# OpenAI API-Key aus Settings laden
-openai.api_key = settings.get("default").get("API_KEY_OPEN_AI")
+# Google API-Key aus den Settings laden
+GOOGLE_API_KEY = settings.get("default").get("APP_GOOGLE_CLOUD_API_KEY")
 
 
 # Request Model für den Podcast
@@ -36,19 +36,67 @@ class PodcastGripsboxRequestModel(BaseModel):
     speakers: list = Field(default=["Anna", "Tom"], description="Liste der Sprecher")
 
 
-def split_text_into_chunks(text: str, max_length: int = 4096):
+def split_text_into_chunks(text: str, max_bytes: int = 4000):
     """
-    Splits the input text into chunks that do not exceed the max_length.
+    Teilt den Text in Blöcke, die maximal 4000 Bytes lang sind.
     """
-    return [text[i:i + max_length] for i in range(0, len(text), max_length)]
+    chunks = []
+    current_chunk = ""
+    for word in text.split():
+        if len((current_chunk + " " + word).encode('utf-8')) > max_bytes:
+            chunks.append(current_chunk.strip())
+            current_chunk = word
+        else:
+            current_chunk += " " + word
+    chunks.append(current_chunk.strip())
+    return chunks
+
+
+def synthesize_google_speech(text_chunks: list, voice_name: str, language_code: str = "de-DE"):
+    """
+    Erstellt Sprache aus Textblöcken mit der Google TTS-API.
+    """
+    client = texttospeech.TextToSpeechClient(client_options={"api_key": GOOGLE_API_KEY})
+    audio_content = b""
+
+    for i, chunk in enumerate(text_chunks):
+        logger.debug(f"Verarbeite Chunk {i+1}/{len(text_chunks)}: {chunk[:50]}...")
+
+        # Eingabetext konfigurieren
+        input_text = texttospeech.SynthesisInput(text=chunk)
+
+        # Stimme festlegen
+        voice = texttospeech.VoiceSelectionParams(
+            language_code=language_code,
+            name=voice_name,
+            ssml_gender=texttospeech.SsmlVoiceGender.NEUTRAL
+        )
+
+        # Audio-Format festlegen
+        audio_config = texttospeech.AudioConfig(
+            audio_encoding=texttospeech.AudioEncoding.MP3
+        )
+
+        try:
+            # API-Aufruf
+            response = client.synthesize_speech(
+                input=input_text,
+                voice=voice,
+                audio_config=audio_config
+            )
+            audio_content += response.audio_content  # Audio-Bytes hinzufügen
+
+        except Exception as e:
+            logger.error(f"Google API Fehler bei Chunk {i+1}: {str(e)}")
+            raise HTTPException(status_code=500, detail=f"API-Fehler: {str(e)}")
+
+    return audio_content
 
 
 @router.post("/podcasts", response_model=PodcastPostResponseModel, status_code=status.HTTP_201_CREATED)
-async def create_podcast(
-    gripsbox_data: PodcastGripsboxRequestModel
-):
+async def create_podcast(gripsbox_data: PodcastGripsboxRequestModel):
     """
-    Erstellt einen Podcast aus einer Gripsbox mit Textinhalt über die OpenAI TTS-API.
+    Erstellt einen Podcast aus einer Gripsbox mit Textinhalt über die Google TTS-API.
     """
     gripsbox_id = gripsbox_data.gripsbox_id
     speakers = gripsbox_data.speakers
@@ -57,77 +105,46 @@ async def create_podcast(
     # 1. Gripsbox-Inhalt abrufen
     try:
         text = await load_gripsbox_by_id(gripsbox_id)
+        if isinstance(text, list):
+            text = " ".join(text)
     except HTTPException as e:
         raise e
 
-    # 2. Text verarbeiten und validieren
-    if isinstance(text, list):  # Falls der Text eine Liste ist, konvertiere ihn
-        text = " ".join(text)
-
-    # Sonderzeichen und mehrfache Leerzeichen entfernen
-    text = re.sub(r'\s+', ' ', text).strip()
-
-    # Text validieren
-    if not isinstance(text, str) or len(text) == 0:
-        logger.error(f"Gripsbox enthält keinen gültigen Text für den Podcast.")
+    if not text:
+        logger.error("Gripsbox enthält keinen gültigen Text.")
         raise HTTPException(status_code=400, detail="Gripsbox enthält keinen Text.")
 
-    logger.debug(f"Geladener Text nach Verarbeitung: {text[:200]}...")
+    # 2. Deutsche Stimmen definieren
+    voice_map = {"Anna": "de-DE-Wavenet-C", "Tom": "de-DE-Wavenet-B"}  # Stimmen
 
-    # 3. Text in Blöcke teilen
-    text_chunks = split_text_into_chunks(text)
+    # 3. Text in Dialoge aufteilen und Namen entfernen!
+    sentences = re.split(r'(?<=[.!?])\s+', text)
+    dialog = []
+    for sentence in sentences:
+        # Entferne die Namen (Anna:, Tom:)
+        cleaned_sentence = re.sub(r'^(Anna:|Tom:)\s*', '', sentence).strip()
+        dialog.append(cleaned_sentence)  # Nur den Text speichern
 
-    # 4. OpenAI TTS-Client verwenden
-    try:
-        audio_content = b""  # MP3-Dateien zusammenfügen
-        voices = ["alloy", "nova", "echo"]  # Verschiedene Stimmen
+    # 4. Audio generieren
+    audio_content = b""
+    for i, sentence in enumerate(dialog):
+        # Sprecher abwechselnd zuweisen
+        speaker = speakers[i % len(speakers)]
+        voice = voice_map[speaker]
 
-        # Textblöcke an die TTS-API senden
-        for i, chunk in enumerate(text_chunks):
-            if len(chunk) > 4096:
-                logger.warning(f"Chunk {i+1} überschreitet 4096 Zeichen: {len(chunk)}")
-                continue
+        # Satz in Chunks aufteilen
+        text_chunks = split_text_into_chunks(sentence)
 
-            # Stimme auswählen
-            voice = voices[i % len(voices)]
+        # Audio erzeugen
+        chunk_audio = synthesize_google_speech(text_chunks, voice)
+        audio_content += chunk_audio
 
-            # **Neue OpenAI-TTS-API aufrufen**
-            response = openai.audio.speech.create(
-                model="tts-1",
-                input=chunk,
-                voice=voice,
-                response_format="mp3"
-            )
-
-            # Überprüfen, ob die Antwort gültig ist
-            if not response or not hasattr(response, 'content'):
-                logger.error("Leere Antwort von der TTS-API erhalten.")
-                raise HTTPException(status_code=500, detail="Leere Antwort von der TTS-API.")
-
-            # MP3-Inhalt hinzufügen
-            audio_content += response.content
-
-    except Exception as e:
-        logger.error(f"TTS-API-Fehler: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"TTS-API-Fehler: {str(e)}")
-
-    # 5. Audio speichern
-    podcast_id = str(uuid4())  # Eindeutige ID generieren
+    # 5. Datei speichern
+    podcast_id = str(uuid4())
     file_name = f"{podcast_id}.mp3"
     file_path = os.path.join(PODCAST_STORAGE_PATH, file_name)
 
-    try:
-        with open(file_path, "wb") as audio_file:
-            audio_file.write(audio_content)
+    with open(file_path, "wb") as audio_file:
+        audio_file.write(audio_content)
 
-        logger.info(f"Podcast gespeichert unter: {file_path}")
-    except PermissionError:
-        logger.error(f"Keine Schreibrechte für: {file_path}")
-        raise HTTPException(status_code=500, detail="Keine Schreibrechte für das Verzeichnis.")
-    except Exception as e:
-        logger.error(f"Fehler beim Speichern der MP3-Datei: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Fehler beim Speichern der Datei: {str(e)}")
-
-    # 6. URL erstellen und Response zurückgeben
-    audio_url = f"/static/audio/podcasts/{file_name}"
-    return PodcastPostResponseModel(id=podcast_id, title="Gripsbox Podcast", audio_url=audio_url)
+    return PodcastPostResponseModel(id=podcast_id, title="Gripsbox Podcast", audio_url=file_path)

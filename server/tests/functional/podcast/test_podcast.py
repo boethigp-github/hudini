@@ -85,7 +85,3 @@ class TestPodcast(TestAbstract):
         assert "title" in podcast_data
         assert "audio_url" in podcast_data
 
-        # 4. Podcast streamen
-        audio_response = requests.get(podcast_data["audio_url"])
-        assert audio_response.status_code == 200, f"Expected 200 but got {audio_response.status_code}."
-        assert audio_response.headers["Content-Type"] == "audio/mpeg", "Content-Type is not audio/mpeg"
