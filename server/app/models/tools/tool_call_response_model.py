@@ -6,8 +6,8 @@ class ToolCallResponseModel(BaseModel):
     tool: str  # The name of the tool that was called
     result: Dict[str, Any]  # The result of the tool call, can include various data depending on the tool
 
-    class Config:
-        schema_extra = {
+    class ConfigDict:
+        json_schema_extra = {
             "example": {
                 "tool": "get_weather",
                 "result": {

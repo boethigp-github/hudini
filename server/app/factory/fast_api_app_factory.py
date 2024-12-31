@@ -18,6 +18,7 @@ from server.app.routers.tool.calling_router import router as tool_call_router
 from server.app.routers.gripsbox.gripsbox_router import router as gripsbox_router
 from server.app.routers.models_parameter.models_parameter_router import router as models_parameter_router
 from server.app.routers.users.users_router import router as users_router
+from server.app.routers.postcasts.podcast_router import router as podcast_router
 from server.app.routers.auth.auth_router import router as auth_router, setup_oauth
 
 logger = logging.getLogger("hudini_logger")
@@ -114,4 +115,6 @@ class FastAPIAppFactory:
         self.app.include_router(tool_call_router)
         self.app.include_router(tool_call_router)
         self.app.include_router(open_ai_text_generation_router)
+        self.app.include_router(models_parameter_router)
+        self.app.include_router(podcast_router)
         self.logger.debug("Finished: Registering routes")

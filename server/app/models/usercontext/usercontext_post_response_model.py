@@ -14,7 +14,7 @@ class ContextDataItem(BaseModel):
     model: Optional[str] = None
     completion: Optional[dict] = None
 
-    class Config:
+    class ConfigDict:
         json_encoders = {
             UUID: lambda v: str(v)  # Automatically serialize UUIDs to strings
         }
@@ -27,7 +27,7 @@ class UserContextPromptModel(BaseModel):
     created: datetime = Field(default_factory=lambda: datetime.now(
         tz=pytz.timezone(settings.get("default").get("APP_TIMEZONE"))))  # Add timezone-aware datetime
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
         json_encoders = {
             UUID: lambda v: str(v)  # Automatically serialize UUIDs to strings
@@ -49,7 +49,7 @@ class UserContextPostRequestModel(BaseModel):
     prompt: UserContextPromptModel
     context_data: List[ContextDataItem]
 
-    class Config:
+    class ConfigDict:
         json_encoders = {
             UUID: lambda v: str(v)  # Automatically serialize UUIDs to strings
         }
@@ -65,7 +65,7 @@ class UserContextResponseModel(BaseModel):
     thread_id: int
     prompt: UserContextPromptModel  # This model now includes context_data
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
         json_encoders = {
             UUID: lambda v: str(v)

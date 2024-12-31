@@ -2,15 +2,16 @@ from pydantic import BaseModel, Field
 from typing import List
 
 class GripsboxPostRequestModel(BaseModel):
-    name: str = Field(..., example="Grip A")
-    size: int = Field(..., example=10, ge=1, description="Size of the gripsbox, must be a positive integer")
-    type: str = Field(..., example="Type X")
-    active: bool = Field(..., example=True)
-    tags: List[str] = Field(..., example=["tag1", "tag2"])
-    models: List[str] = Field(..., example=["gpt-3.5-turbo"])
+    name: str = Field(..., description="Name of the gripsbox")
+    size: int = Field(..., ge=1, description="Size of the gripsbox, must be a positive integer")
+    type: str = Field(..., description="Type of the gripsbox")
+    active: bool = Field(..., description="Whether the gripsbox is active")
+    tags: List[str] = Field(..., description="List of tags associated with the gripsbox")
+    models: List[str] = Field(..., description="List of models associated with the gripsbox")
 
-    class Config:
-        schema_extra = {
+    class ConfigDict:
+        # Correct usage of json_schema_extra for Pydantic V2
+        json_schema_extra = {
             "example": {
                 "name": "Grip A",
                 "size": 10,

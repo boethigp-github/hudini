@@ -39,8 +39,8 @@ def duplicate_files(input_dir, output_dir, duplication_factor=10):
 
 # Configure your paths and duplication factor
 if __name__ == "__main__":
-    INPUT_DIR = r"C:\projects\houdini\server\app\finetuning\documentation_llm\trainingsdaten\routers"
-    OUTPUT_DIR = r"C:\projects\houdini\server\app\finetuning\documentation_llm\trainingsdaten\duplicated"
+    INPUT_DIR = r"/server/app/utils/finetuning/documentation_llm/trainingsdaten/routers"
+    OUTPUT_DIR = r"/server/app/utils/finetuning/documentation_llm/trainingsdaten/duplicated"
     DUPLICATION_FACTOR = 100
 
     duplicate_files(INPUT_DIR, OUTPUT_DIR, DUPLICATION_FACTOR)

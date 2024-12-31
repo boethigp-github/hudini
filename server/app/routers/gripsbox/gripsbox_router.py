@@ -115,6 +115,8 @@ async def create_gripsbox(
         user=user
     )
 
+    logger.debug(f"Gripsbox created successfully: id={new_gripsbox.id}")
+
     return GripsboxPostResponseModel.from_orm(new_gripsbox)
 
 

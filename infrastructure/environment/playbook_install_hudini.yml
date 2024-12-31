@@ -4,7 +4,7 @@
   vars:
     ansible_python_interpreter: /root/anaconda3/envs/hudini/bin/python
     anaconda_path: /root/anaconda3/bin
-    project_path: /var/www/hudini
+    project_path: /var/www/houdini
     conda_env_name: hudini
     python_version: "3.10"
     requirements_file: "{{ project_path }}/server/requirements.txt"
@@ -12,7 +12,7 @@
     database_user: postgres
     database_password: postgres
     pg_hba_conf_path: /etc/postgresql/16/main/pg_hba.conf
-    alembic_migration_path: /var/www/hudini/server/app/db
+    alembic_migration_path: /var/www/houdini/server/app/db
 
   tasks:
     - name: Display selected Anaconda path and project settings

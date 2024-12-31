@@ -186,7 +186,7 @@ if __name__ == "__main__":
 
     # Test der PDF-Extraktion für ein spezifisches Dokument
     test_pdf_extraction(
-        "C:/projects/hudini/server/storage/pdfs/Lebenslauf4.pdf")
+        "C:/projects/houdini/server/storage/pdfs/Lebenslauf4.pdf")
 
     # Ausgabe aller eingelesenen Dateipfade
     logging.info("\nAlle eingelesenen Dateipfade:")

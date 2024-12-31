@@ -13,7 +13,7 @@ class PromptPostRequestModel(BaseModel):
     status: Optional[str] = None
     uuid: UUID
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
         json_schema_extra = {
             "example": {

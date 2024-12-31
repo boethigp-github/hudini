@@ -28,8 +28,8 @@ class ImageGenerationRequest(BaseModel):
     quality: Literal["standard", "hd"] = Field("standard", description="Quality of the generated images")
     style: Literal["vivid", "natural"] = Field("vivid", description="Style of the generated images")
 
-    class Config:
-        schema_extra = {
+    class ConfigDict:
+        json_schema_extra = {
             "example": {
                 "prompt": "A serene landscape with a calm lake reflecting a snow-capped mountain at sunset",
                 "n": 1,
@@ -43,8 +43,8 @@ class ImageGenerationResponse(BaseModel):
     created: int
     data: List[dict]
 
-    class Config:
-        schema_extra = {
+    class ConfigDict:
+        json_schema_extra = {
             "example": {
                 "created": 1631619392,
                 "data": [

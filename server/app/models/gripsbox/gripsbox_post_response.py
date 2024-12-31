@@ -14,7 +14,7 @@ class GripsboxPostResponseModel(BaseModel):
     created: datetime
     updated: datetime
 
-    class Config:
+    class ConfigDict:
         json_encoders = {
             UUID: lambda v: str(v)  # Automatically serialize UUIDs to strings
         }

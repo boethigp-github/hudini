@@ -84,17 +84,28 @@ async def create_gripsbox_service(
     with open(file_path, "wb") as f:
         f.write(await file.read())
 
+    # **Neue Überprüfung: Existiert die Datei?**
+    if not os.path.exists(file_path):
+        logger.error(f"Uploaded file not found at: {file_path}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"File upload failed. File not found at: {file_path}"
+        )
+
     extracted_text_filename = None
     image_filenames = []
+
+
+    logger.debug(f"Gripsbox file: file={file_path} usergripsboxpath: {user_gripsbox_path}")
 
     # If the file is a PDF, extract text and images
     if file_extension == ".pdf":
         file_name = os.path.splitext(file.filename)[0]
         extracted_text_filename, image_filenames = await handle_pdf(file_path, user_gripsbox_path, file_name)
 
+    # Speichere die Gripsbox in der Datenbank
     async for db in get_db():
         try:
-            # Create a new Gripsbox entry in the database
             new_gripsbox = Gripsbox(
                 user=user.uuid,
                 name=gripsbox_post_data.name,
@@ -116,6 +127,66 @@ async def create_gripsbox_service(
             logger.error(f"Error creating gripsbox: {str(e)}")
             raise HTTPException(status_code=500, detail="Failed to create Gripsbox")
 
+async def load_gripsbox_by_id(gripsbox_id: str) -> List[str]:
+    """
+    Load the contents of a single Gripsbox by ID.
+    """
+    async for db in get_db():
+        # Suche nach der Gripsbox anhand der ID
+        result = await db.execute(
+            select(Gripsbox).where(Gripsbox.id == gripsbox_id, Gripsbox.active == True)
+        )
+        gripsbox_entry = result.scalar_one_or_none()
+
+        if not gripsbox_entry:
+            logger.error(f"Gripsbox mit ID {gripsbox_id} nicht gefunden oder nicht aktiv.")
+            raise HTTPException(status_code=404, detail="Gripsbox nicht gefunden oder nicht aktiv.")
+
+        # Lade die Inhalte
+        user_gripsbox_path = get_users_gripsbox_folder(str(gripsbox_entry.user))  # Fix: UUID zu String
+        return await _load_gripsbox_files([gripsbox_entry], user_gripsbox_path)
+
+
+
+async def _load_gripsbox_files(gripsbox_entries, user_gripsbox_path: str) -> List[str]:
+    """
+    Hilfsmethode zum Laden von Dateien für Gripsbox-Einträge.
+    """
+    file_contents = []
+    for gripsbox_entry in gripsbox_entries:
+        file_path = os.path.join(user_gripsbox_path, gripsbox_entry.name)
+
+        # PDF: Extrahierte Texte laden
+        if gripsbox_entry.name.lower().endswith('.pdf'):
+            extracted_text_filename = os.path.join(
+                user_gripsbox_path,
+                f"{os.path.splitext(gripsbox_entry.name)[0]}_extracted.txt"
+            )
+            if os.path.exists(extracted_text_filename):
+                try:
+                    with open(extracted_text_filename, "r", encoding="utf-8", errors="ignore") as text_file:
+                        extracted_text = text_file.read()
+                    file_contents.append(f"File: {gripsbox_entry.name} (type: PDF)\n{extracted_text}")
+                except UnicodeDecodeError as e:
+                    logger.error(f"Error reading extracted text for {gripsbox_entry.name}: {str(e)}")
+                    raise HTTPException(status_code=500, detail="Fehler beim Laden des PDFs.")
+            else:
+                logger.warning(f"Extracted text file for {gripsbox_entry.name} nicht gefunden.")
+        else:
+            # Normale Datei laden
+            if os.path.exists(file_path) and os.path.isfile(file_path):
+                try:
+                    with open(file_path, "r", encoding="utf-8", errors="ignore") as file:
+                        content = file.read()
+                    file_contents.append(content)
+                except UnicodeDecodeError as e:
+                    logger.error(f"Error reading file {gripsbox_entry.name}: {str(e)}")
+                    raise HTTPException(status_code=500, detail=f"Fehler beim Laden der Datei {gripsbox_entry.name}.")
+            else:
+                logger.error(f"File {gripsbox_entry.name} nicht gefunden.")
+                raise HTTPException(status_code=404, detail=f"File {gripsbox_entry.name} nicht gefunden.")
+    return file_contents
+
 
 async def load_active_gripsbox_files(user_uuid: str) -> List[str]:
     """
@@ -126,7 +197,7 @@ async def load_active_gripsbox_files(user_uuid: str) -> List[str]:
 
     # Check if the Gripsbox folder exists
     if not os.path.exists(user_gripsbox_path):
-        logger.error(f"Gripsbox folder for user {user_uuid} does not exist.")
+        logger.error(f"Gripsbox folder {user_gripsbox_path} for user {user_uuid} does not exist.")
         raise HTTPException(status_code=404, detail="Gripsbox folder not found.")
 
     # Manually use get_db() for the session

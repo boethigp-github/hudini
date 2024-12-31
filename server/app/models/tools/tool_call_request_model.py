@@ -6,8 +6,8 @@ class ToolCallRequestModel(BaseModel):
     tool: str  # The name of the tool being called, e.g., "get_weather"
     parameters: Dict[str, Any]  # A dictionary of parameters needed for the tool call
 
-    class Config:
-        schema_extra = {
+    class ConfigDict:
+        json_schema_extra = {
             "example": {
                 "tool": "get_weather",
                 "parameters": {

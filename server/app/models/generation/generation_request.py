@@ -30,7 +30,7 @@ class ModelConfig(BaseModel):
             return str(value)  # Convert UUID to string
         return value
 
-    class Config:
+    class ConfigDict:
         use_enum_values = True
 
 class GenerationRequest(BaseModel):
@@ -68,5 +68,5 @@ class GenerationRequest(BaseModel):
         example="chat_completion"
     )
 
-    class Config:
+    class ConfigDict:
         use_enum_values = True

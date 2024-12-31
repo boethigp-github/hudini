@@ -11,7 +11,7 @@ class Message(BaseModel):
     refusal: Optional[str] = None
     role: str
 
-    class Config:
+    class ConfigDict:
         json_encoders = {
             UUID: lambda v: str(v)  # Automatically serialize UUIDs to strings
         }
@@ -23,7 +23,7 @@ class Choice(BaseModel):
     logprobs: Optional[Any] = None
     message: Message
 
-    class Config:
+    class ConfigDict:
         json_encoders = {
             UUID: lambda v: str(v)  # Automatically serialize UUIDs to strings
         }
@@ -34,7 +34,7 @@ class Usage(BaseModel):
     prompt_tokens: int
     total_tokens: int
 
-    class Config:
+    class ConfigDict:
         json_encoders = {
             UUID: lambda v: str(v)  # Automatically serialize UUIDs to strings
         }
@@ -49,7 +49,7 @@ class Completion(BaseModel):
     system_fingerprint: Optional[str] = None
     usage: Usage
 
-    class Config:
+    class ConfigDict:
         json_encoders = {
             UUID: lambda v: str(v)  # Automatically serialize UUIDs to strings
         }
@@ -62,7 +62,7 @@ class ContextDataItem(BaseModel):
     model: Optional[str] = None
     completion: Optional[Dict[str, Any]] = None
 
-    class Config:
+    class ConfigDict:
         json_encoders = {
             UUID: lambda v: str(v)  # Automatically serialize UUIDs to strings
         }
@@ -76,7 +76,7 @@ class UserContextPromptModel(BaseModel):
     created: datetime = Field(default_factory=lambda: datetime.now(tz=pytz.timezone(settings.get("default").get("APP_TIMEZONE"))))  # Add timezone-aware datetime
     context_data: List[ContextDataItem]  # Add context_data here
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
         json_encoders = {
             UUID: lambda v: str(v)  # Automatically serialize UUIDs to strings
@@ -100,7 +100,7 @@ class UserContextPrompt(BaseModel):
     prompt: str
     context_data: List[ContextDataItem]  # Hier fügen wir den korrekten Typ für context_data hinzu!
 
-    class Config:
+    class ConfigDict:
         json_encoders = {
             UUID: lambda v: str(v)  # Automatically serialize UUIDs to strings
         }
@@ -112,7 +112,7 @@ class UserContextPostRequestModel(BaseModel):
     thread_id: int
     prompt: UserContextPrompt
 
-    class Config:
+    class ConfigDict:
         from_attributes = True
         json_encoders = {
             UUID: lambda v: str(v)  # Automatically serialize UUIDs to strings

@@ -14,7 +14,7 @@ class ModelParameterResponseModel(BaseModel):
     created: datetime = Field(..., description="Timestamp when the parameter was created.")
     updated: Optional[datetime] = Field(None, description="Timestamp when the parameter was last updated.")
 
-    class Config:
+    class ConfigDict:
         json_schema_extra = {
             "example": {
                 "uuid": "123e4567-e89b-12d3-a456-426614174000",

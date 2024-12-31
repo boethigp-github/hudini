@@ -1,0 +1,121 @@
+# tactiq.io free youtube transcript
+# China's new AI model breakthrough
+# https://www.youtube.com/watch/NJljq429cGk
+
+00:00:03.040 as big Tech is getting hammered in
+00:00:05.120 today's selloff cnbc's Magnificent Seven
+00:00:07.520 index dropping more than 1% well there's
+00:00:10.320 a new emerging threat uh to Mega Cap's
+00:00:13.320 massive spending in America's dominance
+00:00:15.360 in the AI race dear josa digs into that
+00:00:18.039 for today's Tech check hey D hey good
+00:00:20.519 morning Lesley so here's a name that our
+00:00:23.039 audience may want to write down deep
+00:00:24.920 seek this is a new free open- source AI
+00:00:27.840 model that beats the latest open and
+00:00:30.400 meta models on key benchmarks and it was
+00:00:32.558 made for a fraction of a fraction of the
+00:00:34.480 cost now it was trained by a Chinese
+00:00:36.520 research lab that used Invidia H 800s
+00:00:39.719 that's a lower performance version of
+00:00:41.239 the h100 chips that are cheaper more
+00:00:43.760 available and tailored for restricted
+00:00:46.160 markets like China now I've been testing
+00:00:48.360 it out this morning and on the surface
+00:00:50.079 it looks and acts just like open AI chat
+00:00:52.879 gbt and in fact it actually thinks it is
+00:00:55.600 chat gbt when I asked what model are you
+00:00:58.440 it answered I'm an AI language model
+00:01:00.640 created by open AI specifically based on
+00:01:02.920 the gbt 4 architecture suggesting that
+00:01:05.760 it was trained on chat gbt output which
+00:01:08.799 leaving aside terms of service
+00:01:10.479 violations it means that entirely new
+00:01:13.040 state-of-the-art models can be built on
+00:01:15.320 what is already out there in other words
+00:01:17.520 open ai's moat may be shrinking if a
+00:01:20.520 model like deep sea can emerge with
+00:01:22.680 competitive performance minimal cost and
+00:01:24.880 Reliance on existing outputs it signals
+00:01:27.240 a rapidly shrinking barrier to entry in
+00:01:29.400 AI development vment challenging the
+00:01:31.000 current dominance of Industry leaders
+00:01:33.079 like open AI based on technical tests
+00:01:35.680 designed to measure its coding
+00:01:37.079 performance deep seek outperformed other
+00:01:39.439 models including meta's llama 3.1 and
+00:01:42.640 open ai's gbt 40 and by the way those
+00:01:45.240 are the latest state-of-the-art models
+00:01:47.479 and that led Andre kaparthy a founding
+00:01:49.600 team member at open aai to post deep
+00:01:52.119 seek making it look easy today with an
+00:01:54.000 open Frontier grade llm trained on a
+00:01:56.520 joke of a budget now to put that budget
+00:01:58.680 in perspective it's pretty mind-boggling
+00:02:01.479 it costs just $5.5 million versus
+00:02:04.680 hundreds of millions of dollars for
+00:02:06.039 meta's latest llama model and billions
+00:02:08.199 of dollars for gbt and Gemini models
+00:02:10.639 this all raises an important question
+00:02:12.120 for investors as the AI trade evolves
+00:02:14.560 and technological progress stalls is
+00:02:16.840 training Frontier models even a good
+00:02:18.760 investment anymore Microsoft Google
+00:02:20.879 Amazon meta open AI they have made that
+00:02:22.920 a core Mission over the last few years
+00:02:24.680 as they continue to spend billions
+00:02:26.360 building out AI infrastructure to train
+00:02:28.560 ever bigger and better better models
+00:02:30.959 deep seek did something highly
+00:02:33.200 competitive in just two months with
+00:02:35.560 dumbed down gpus for less than 6
+00:02:37.959 millionar and guys let's not forget this
+00:02:40.920 fact it comes from China whom Sam Alman
+00:02:43.440 and others say poses the greatest
+00:02:45.640 competitive threat to the dominance of
+00:02:47.720 us-led AI now this model is going to be
+00:02:50.440 tested in the weeks and months ahead but
+00:02:52.440 the implication guys of this is just
+00:02:54.480 massive and will Ripple through the AI
+00:02:56.800 Community wow uh dear I mean we've been
+00:02:59.400 talking this morning about obviously the
+00:03:01.440 capex and that we're expecting to be
+00:03:03.599 spent in 2025 on exactly what you're
+00:03:05.920 talking about um what is the core
+00:03:08.640 competency then here of the Chinese
+00:03:10.920 obviously they're not using the latest
+00:03:12.560 chips they don't have the computing
+00:03:13.840 power they're not even spending on that
+00:03:15.400 so what are they doing well and yet I
+00:03:18.680 know right and yet you're right they
+00:03:20.120 don't have all those things they don't
+00:03:21.440 even have access to h100s and yet they
+00:03:25.000 have built a model that competes with
+00:03:27.799 the ones from open Ai and meta I mean
+00:03:30.720 they've done this out of necessity using
+00:03:32.439 H 800s which like I said is a dumb down
+00:03:34.959 version of the h100s they've been able
+00:03:37.239 to do this which essentially just means
+00:03:38.760 that these models are becoming more
+00:03:40.519 commoditized than ever as that progress
+00:03:43.480 the technological progress stalls it's
+00:03:45.560 all about what can you build with the
+00:03:47.400 existing Frontier models and this is a
+00:03:49.560 perfect example of what a company that
+00:03:52.159 doesn't have to have built all the
+00:03:53.879 architecture doesn't need those high-end
+00:03:55.760 GPS is able to do simply by taking
+00:03:58.920 existing out it also raises questions
+00:04:01.400 between open and closed Source models
+00:04:03.879 right they were able to do so this is an
+00:04:05.560 open source models that was always the
+00:04:07.280 fear here with meta's llama is that it
+00:04:09.159 gives the Chinese an advantage it turns
+00:04:11.000 out the Chinese didn't even need llama
+00:04:12.760 they just needed stuff that was already
+00:04:14.120 put out there by chat GPT and others now
+00:04:17.238 wow dear I feel like this is going to be
+00:04:18.560 a huge story in 2025 and the
+00:04:20.560 geopolitical ramifications of all of
+00:04:22.360 this as well uh really appreciate it
+00:04:24.240 dear jaosa

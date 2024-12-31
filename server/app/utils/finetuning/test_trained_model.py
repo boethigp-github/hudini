@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Data directory and model
-DATA_DIR = r"C:\projects\houdini\server\app\finetuning\documentation_llm\trainingsdaten\routers"
+DATA_DIR = r"/server/app/utils/finetuning/documentation_llm/trainingsdaten/routers"
 MODEL_NAME = "gpt2-medium"
 
 
@@ -96,7 +96,7 @@ model = GPT2LMHeadModel.from_pretrained(MODEL_NAME)
 
 # Training arguments
 training_args = TrainingArguments(
-    output_dir="./llm_finetuned",
+    output_dir="llm_finetuned",
     overwrite_output_dir=True,
     per_device_train_batch_size=1,
     gradient_accumulation_steps=16,
