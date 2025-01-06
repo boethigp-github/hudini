@@ -28,7 +28,7 @@ OPENAI_API_KEY = settings.get("default").get("API_KEY_OPEN_AI")
 url = "https://api.elevenlabs.io/v1/text-to-speech"
 
 # Stimmenzuordnung für ElevenLabs
-voice_map = {"Anna": "IKne3meq5aSn9XLyUdCD", "Tom": "nPczCjzI2devNBz1zQrb"}
+voice_map = {"Tom": "fLLa7y6ZAxsUOLgJRp2C", "Anna": "ll2DVAFRgiMqZEq6luD9"}
 
 
 # Request Model für den Podcast
@@ -85,7 +85,8 @@ def create_elevenlabs_audio(dialogue: list, user_uuid: str, gripsbox_uuid: str):
             "text": line["text"],
             "voice_settings": {
                 "stability": 0.75,
-                "similarity_boost": 0.42
+                "similarity_boost": 0.6,
+                "style_exaggeration": 0.6
             }
         }
 
