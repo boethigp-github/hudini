@@ -81,11 +81,11 @@ def create_elevenlabs_audio(dialogue: list, user_uuid: str, gripsbox_uuid: str):
 
     for index, line in enumerate(dialogue):
         payload = {
-            "model_id": "eleven_multilingual_v1",
+            "model_id": "eleven_multilingual_v2",
             "text": line["text"],
             "voice_settings": {
                 "stability": 0.75,
-                "similarity_boost": 0.85
+                "similarity_boost": 0.42
             }
         }
 
