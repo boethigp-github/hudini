@@ -37,7 +37,6 @@ async def main():
 
         sql_agent = create_sql_agent(llm=llm, db=db, verbose=True)
 
-
         query_input = "Lese alle Benutzer aus der Datenbank im Json format"
         response = sql_agent.invoke({"input": query_input})
 
