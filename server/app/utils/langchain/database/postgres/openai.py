@@ -7,6 +7,9 @@ from urllib.parse import quote_plus
 from sqlalchemy import create_engine
 from sqlalchemy.exc import SQLAlchemyError
 import warnings
+
+from server.app.routers.postcasts.elevenlabs.podcast_elevenlabs_router import OPENAI_API_KEY
+
 warnings.filterwarnings("ignore", category=FutureWarning)
 async def main():
     username = "postgres"
@@ -28,7 +31,9 @@ async def main():
             engine_args={"connect_args": {"client_encoding": "utf8"}}
         )
 
-        llm = ChatOpenAI(model="gpt-4", temperature=0, openai_api_key="sk-AuI-1HUNhcef_tavj2PvUF9QvgNl1JoBNJxA5XLdVbT3BlbkFJnufWCgYitQdvAceErlT2iwU-ESYZvN5fy7x2-H_8sA")
+        OPENAI_API_KEY = ""
+
+        llm = ChatOpenAI(model="gpt-4", temperature=0, openai_api_key=OPENAI_API_KEY)
 
         sql_agent = create_sql_agent(llm=llm, db=db, verbose=True)
 
